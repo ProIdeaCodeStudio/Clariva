@@ -596,7 +596,7 @@
 <body>
 
   <!-- ── GATE OVERLAY ───────────────────────────────────── -->
-  <div id="gate-overlay" class="hidden">
+  <div id="gate-overlay">
     <div class="gate-box">
 
       <div class="gate-edu-mark">ProIdea EDU · Student Access</div>
@@ -1480,6 +1480,9 @@
       emailjs.init(EMAILJS_PUBLIC_KEY);
       document.querySelector('.whatsapp-link').href = WHATSAPP_GROUP_URL;
 
+      // Hide gate on load — show only when triggered
+      document.getElementById('gate-overlay').classList.add('hidden');
+      
       // Force re-verify unverified accounts
       const savedEmail = localStorage.getItem('proidea_email');
       if (savedEmail && localStorage.getItem('proidea_access') === 'granted') {
@@ -1506,9 +1509,6 @@
       } else {
         showStep('step-1');
       }
-
-      // Hide gate on load — show only when triggered
-      document.getElementById('gate-overlay').classList.add('hidden');
 
       // Retry pending sync
       const pending = localStorage.getItem('proidea_pending_sync');
