@@ -12,88 +12,17 @@
         <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     </head>
     <body>
-        <!-- GATE OVERLAY -->
-<div id="gate-overlay">
-    <div class="gate-box">
-
-        <div class="gate-label">Pro Idea · Educational Access</div>
-        <div class="gate-title">Access Resources</div>
-        <div class="gate-subtitle">Join the Pro Idea learning community to access all educational materials for free.</div>
-        <div class="gate-divider"></div>
-
-        <!-- STEP 1: Form -->
-        <div class="gate-step active" id="step-1">
-            <form class="gate-form" id="access-form" onsubmit="handleFormSubmit(event)">
-                <div>
-                    <label class="gate-field-label">FULL NAME</label>
-                    <input class="gate-input" type="text" id="field-name" placeholder="Your full name" required>
-                </div>
-                <div>
-                    <label class="gate-field-label">EMAIL ADDRESS</label>
-                    <input class="gate-input" type="email" id="field-email" placeholder="your@email.com" required>
-                </div>
-                <div>
-                    <label class="gate-field-label">PHONE NUMBER</label>
-                    <input class="gate-input" type="tel" id="field-phone" placeholder="+234 xxx xxx xxxx" required>
-                </div>
-                <p class="gate-error" id="form-error">Please fill in all fields correctly.</p>
-                <button class="gate-btn gate-btn-primary" type="submit">Create Account→</button>
-            </form>
-        </div>
-
-        <!-- STEP 2: WhatsApp + Code -->
-<div class="gate-step" id="step-2">
-    <div class="whatsapp-box">
-        <p>Join the Pro Idea WhatsApp group. The group code is pinned in the group chat.</p>
-        <a class="whatsapp-link" href="#" target="_blank">JOIN WHATSAPP GROUP</a>
-    </div>
-    <div class="gate-form" style="margin-top: 16px;">
-        <div>
-            <label class="gate-field-label">ENTER GROUP CODE</label>
-            <input class="gate-input" type="text" id="field-code" placeholder="Enter code from WhatsApp group" style="text-transform:uppercase;">
-        </div>
-        <p class="gate-error" id="code-error"></p>
-        <button class="gate-btn gate-btn-primary" onclick="handleCodeSubmit()">Verify →</button>
-    </div>
-</div>
-
-        <!-- STEP 3: Success -->
-        <div class="gate-step" id="step-3">
-            <div class="success-icon">🔥</div>
-            <p style="font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; color:#DDD0B3; font-weight:300; line-height:1.7; margin-bottom:24px;">
-                Welcome to the Pro Idea community. Your resources are now unlocked. Enjoy the materials!
-            </p>
-            <button class="gate-btn gate-btn-primary" onclick="unlockContent()">Access Resources →</button>
-        </div>
-        <!-- STEP 4: Login -->
-<div class="gate-step" id="step-4">
-    <div class="gate-label">Welcome Back!</div>
-    <div class="gate-subtitle">Login to access your resources.</div>
-    <div class="gate-divider"></div>
-    <div class="gate-form">
-        <div>
-            <label class="gate-field-label">EMAIL ADDRESS</label>
-            <input class="gate-input" type="email" id="login-email" placeholder="your@email.com">
-        </div>
-        <p class="gate-error" id="login-error"></p>
-        <button class="gate-btn gate-btn-primary" onclick="handleLogin()">Login →</button>
-        <button class="gate-btn gate-btn-outline" onclick="showStep('step-1')" style="margin-top:8px;">Create New Account</button>
-    </div>
-</div>
-
-    </div>
-</div>
-        <header id="navbar">
+        <!--<header id="navbar">
             <div class="container">
                 <p class="cover-label">Pro Idea</p>
                 <h1 class="cover-wordmark">Educational Services</h1>
                 <p class="cover-tagline">Comprehensive educational resources for students at Undergraduate level.</p>
             </div>
-        </header>
+        </header>-->
 
         <main class="container">
             <section class="section">
-                <p class="section-label">Featured Resources</p>
+                <p class="section-label">Educational Resources</p>
                 <h2 class="section-title">100 level Resources</h2>
                 <div class="gallery">
                     <div class="project-card">
