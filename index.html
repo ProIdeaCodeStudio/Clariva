@@ -10,588 +10,6 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
-  <style>
-
-    /* ── VARIABLES ───────────────────────────────────────── */
-    :root {
-      --deep-ink:     #111008;
-      --ash:          #1E1B12;
-      --ember-fog:    #8A7A5A;
-      --parchment:    #DDD0B3;
-      --warm-white:   #F5EDD8;
-      --burnt-ember:  #B5660F;
-      --amber:        #E8941A;
-      --ember-tint:   #F2B455;
-
-      --deep-ink-97:  rgba(17, 16, 8, 0.97);
-      --amber-10:     rgba(232, 148, 26, 0.1);
-      --shadow:       rgba(0, 0, 0, 0.12);
-      --shadow-md:    rgba(0, 0, 0, 0.18);
-
-      --font-display: 'Syne', sans-serif;
-      --font-accent:  'Cormorant Garamond', serif;
-      --font-body:    'Plus Jakarta Sans', sans-serif;
-      --font-label:   'DM Mono', monospace;
-
-      --text-hero:  clamp(40px, 7vw, 68px);
-      --text-h2:    clamp(22px, 4vw, 36px);
-      --text-h3:    clamp(17px, 2.5vw, 22px);
-      --text-lg:    clamp(16px, 2vw, 19px);
-      --text-md:    clamp(14px, 1.8vw, 16px);
-      --text-sm:    clamp(12px, 1.4vw, 13px);
-      --text-label: clamp(9px, 1vw, 11px);
-
-      --space-xs:  clamp(4px,  0.5vw, 6px);
-      --space-sm:  clamp(8px,  1vw,   12px);
-      --space-md:  clamp(14px, 2vw,   20px);
-      --space-lg:  clamp(24px, 3.5vw, 40px);
-      --space-xl:  clamp(48px, 6vw,   80px);
-      --space-2xl: clamp(72px, 9vw,   120px);
-
-      --radius-lg: 16px;
-      --radius-md: 10px;
-      --radius-sm: 6px;
-      --radius-xs: 4px;
-      --transition: all 0.3s ease;
-    }
-
-    /* ── RESET ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    img { max-width: 100%; height: auto; display: block; }
-
-    /* ── BASE ────────────────────────────────────────────── */
-    body {
-      background-color: var(--warm-white);
-      color: var(--deep-ink);
-      font-family: var(--font-body);
-      font-weight: 400;
-      font-size: var(--text-md);
-      line-height: 1.7;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 0 clamp(20px, 4vw, 40px);
-    }
-
-    a {
-      color: var(--amber);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    a:hover { color: var(--burnt-ember); }
-
-    /* ── GATE OVERLAY ────────────────────────────────────── */
-    #gate-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--deep-ink-97);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: clamp(16px, 3vw, 24px);
-    }
-
-    #gate-overlay.hidden { display: none; }
-
-    .gate-box {
-      background: var(--warm-white);
-      border: 1px solid var(--parchment);
-      border-radius: var(--radius-lg);
-      padding: clamp(28px, 4vw, 48px) clamp(20px, 3vw, 40px);
-      max-width: 460px;
-      width: 100%;
-      text-align: center;
-    }
-
-    .gate-edu-mark {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 4px;
-      color: var(--amber);
-      text-transform: uppercase;
-      margin-bottom: var(--space-sm);
-    }
-
-    .gate-title {
-      font-family: var(--font-display);
-      font-size: clamp(22px, 3.5vw, 28px);
-      font-weight: 800;
-      color: var(--deep-ink);
-      margin-bottom: var(--space-xs);
-      line-height: 1.2;
-    }
-
-    .gate-subtitle {
-      font-family: var(--font-body);
-      font-size: var(--text-sm);
-      color: var(--ember-fog);
-      margin-bottom: var(--space-lg);
-      line-height: 1.6;
-    }
-
-    .gate-divider {
-      width: 36px;
-      height: 2px;
-      background: var(--amber);
-      margin: 0 auto var(--space-lg);
-      border-radius: 2px;
-    }
-
-    .gate-step { display: none; }
-    .gate-step.active { display: block; }
-
-    .gate-form {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(10px, 1.5vw, 14px);
-      text-align: left;
-    }
-
-    .gate-field-label {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      color: var(--ember-fog);
-      display: block;
-      margin-bottom: 5px;
-      text-transform: uppercase;
-    }
-
-    .gate-input {
-      width: 100%;
-      background: var(--parchment);
-      border: 1px solid transparent;
-      color: var(--deep-ink);
-      font-family: var(--font-body);
-      font-size: var(--text-md);
-      font-weight: 400;
-      padding: 12px 16px;
-      border-radius: var(--radius-sm);
-      outline: none;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .gate-input:focus {
-      border-color: var(--amber);
-      background: var(--warm-white);
-    }
-
-    .gate-input::placeholder { color: var(--ember-fog); }
-
-    .gate-btn {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 14px 28px;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      transition: var(--transition);
-      width: 100%;
-      margin-top: var(--space-xs);
-    }
-
-    .gate-btn-primary {
-      background: var(--amber);
-      color: var(--deep-ink);
-      font-weight: 700;
-    }
-
-    .gate-btn-primary:hover { background: var(--burnt-ember); color: var(--warm-white); }
-    .gate-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .gate-btn-outline {
-      background: transparent;
-      color: var(--amber);
-      border: 1.5px solid var(--amber);
-      margin-top: var(--space-sm);
-    }
-
-    .gate-btn-outline:hover { background: var(--amber-10); }
-
-    .gate-error {
-      font-family: var(--font-body);
-      font-size: var(--text-sm);
-      color: #C0392B;
-      margin-top: -6px;
-      display: none;
-      text-align: left;
-    }
-
-    .gate-error.visible { display: block; }
-
-    .whatsapp-box {
-      background: var(--parchment);
-      border-radius: var(--radius-md);
-      padding: var(--space-md);
-      margin-bottom: var(--space-md);
-      text-align: left;
-    }
-
-    .whatsapp-box p {
-      font-size: var(--text-sm);
-      color: var(--deep-ink);
-      line-height: 1.6;
-      margin-bottom: var(--space-md);
-    }
-
-    .whatsapp-link {
-      display: inline-block;
-      background: #25D366;
-      color: #fff;
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      padding: 10px 20px;
-      border-radius: var(--radius-xs);
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-
-    .whatsapp-link:hover { background: #1da851; color: #fff; }
-
-    .gate-note {
-      font-size: var(--text-sm);
-      color: var(--ember-fog);
-      margin-top: var(--space-md);
-      font-style: italic;
-    }
-
-    .success-icon { font-size: clamp(36px, 5vw, 48px); margin-bottom: var(--space-md); }
-
-    .success-text {
-      font-size: var(--text-md);
-      color: var(--deep-ink);
-      line-height: 1.7;
-      margin-bottom: var(--space-lg);
-    }
-
-
-    /* ── HEADER ──────────────────────────────────────────── */
-    #header {
-      background: var(--ash);
-      padding: var(--space-md) 0;
-      border-bottom: 2px solid var(--amber);
-    }
-
-    .header-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .edu-wordmark {
-      font-family: var(--font-display);
-      font-size: clamp(18px, 3vw, 24px);
-      font-weight: 800;
-      color: var(--warm-white);
-      letter-spacing: 0.5px;
-    }
-
-    .edu-wordmark span { color: var(--amber); }
-
-    .header-tagline {
-      font-family: var(--font-accent);
-      font-style: italic;
-      font-size: clamp(13px, 1.8vw, 16px);
-      color: var(--parchment);
-    }
-
-    .header-btn {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      background: var(--amber);
-      color: var(--deep-ink);
-      padding: 8px 18px;
-      border-radius: var(--radius-xs);
-      border: none;
-      cursor: pointer;
-      transition: var(--transition);
-      text-transform: uppercase;
-    }
-
-    .header-btn:hover { background: var(--burnt-ember); color: var(--warm-white); }
-
-
-    /* ── HERO ────────────────────────────────────────────── */
-    #hero {
-      padding: var(--space-2xl) 0 var(--space-xl);
-      position: relative;
-    }
-
-    .hero-pre {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 4px;
-      color: var(--amber);
-      text-transform: uppercase;
-      margin-bottom: var(--space-md);
-    }
-
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: var(--text-hero);
-      font-weight: 800;
-      color: var(--deep-ink);
-      line-height: 1.05;
-      margin-bottom: var(--space-md);
-    }
-
-    .hero-title span { color: var(--amber); }
-
-    .hero-sub {
-      font-family: var(--font-accent);
-      font-style: italic;
-      font-size: clamp(18px, 2.5vw, 24px);
-      color: var(--ember-fog);
-      margin-bottom: var(--space-lg);
-      max-width: 560px;
-    }
-
-    .hero-description {
-      font-size: var(--text-lg);
-      color: var(--deep-ink);
-      max-width: 580px;
-      line-height: 1.7;
-      margin-bottom: var(--space-xl);
-    }
-
-    .hero-actions { display: flex; gap: var(--space-md); flex-wrap: wrap; }
-
-    .btn-primary {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: var(--amber);
-      color: var(--deep-ink);
-      padding: 16px 36px;
-      border-radius: var(--radius-sm);
-      border: none;
-      cursor: pointer;
-      transition: var(--transition);
-      font-weight: 700;
-    }
-
-    .btn-primary:hover {
-      background: var(--burnt-ember);
-      color: var(--warm-white);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px var(--shadow-md);
-    }
-
-    .btn-secondary {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: transparent;
-      color: var(--deep-ink);
-      padding: 16px 36px;
-      border-radius: var(--radius-sm);
-      border: 1.5px solid var(--parchment);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .btn-secondary:hover { border-color: var(--amber); color: var(--amber); }
-
-    .hero-amber-line {
-      width: 60px;
-      height: 3px;
-      background: var(--amber);
-      margin: var(--space-xl) 0 0;
-      border-radius: 2px;
-    }
-
-
-    /* ── FEATURES ────────────────────────────────────────── */
-    #features {
-      padding: var(--space-xl) 0;
-      border-top: 1px solid var(--parchment);
-    }
-
-    .features-label {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 4px;
-      color: var(--amber);
-      text-transform: uppercase;
-      margin-bottom: var(--space-md);
-    }
-
-    .features-title {
-      font-family: var(--font-display);
-      font-size: var(--text-h2);
-      font-weight: 800;
-      color: var(--deep-ink);
-      margin-bottom: var(--space-xl);
-      line-height: 1.1;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: var(--space-lg);
-    }
-
-    .feature-card {
-      background: var(--parchment);
-      border-radius: var(--radius-md);
-      padding: var(--space-lg);
-      border: 1px solid transparent;
-      transition: var(--transition);
-    }
-
-    .feature-card:hover {
-      border-color: var(--amber);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px var(--shadow);
-    }
-
-    .feature-icon {
-      font-size: 28px;
-      margin-bottom: var(--space-md);
-    }
-
-    .feature-number {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 3px;
-      color: var(--amber);
-      margin-bottom: var(--space-sm);
-      text-transform: uppercase;
-    }
-
-    .feature-title {
-      font-family: var(--font-display);
-      font-size: var(--text-h3);
-      font-weight: 800;
-      color: var(--deep-ink);
-      margin-bottom: var(--space-sm);
-      line-height: 1.2;
-    }
-
-    .feature-text {
-      font-size: var(--text-md);
-      color: var(--ember-fog);
-      line-height: 1.6;
-    }
-
-
-    /* ── CTA BANNER ──────────────────────────────────────── */
-    #cta-banner {
-      background: var(--ash);
-      padding: var(--space-xl) 0;
-      margin: var(--space-xl) 0 0;
-      text-align: center;
-    }
-
-    .cta-label {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 4px;
-      color: var(--amber);
-      text-transform: uppercase;
-      margin-bottom: var(--space-md);
-    }
-
-    .cta-title {
-      font-family: var(--font-display);
-      font-size: var(--text-h2);
-      font-weight: 800;
-      color: var(--warm-white);
-      margin-bottom: var(--space-md);
-      line-height: 1.1;
-    }
-
-    .cta-sub {
-      font-family: var(--font-accent);
-      font-style: italic;
-      font-size: clamp(16px, 2vw, 20px);
-      color: var(--parchment);
-      margin-bottom: var(--space-lg);
-    }
-
-
-    /* ── FOOTER ──────────────────────────────────────────── */
-    #footer {
-      background: var(--deep-ink);
-      padding: var(--space-lg) 0;
-      border-top: 2px solid var(--amber);
-    }
-
-    .footer-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: var(--space-md);
-    }
-
-    .footer-brand {
-      font-family: var(--font-display);
-      font-size: clamp(16px, 2.5vw, 20px);
-      font-weight: 800;
-      color: var(--warm-white);
-    }
-
-    .footer-brand span { color: var(--amber); }
-
-    .footer-tagline {
-      font-family: var(--font-accent);
-      font-style: italic;
-      font-size: clamp(12px, 1.5vw, 14px);
-      color: var(--ember-fog);
-      margin-top: 4px;
-    }
-
-    .footer-powered {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      color: var(--ember-fog);
-      text-align: right;
-    }
-
-    .footer-powered a {
-      color: var(--amber);
-      text-decoration: none;
-    }
-
-    .footer-powered a:hover { color: var(--ember-tint); }
-
-    .footer-meta {
-      font-family: var(--font-label);
-      font-size: var(--text-label);
-      letter-spacing: 2px;
-      color: var(--ember-fog);
-      text-align: center;
-      margin-top: var(--space-md);
-      padding-top: var(--space-md);
-      border-top: 1px solid var(--ash);
-      width: 100%;
-    }
-
-
-    /* ── RESPONSIVE ──────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .header-tagline { display: none; }
-      .hero-actions { flex-direction: column; }
-      .btn-primary, .btn-secondary { width: 100%; text-align: center; }
-      .footer-inner { flex-direction: column; text-align: center; }
-      .footer-powered { text-align: center; }
-    }
-
-  </style>
 </head>
 <body>
 
@@ -599,13 +17,13 @@
   <div id="gate-overlay" class="hidden">
     <div class="gate-box">
 
-      <div class="gate-edu-mark">ProIdea EDU · Student Access</div>
+      <div class="gate-edu-mark">Clariva · Student Access</div>
       <div class="gate-divider"></div>
 
       <!-- STEP 1: Register -->
       <div class="gate-step active" id="step-1">
         <div class="gate-title">Create Account</div>
-        <div class="gate-subtitle">Join the ProIdea EDU community to access free undergraduate resources.</div>
+        <div class="gate-subtitle">Join the Clariva community to access free undergraduate resources.</div>
         <br>
         <form class="gate-form" id="access-form" onsubmit="handleFormSubmit(event)">
           <div>
@@ -632,7 +50,7 @@
         <div class="gate-subtitle">One last step — join our WhatsApp group and enter the code from the pinned message.</div>
         <br>
         <div class="whatsapp-box">
-          <p>Join the ProIdea EDU WhatsApp group. The access code is pinned in the group chat.</p>
+          <p>Join the Clariva WhatsApp group. The access code is pinned in the group chat.</p>
           <a class="whatsapp-link" href="#" target="_blank">JOIN WHATSAPP GROUP</a>
         </div>
         <div class="gate-form">
@@ -649,7 +67,7 @@
       <!-- STEP 3: Success -->
       <div class="gate-step" id="step-3">
         <div class="success-icon">🔥</div>
-        <div class="gate-title">Welcome to ProIdea EDU!</div>
+        <div class="gate-title">Welcome to Clariva!</div>
         <p class="success-text">Your account is verified. You now have full access to all undergraduate resources, CBT practice, and AI assistance.</p>
         <button class="gate-btn gate-btn-primary" onclick="unlockContent()">Access Resources →</button>
       </div>
@@ -665,7 +83,7 @@
             <input class="gate-input" type="email" id="login-email" placeholder="your@email.com">
           </div>
           <p class="gate-error" id="login-error"></p>
-          <button href="Undergraduates.html" target="_self" class="gate-btn gate-btn-primary" onclick="handleLogin()">Login →</button>
+          <button class="gate-btn gate-btn-primary" onclick="handleLogin()">Login →</button>
           <button class="gate-btn gate-btn-outline" onclick="showStep('step-1')">Create New Account</button>
         </div>
       </div>
@@ -679,8 +97,8 @@
     <div class="container">
       <div class="header-inner">
         <div>
-          <div class="edu-wordmark">ProIdea <span>EDU</span></div>
-          <div class="header-tagline">"Learn Smarter."</div>
+          <div class="edu-wordmark">Clariva <!--<span>EDU</span>--></div>
+          <div class="header-tagline">"From Confusion to Confidence"</div>
         </div>
         <button class="header-btn" onclick="showGate()">Get Started</button>
       </div>
@@ -691,10 +109,10 @@
   <!-- ── HERO ──────────────────────────────────────────── -->
   <section id="hero">
     <div class="container">
-      <p class="hero-pre">Free for all undergraduates</p>
-      <h1 class="hero-title">Learn <span>Smarter.</span><br>Go Further.</h1>
+      <!--<p class="hero-pre">Free for all undergraduates</p>-->
+      <h1 class="hero-title">From <span>Confusion to</span><br><span>Confidence.</span></h1>
       <p class="hero-sub">"The right resources change everything."</p>
-      <p class="hero-description">ProIdea EDU gives Nigerian undergraduate students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
+      <p class="hero-description">Clariva gives Nigerian undergraduate students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
       <div class="hero-actions">
         <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
         <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See What's Inside</button>
@@ -749,7 +167,7 @@
     <div class="container">
       <p class="cta-label">Ready to start?</p>
       <h2 class="cta-title">Your resources are waiting.</h2>
-      <p class="cta-sub">"From Idea to Impact — one student at a time."</p>
+      <p class="cta-sub">"From Confusion to Confidence"</p>
       <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
     </div>
   </section>
@@ -760,8 +178,8 @@
     <div class="container">
       <div class="footer-inner">
         <div>
-          <div class="footer-brand">ProIdea <span>EDU</span></div>
-          <div class="footer-tagline">"Learn Smarter."</div>
+          <div class="footer-brand">Clariva <!--<span>EDU</span>--></div>
+          <div class="footer-tagline">"From Confusion to Confidence"</div>
         </div>
         <div class="footer-powered">
           DESIGNED & BUILT BY<br>
@@ -769,7 +187,7 @@
         </div>
       </div>
       <div class="footer-meta">
-        PROIDEA EDU · FREE UNDERGRADUATE RESOURCES · 2026
+        CLARIVA · FREE EDUCATIONAL RESOURCES · 2026
       </div>
     </div>
   </footer>
@@ -1059,7 +477,8 @@
           return;
         }
 
-        localStorage.setItem('proidea_email', email);
+        localStorage.setItem('proidea_access', 'granted');
+window.location.href = 'Undergraduates.html';
 
         if (data[0].Verified === true) {
           localStorage.setItem('proidea_access', 'granted');
@@ -1078,9 +497,10 @@
     }
 
     function unlockContent() {
-      localStorage.setItem('proidea_access', 'granted');
-      document.getElementById('gate-overlay').classList.add('hidden');
-    }
+  localStorage.setItem('proidea_access', 'granted');
+  document.getElementById('gate-overlay').classList.remove('visible');
+  window.location.href = 'Undergraduates.html';
+}
   </script>
 
 </body>
