@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ProIdea EDU — Free educational resources, CBT practice and AI assistance for Nigerian undergraduate students.">
-  <meta name="keywords" content="ProIdea, Clariva, EDU, free educational materials, undergraduate, FUTA, CBT, past questions, Nigeria students">
+  <meta name="description" content="Clariva — Free educational resources, CBT practice and AI assistance for Nigerian undergraduate students.">
+  <meta name="keywords" content="Clariva, free educational materials, undergraduate, FUTA, CBT, past questions, Nigeria students">
   <meta name="author" content="Pro Idea">
+  <title>Clariva — From Confusion to Confidence</title>
   <link rel="stylesheet" href="Stylesheet.css">
-  <title>Clariva - From Confusioon to Confidence</title>
+  <link reel="icon" href="favicon.ico">
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
@@ -22,7 +23,7 @@
       <!-- STEP 1: Register -->
       <div class="gate-step active" id="step-1">
         <div class="gate-title">Create Account</div>
-        <div class="gate-subtitle">Join the Clariva community to access free undergraduate resources.</div>
+        <div class="gate-subtitle">Join the Clariva community to access free educational resources.</div>
         <br>
         <form class="gate-form" id="access-form" onsubmit="handleFormSubmit(event)">
           <div>
@@ -67,7 +68,7 @@
       <div class="gate-step" id="step-3">
         <div class="success-icon">🔥</div>
         <div class="gate-title">Welcome to Clariva!</div>
-        <p class="success-text">Your account is verified. You now have full access to all undergraduate resources, CBT practice, and AI assistance.</p>
+        <p class="success-text">Your account is verified. You now have full access to all educational resources, CBT practice, and AI assistance.</p>
         <button class="gate-btn gate-btn-primary" onclick="unlockContent()">Access Resources →</button>
       </div>
 
@@ -96,21 +97,21 @@
     <div class="container">
       <div class="header-inner">
         <div>
-          <div class="edu-wordmark">Clariva <!--<span>EDU</span>--></div>
-          <div class="header-tagline">"From Confusion to Confidence"</div>
+          <div class="edu-wordmark">Clariva</div>
+          <div class="header-tagline">"From Confusion to Confidence."</div>
         </div>
         <button class="header-btn" onclick="showGate()">Get Started</button>
       </div>
     </div>
   </header>
 
+
   <!-- ── HERO ──────────────────────────────────────────── -->
   <section id="hero">
     <div class="container">
-      <!--<p class="hero-pre">Free for all undergraduates</p>-->
-      <h1 class="hero-title">From <span>Confusion to</span><br><span>Confidence.</span></h1>
+      <h1 class="hero-title">From <span>Confusion</span><br>to <span>Confidence.</span></h1>
       <p class="hero-sub">"The right resources change everything."</p>
-      <p class="hero-description">Clariva gives Nigerian undergraduate students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
+      <p class="hero-description">Clariva gives Nigerian students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
       <div class="hero-actions">
         <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
         <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See What's Inside</button>
@@ -131,7 +132,7 @@
           <div class="feature-icon">📚</div>
           <div class="feature-number">01 — Materials</div>
           <div class="feature-title">Study Materials</div>
-          <p class="feature-text">Curated PDF handouts, lecture notes and past questions for 100 level undergraduate courses.</p>
+          <p class="feature-text">Curated PDF handouts, lecture notes and past questions across multiple courses and levels.</p>
         </div>
 
         <div class="feature-card">
@@ -165,7 +166,7 @@
     <div class="container">
       <p class="cta-label">Ready to start?</p>
       <h2 class="cta-title">Your resources are waiting.</h2>
-      <p class="cta-sub">"From Confusion to Confidence"</p>
+      <p class="cta-sub">"From Confusion to Confidence."</p>
       <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
     </div>
   </section>
@@ -176,11 +177,11 @@
     <div class="container">
       <div class="footer-inner">
         <div>
-          <div class="footer-brand">Clariva <!--<span>EDU</span>--></div>
-          <div class="footer-tagline">"From Confusion to Confidence"</div>
+          <div class="footer-brand">Clariva</div>
+          <div class="footer-tagline">"From Confusion to Confidence."</div>
         </div>
         <div class="footer-powered">
-          DESIGNED & BUILT BY<br>
+          POWERED BY<br>
           <a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank">PRO IDEA →</a>
         </div>
       </div>
@@ -206,9 +207,6 @@
       emailjs.init(EMAILJS_PUBLIC_KEY);
       document.querySelector('.whatsapp-link').href = WHATSAPP_GROUP_URL;
 
-      // Hide gate on load — show only when triggered
-      document.getElementById('gate-overlay').classList.add('hidden');
-      
       // Force re-verify unverified accounts
       const savedEmail = localStorage.getItem('proidea_email');
       if (savedEmail && localStorage.getItem('proidea_access') === 'granted') {
@@ -229,7 +227,7 @@
         }
       }
 
-      // Access check
+      // Access check — show correct step when gate opens
       if (localStorage.getItem('proidea_access') === 'granted') {
         showStep('step-4');
       } else {
@@ -326,9 +324,11 @@
           submitBtn.disabled = false;
           submitBtn.textContent = 'Create Account →';
           if (existing[0].Verified === true) {
+            // Already verified — grant access and redirect
             localStorage.setItem('proidea_access', 'granted');
-            document.getElementById('gate-overlay').classList.add('hidden');
+            window.location.href = 'Undergraduates.html';
           } else {
+            // Registered but not verified — send to code step
             showStep('step-2');
           }
           return;
@@ -475,13 +475,14 @@
           return;
         }
 
-        localStorage.setItem('proidea_access', 'granted');
-window.location.href = 'Undergraduates.html';
+        localStorage.setItem('proidea_email', email);
 
         if (data[0].Verified === true) {
+          // Verified — grant access and redirect
           localStorage.setItem('proidea_access', 'granted');
-          document.getElementById('gate-overlay').classList.add('hidden');
+          window.location.href = 'Undergraduates.html';
         } else {
+          // Not verified — send to code step
           btn.disabled = false;
           btn.textContent = 'Login →';
           showStep('step-2');
@@ -495,10 +496,10 @@ window.location.href = 'Undergraduates.html';
     }
 
     function unlockContent() {
-  localStorage.setItem('proidea_access', 'granted');
-  document.getElementById('gate-overlay').classList.remove('visible');
-  window.location.href = 'Undergraduates.html';
-}
+      localStorage.setItem('proidea_access', 'granted');
+      document.getElementById('gate-overlay').classList.add('hidden');
+      window.location.href = 'Undergraduates.html';
+    }
   </script>
 
 </body>
