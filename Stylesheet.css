@@ -1,4 +1,6 @@
-    /* ── VARIABLES ───────────────────────────────────────── */
+/* ── GOOGLE FONTS IMPORT ─────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
+/* ── VARIABLES ───────────────────────────────────────── */
     :root {
       --deep-ink:     #111008;
       --ash:          #1E1B12;
@@ -470,6 +472,55 @@
       color: var(--ember-fog);
       line-height: 1.6;
     }
+
+/* ── GALLERY & PROJECT CARDS ─────────────────────────────── */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 30vw, 260px), 1fr));
+  gap: var(--space-lg);
+  margin: var(--space-lg) 0;
+}
+
+.project-card {
+  background-color: var(--ash);
+  border: var(--border-thin);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 10px 30px var(--shadow-card);
+}
+
+.project-card img {
+  width: 100%;
+  height: clamp(180px, 25vw, 260px);
+  object-fit: contain;
+  background-color: var(--deep-ink);
+}
+
+.project-card .project-description {
+  padding: var(--space-md);
+}
+
+.project-card .project-type {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: clamp(1px, 0.3vw, 2px);
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: var(--space-sm);
+}
+
+.project-card .project-title {
+  font-family: var(--font-display);
+  color: var(--warm-white);
+  font-size: var(--text-h3);
+  margin-bottom: var(--space-sm);
+}
+
+.project-card .project-copy {
+  color: var(--parchment);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
 
 
     /* ── CTA BANNER ──────────────────────────────────────── */
