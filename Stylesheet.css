@@ -282,7 +282,7 @@
       letter-spacing: 0.5px;
     }
 
-    .edu-wordmark span { color: var(--amber); }
+    /*.edu-wordmark span { color: var(--amber); }*/
 
     .header-tagline {
       font-family: var(--font-accent);
@@ -474,7 +474,7 @@
     }
 
 /* ── GALLERY & PROJECT CARDS ─────────────────────────────── */
-.gallery {
+/*.gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 30vw, 260px), 1fr));
   gap: var(--space-lg);
@@ -520,7 +520,7 @@
   color: var(--parchment);
   font-size: var(--text-sm);
   line-height: 1.5;
-}
+}*/
 
 
     /* ── CTA BANNER ──────────────────────────────────────── */
