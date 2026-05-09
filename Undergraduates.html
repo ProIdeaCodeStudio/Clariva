@@ -1,113 +1,506 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="Clariva - From Confusion to Confidence">
-        <meta name="keywords" content="education, secondary school, students, University, 100 level, 200 level, 300 level, 400 level, 500 level, Pro Idea, educational materials, Clariva, materials, PDF, pdfs, notes, past questions, answers, solutions">
-        <meta name="author" content="Pro Idea">
-        <title>Clariva - Undergraduates Resources</title>
-        <link rel="stylesheet" href="Stylesheet.css">
-        <link rel="icon" href="Transparent logo.png" type="image/Brand-icon">
-        <style>
-            .feature card a:hover {
-                text-decoration:underline;
-            }
-            .feature card a:active {
-                text-decoration:underline;
-            }
-        </style>
-    </head>
-    <body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Clariva — Free educational resources, CBT practice and AI assistance for Nigerian undergraduate students.">
+  <meta name="keywords" content="Clariva, free educational materials, undergraduate, FUTA, CBT, past questions, Nigeria students">
+  <meta name="author" content="Pro Idea">
+  <title>Clariva — From Confusion to Confidence</title>
+  <link rel="stylesheet" href="Stylesheet.css">
+  <link rel="icon" href="https://pin.it/6b5C6U9uI">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+  <!-- ── GATE OVERLAY ───────────────────────────────────── -->
+  <div id="gate-overlay" class="hidden">
+    <div class="gate-box">
+
+      <div class="gate-edu-mark">Clariva · Student Access</div>
+      <div class="gate-divider"></div>
+
+      <!-- STEP 1: Register -->
+      <div class="gate-step active" id="step-1">
+        <div class="gate-title">Create Account</div>
+        <div class="gate-subtitle">Join the Clariva community to access free educational resources.</div>
+        <br>
+        <form class="gate-form" id="access-form" onsubmit="handleFormSubmit(event)">
+          <div>
+            <label class="gate-field-label">Full Name</label>
+            <input class="gate-input" type="text" id="field-name" placeholder="Your full name" required>
+          </div>
+          <div>
+            <label class="gate-field-label">Email Address</label>
+            <input class="gate-input" type="email" id="field-email" placeholder="your@email.com" required>
+          </div>
+          <div>
+            <label class="gate-field-label">Phone Number</label>
+            <input class="gate-input" type="tel" id="field-phone" placeholder="+234 xxx xxx xxxx" required>
+          </div>
+          <p class="gate-error" id="form-error"></p>
+          <button class="gate-btn gate-btn-primary" type="submit">Create Account →</button>
+        </form>
+        <p class="gate-note" style="margin-top:16px;">Already have an account? <a href="#" onclick="showStep('step-4'); return false;">Login here</a></p>
+      </div>
+
+      <!-- STEP 2: WhatsApp + Code -->
+      <div class="gate-step" id="step-2">
+        <div class="gate-title">Join the Community</div>
+        <div class="gate-subtitle">One last step — join our WhatsApp group and enter the code from the pinned message.</div>
+        <br>
+        <div class="whatsapp-box">
+          <p>Join the Clariva WhatsApp group. The access code is pinned in the group chat.</p>
+          <a class="whatsapp-link" href="#" target="_blank">JOIN WHATSAPP GROUP</a>
+        </div>
+        <div class="gate-form">
+          <div>
+            <label class="gate-field-label">Group Access Code</label>
+            <input class="gate-input" type="text" id="field-code" placeholder="Enter code from WhatsApp group" style="text-transform:uppercase; letter-spacing:3px;">
+          </div>
+          <p class="gate-error" id="code-error"></p>
+          <button class="gate-btn gate-btn-primary" onclick="handleCodeSubmit()">Verify & Continue →</button>
+        </div>
+        <p class="gate-note">Check the pinned message in the WhatsApp group for the code.</p>
+      </div>
+
+      <!-- STEP 3: Success -->
+      <div class="gate-step" id="step-3">
+        <div class="success-icon">🔥</div>
+        <div class="gate-title">Welcome to Clariva!</div>
+        <p class="success-text">Your account is verified. You now have full access to all educational resources, CBT practice, and AI assistance.</p>
+        <button class="gate-btn gate-btn-primary" onclick="unlockContent()">Access Resources →</button>
+      </div>
+
+      <!-- STEP 4: Login -->
+      <div class="gate-step" id="step-4">
+        <div class="gate-title">Welcome Back</div>
+        <div class="gate-subtitle">Enter your email to continue learning.</div>
+        <br>
+        <div class="gate-form">
+          <div>
+            <label class="gate-field-label">Email Address</label>
+            <input class="gate-input" type="email" id="login-email" placeholder="your@email.com">
+          </div>
+          <p class="gate-error" id="login-error"></p>
+          <button class="gate-btn gate-btn-primary" onclick="handleLogin()">Login →</button>
+          <button class="gate-btn gate-btn-outline" onclick="showStep('step-1')">Create New Account</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
   <!-- ── HEADER ─────────────────────────────────────────── -->
   <header id="header">
     <div class="container">
       <div class="header-inner">
         <div>
-          <div class="edu-wordmark">Clariva <!--<span>EDU</span>--></div>
-          <div class="header-tagline">"From Confusion to Confidence"</div>
+          <div class="edu-wordmark">Clariva</div>
+          <div class="header-tagline">"From Confusion to Confidence."</div>
         </div>
         <button class="header-btn" onclick="showGate()">Get Started</button>
       </div>
     </div>
   </header>
-  <div></div>
-  <div></div>
-  <section class="container">
-                <p class="features-label">Educational Resources</p>
-                <h2 class="features-title">100 level Resources</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12UotRidfTnhLCMQEDvTIy7reN2YK4jJr/view?usp=drivesdk" target="_blank">
-                            <div>
-                                <p class="feature-number">MTS 102</p>
-                                <h3 class="feature-text" style="font-weight: bold">COMPLETE HANDOUT</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12WjPEAOzOS1PzfSXlwyOoX-pJjNlXtEG/view?usp=drivesdk" alt="MTS 104-Vectors-Geometry-1">
-                            <div>
-                                <p class="feature-number">MTS 104</p>
-                                <h3 class="feature-text">Vectors-Geometry-1</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12o26O_UGZsqzoXegWx5tX930X38n3IIQ/view?usp=drivesdk" alt="MTS 104 Vector questions">
-                            <div>
-                                <p class="feature-number">MTS 104</p>
-                                <h3 class="feature-text">Vector questions</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12epJ-_uvKGgymZH7_X6hmT_jkT6ETUt9/view?usp=drivesdk" alt="MTS 104">
-                            <div>
-                                <p class="feature-number">MTS 104</p>
-                                <h3 class="feature-text">MTS 104</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12Ph-IIvxO_LrV75DGnlHtd6YYuiQZt51/view?usp=drivesdk" alt="MTS 102:Limit and Continuity">
-                            <div>
-                                <p class="feature-number">MTS 102</p>
-                                <h3 class="feature-text">Limit and Continuity</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12TZ1jLUxK6BcYwhNZYtI2GfddLDJHOVC/view?usp=drivesdk" alt="MTS 102 lecture note">
-                            <div>
-                                <p class="feature-number">MTS 102</p>
-                                <h3 class="feature-text">Lecture note</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12jl-nx1PCmDcMEDfNo3-cW0R1piHoEVE/view?usp=drivesdk" alt="MTS 104 coordinate geometry">
-                            <div>
-                                <p class="feature-number">MTS 104</p>
-                                <h3 class="feature-text">Coordinate Geometry</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12emsslJ-SF-uVjL3J6Blw-zoOeV12ITU/view?usp=drivesdk" alt="MTS 104 conic sections">
-                            <div>
-                                <p class="feature-number">MTS 104</p>
-                                <h3 class="feature-text">Conic Sections</h3>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="feature-card">
-                        <a href="https://drive.google.com/file/d/12PIsnoKDiwdvxediSOpZGrR6bC-LsHdk/view?usp=drivesdk" alt="MTS 102 Techniques of Differentiation with Application">
-                            <div>
-                                <p class="feature-number">MTS 102</p>
-                                <h3 class="feature-text">Techniques of Differentiation with Application</h3>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </section>
+
+
+  <!-- ── HERO ──────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="container">
+      <h1 class="hero-title">From <span>Confusion</span><br>to <span>Confidence.</span></h1>
+      <p class="hero-sub">"The right resources change everything."</p>
+      <p class="hero-description">Clariva gives Nigerian students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
+        <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See What's Inside</button>
+      </div>
+      <div class="hero-amber-line"></div>
+    </div>
+  </section>
+
+
+  <!-- ── FEATURES ──────────────────────────────────────── -->
+  <section id="features">
+    <div class="container">
+      <p class="features-label">What you get</p>
+      <h2 class="features-title">Everything you need.<br>All free.</h2>
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <div class="feature-number">01 — Materials</div>
+          <div class="feature-title">Study Materials</div>
+          <p class="feature-text">Curated PDF handouts, lecture notes and past questions across multiple courses and levels.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <div class="feature-number">02 — CBT</div>
+          <div class="feature-title">CBT Practice</div>
+          <p class="feature-text">Timed computer-based test simulations with questions drawn directly from past examination papers.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-number">03 — AI</div>
+          <div class="feature-title">AI Assistance</div>
+          <p class="feature-text">Ask questions, get explanations, and understand difficult concepts with AI-powered study support.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <div class="feature-number">04 — Community</div>
+          <div class="feature-title">Study Community</div>
+          <p class="feature-text">Join a WhatsApp community of students sharing resources, tips, and support for each other.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── CTA BANNER ────────────────────────────────────── -->
+  <section id="cta-banner">
+    <div class="container">
+      <p class="cta-label">Ready to start?</p>
+      <h2 class="cta-title">Your resources are waiting.</h2>
+      <p class="cta-sub">"From Confusion to Confidence."</p>
+      <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
+    </div>
+  </section>
+
+
+  <!-- ── FOOTER ─────────────────────────────────────────── -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">Clariva</div>
+          <div class="footer-tagline">"From Confusion to Confidence."</div>
+        </div>
+        <div class="footer-powered">
+          POWERED BY<br>
+          <a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank">PRO IDEA →</a>
+        </div>
+      </div>
+      <div class="footer-meta">
+        CLARIVA · FREE EDUCATIONAL RESOURCES · 2026
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ── SCRIPT ─────────────────────────────────────────── -->
+  <script>
+    const EMAILJS_SERVICE_ID  = 'service_ugbnb2d';
+    const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
+    const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
+    const SUPABASE_URL        = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
+    const SUPABASE_KEY        = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
+    const WHATSAPP_GROUP_URL  = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
+    const GROUP_CODE          = 'PI2526';
+    const REQUEST_TIMEOUT     = 5000;
+
+    window.onload = async function () {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+      document.querySelector('.whatsapp-link').href = WHATSAPP_GROUP_URL;
+
+      // Force re-verify unverified accounts
+      const savedEmail = localStorage.getItem('proidea_email');
+      if (savedEmail && localStorage.getItem('proidea_access') === 'granted') {
+        try {
+          const checkResponse = await fetch(
+            `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(savedEmail)}&select=Verified`, {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+          const data = await checkResponse.json();
+          if (data.length > 0 && data[0].Verified === false) {
+            localStorage.removeItem('proidea_access');
+          }
+        } catch (err) {
+          console.error('✗ Verification check failed:', err.message);
+        }
+      }
+
+      // Access check — show correct step when gate opens
+      if (localStorage.getItem('proidea_access') === 'granted') {
+        showStep('step-4');
+      } else {
+        showStep('step-1');
+      }
+
+      // Retry pending sync
+      const pending = localStorage.getItem('proidea_pending_sync');
+      if (pending) {
+        const data = JSON.parse(pending);
+        fetch(`${SUPABASE_URL}/rest/v1/Form%20Submissions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            "Name": data.name,
+            "E-mail": data.email,
+            "Phone No.": data.phone,
+            "Verified": false
+          })
+        }).then(res => {
+          if (res.ok) {
+            localStorage.removeItem('proidea_pending_sync');
+            localStorage.setItem('proidea_db_saved', 'yes');
+            console.log('✓ Pending data synced');
+          }
+        }).catch(err => console.error('✗ Retry failed:', err.message));
+      }
+    };
+
+    function showGate() {
+      document.getElementById('gate-overlay').classList.remove('hidden');
+    }
+
+    function showStep(stepId) {
+      document.querySelectorAll('.gate-step').forEach(s => s.classList.remove('active'));
+      document.getElementById(stepId).classList.add('active');
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function isValidPhone(phone) {
+      return /^[\d\s\+\-\(\)]{10,}$/.test(phone);
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const name  = document.getElementById('field-name').value.trim();
+      const email = document.getElementById('field-email').value.trim();
+      const phone = document.getElementById('field-phone').value.trim();
+      const error = document.getElementById('form-error');
+      const submitBtn = document.querySelector('#step-1 .gate-btn-primary');
+
+      if (!name || !email || !phone) {
+        error.textContent = 'Please fill in all fields.';
+        error.classList.add('visible');
+        return;
+      }
+      if (!isValidEmail(email)) {
+        error.textContent = 'Please enter a valid email address.';
+        error.classList.add('visible');
+        return;
+      }
+      if (!isValidPhone(phone)) {
+        error.textContent = 'Please enter a valid phone number (10+ digits).';
+        error.classList.add('visible');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Checking...';
+      error.classList.remove('visible');
+
+      // Duplicate check
+      try {
+        const checkResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}&select=id,Verified`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        const existing = await checkResponse.json();
+
+        if (existing.length > 0) {
+          localStorage.setItem('proidea_email', email);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Account →';
+          if (existing[0].Verified === true) {
+            // Already verified — grant access and redirect
+            localStorage.setItem('proidea_access', 'granted');
+            window.location.href = 'Undergraduates.html';
+          } else {
+            // Registered but not verified — send to code step
+            showStep('step-2');
+          }
+          return;
+        }
+      } catch (err) {
+        console.error('✗ Duplicate check failed:', err.message);
+      }
+
+      // Save to Supabase
+      let savedToDatabase = false;
+      try {
+        const controller = new AbortController();
+        const timeoutId  = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/Form%20Submissions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            "Name": name,
+            "E-mail": email,
+            "Phone No.": phone,
+            "Verified": false
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          savedToDatabase = true;
+          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            from_name: name,
+            from_email: email,
+            phone: phone
+          }).then(() => console.log('✓ Email sent'))
+            .catch(err => console.error('✗ Email failed:', err));
+        } else {
+          const txt = await response.text();
+          error.textContent = '✗ Error ' + response.status + ': ' + txt;
+          error.classList.add('visible');
+        }
+      } catch (err) {
+        error.textContent = '✗ ' + err.message;
+        error.classList.add('visible');
+      }
+
+      localStorage.setItem('proidea_name',  name);
+      localStorage.setItem('proidea_email', email);
+      localStorage.setItem('proidea_phone', phone);
+      localStorage.setItem('proidea_db_saved', savedToDatabase ? 'yes' : 'no');
+
+      if (!savedToDatabase) {
+        localStorage.setItem('proidea_pending_sync', JSON.stringify({ name, email, phone }));
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+      showStep('step-2');
+    }
+
+    async function handleCodeSubmit() {
+      const code  = document.getElementById('field-code').value.trim().toUpperCase();
+      const error = document.getElementById('code-error');
+      const btn   = document.querySelector('#step-2 .gate-btn-primary');
+
+      if (!code) {
+        error.textContent = 'Please enter the group code.';
+        error.classList.add('visible');
+        return;
+      }
+      if (code !== GROUP_CODE) {
+        error.textContent = '✗ Incorrect code. Check the pinned message in the WhatsApp group.';
+        error.classList.add('visible');
+        return;
+      }
+
+      error.classList.remove('visible');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      const email = localStorage.getItem('proidea_email');
+      try {
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ "Verified": true })
+        });
+        console.log('✓ Verified in database');
+      } catch (err) {
+        console.error('✗ Verification update failed:', err.message);
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Verify & Continue →';
+      showStep('step-3');
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const error = document.getElementById('login-error');
+      const btn   = document.querySelector('#step-4 .gate-btn-primary');
+
+      if (!email) {
+        error.textContent = 'Please enter your email.';
+        error.classList.add('visible');
+        return;
+      }
+      if (!isValidEmail(email)) {
+        error.textContent = 'Please enter a valid email address.';
+        error.classList.add('visible');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Checking...';
+      error.classList.remove('visible');
+
+      try {
+        const checkResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}&select=Verified`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        const data = await checkResponse.json();
+
+        if (data.length === 0) {
+          error.textContent = 'Email not found. Please create an account.';
+          error.classList.add('visible');
+          btn.disabled = false;
+          btn.textContent = 'Login →';
+          return;
+        }
+
+        localStorage.setItem('proidea_email', email);
+
+        if (data[0].Verified === true) {
+          // Verified — grant access and redirect
+          localStorage.setItem('proidea_access', 'granted');
+          window.location.href = 'Undergraduates.html';
+        } else {
+          // Not verified — send to code step
+          btn.disabled = false;
+          btn.textContent = 'Login →';
+          showStep('step-2');
+        }
+      } catch (err) {
+        error.textContent = '✗ Error: ' + err.message;
+        error.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Login →';
+      }
+    }
+
+    function unlockContent() {
+      localStorage.setItem('proidea_access', 'granted');
+      document.getElementById('gate-overlay').classList.add('hidden');
+      window.location.href = 'Undergraduates.html';
+    }
+  </script>
+
+</body>
+</html>
