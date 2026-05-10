@@ -1,6 +1,6 @@
 /* ============================================================
    CLARIVA — STYLESHEET
-   From Confused to Confident.
+   From Confusion to Confident.
    Powered by Pro Idea · Ember Design System
    ============================================================ */
 
@@ -108,15 +108,13 @@ a:hover { color: var(--burnt-ember); }
   inset: 0;
   background: var(--deep-ink-97);
   z-index: 1000;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: clamp(16px, 3vw, 24px);
 }
 
-#gate-overlay.visible {
-  display: flex;
-}
+#gate-overlay.hidden { display: none; }
 
 .gate-box {
   background: var(--warm-white);
@@ -128,7 +126,7 @@ a:hover { color: var(--burnt-ember); }
   text-align: center;
 }
 
-.gate-brand-mark {
+.gate-edu-mark {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 4px;
@@ -297,20 +295,20 @@ a:hover { color: var(--burnt-ember); }
 }
 
 
-/* ── NAVBAR ──────────────────────────────────────────────── */
-#navbar {
+/* ── HEADER ──────────────────────────────────────────────── */
+#header {
   background: var(--ash);
   padding: var(--space-md) 0;
   border-bottom: 2px solid var(--amber);
 }
 
-.navbar-inner {
+.header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.cover-wordmark {
+.edu-wordmark {
   font-family: var(--font-display);
   font-size: clamp(18px, 3vw, 24px);
   font-weight: 800;
@@ -318,16 +316,16 @@ a:hover { color: var(--burnt-ember); }
   letter-spacing: 0.5px;
 }
 
-.cover-wordmark span { color: var(--amber); }
+.edu-wordmark span { color: var(--amber); }
 
-.cover-tagline {
+.header-tagline {
   font-family: var(--font-accent);
   font-style: italic;
   font-size: clamp(13px, 1.8vw, 16px);
   color: var(--parchment);
 }
 
-.navbar-btn {
+.header-btn {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 2px;
@@ -340,17 +338,19 @@ a:hover { color: var(--burnt-ember); }
   transition: var(--transition);
   text-transform: uppercase;
   font-weight: 700;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.navbar-btn:hover { background: var(--burnt-ember); color: var(--warm-white); }
+.header-btn:hover { background: var(--burnt-ember); color: var(--warm-white); }
 
 
-/* ── HERO SECTION ────────────────────────────────────────── */
+/* ── HERO ────────────────────────────────────────────────── */
 #hero {
   padding: var(--space-2xl) 0 var(--space-xl);
 }
 
-.section-label {
+.hero-pre {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 4px;
@@ -370,7 +370,7 @@ a:hover { color: var(--burnt-ember); }
 
 .hero-title span { color: var(--amber); }
 
-.hero-quote {
+.hero-sub {
   font-family: var(--font-accent);
   font-style: italic;
   font-size: clamp(18px, 2.5vw, 24px);
@@ -379,7 +379,7 @@ a:hover { color: var(--burnt-ember); }
   max-width: 560px;
 }
 
-.hero-copy {
+.hero-description {
   font-size: var(--text-lg);
   color: var(--deep-ink);
   max-width: 580px;
@@ -393,7 +393,7 @@ a:hover { color: var(--burnt-ember); }
   flex-wrap: wrap;
 }
 
-.cta-button {
+.btn-primary {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 2px;
@@ -408,14 +408,14 @@ a:hover { color: var(--burnt-ember); }
   font-weight: 700;
 }
 
-.cta-button:hover {
+.btn-primary:hover {
   background: var(--burnt-ember);
   color: var(--warm-white);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px var(--shadow-md);
 }
 
-.cta-button-secondary {
+.btn-secondary {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 2px;
@@ -429,12 +429,12 @@ a:hover { color: var(--burnt-ember); }
   transition: var(--transition);
 }
 
-.cta-button-secondary:hover {
+.btn-secondary:hover {
   border-color: var(--amber);
   color: var(--amber);
 }
 
-.amber-line {
+.hero-amber-line {
   width: 60px;
   height: 3px;
   background: var(--amber);
@@ -449,7 +449,16 @@ a:hover { color: var(--burnt-ember); }
   border-top: var(--border-thin);
 }
 
-.section-title {
+.features-label {
+  font-family: var(--font-label);
+  font-size: var(--text-label);
+  letter-spacing: 4px;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+
+.features-title {
   font-family: var(--font-display);
   font-size: var(--text-h2);
   font-weight: 800;
@@ -458,13 +467,13 @@ a:hover { color: var(--burnt-ember); }
   line-height: 1.1;
 }
 
-.gallery {
+.features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-lg);
 }
 
-.project-card {
+.feature-card {
   background: var(--parchment);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
@@ -472,7 +481,7 @@ a:hover { color: var(--burnt-ember); }
   transition: var(--transition);
 }
 
-.project-card:hover {
+.feature-card:hover {
   border-color: var(--amber);
   transform: translateY(-4px);
   box-shadow: 0 12px 32px var(--shadow);
@@ -483,7 +492,7 @@ a:hover { color: var(--burnt-ember); }
   margin-bottom: var(--space-md);
 }
 
-.project-type {
+.feature-number {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 3px;
@@ -492,7 +501,7 @@ a:hover { color: var(--burnt-ember); }
   text-transform: uppercase;
 }
 
-.project-title {
+.feature-title {
   font-family: var(--font-display);
   font-size: var(--text-h3);
   font-weight: 800;
@@ -501,10 +510,31 @@ a:hover { color: var(--burnt-ember); }
   line-height: 1.2;
 }
 
-.project-copy {
+.feature-text {
   font-size: var(--text-md);
   color: var(--ember-fog);
   line-height: 1.6;
+}
+
+
+/* ── RESOURCES SECTION (Undergraduates page) ─────────────── */
+.resources-section {
+  padding: var(--space-xl) 0;
+}
+
+.feature-card a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.feature-card a:hover .feature-text {
+  color: var(--amber);
+  text-decoration: underline;
+}
+
+.feature-card a:active .feature-text {
+  color: var(--burnt-ember);
 }
 
 
@@ -516,14 +546,25 @@ a:hover { color: var(--burnt-ember); }
   text-align: center;
 }
 
-#cta-banner .section-label { color: var(--amber); }
-
-#cta-banner .section-title {
-  color: var(--warm-white);
+.cta-label {
+  font-family: var(--font-label);
+  font-size: var(--text-label);
+  letter-spacing: 4px;
+  color: var(--amber);
+  text-transform: uppercase;
   margin-bottom: var(--space-md);
 }
 
-.cta-quote {
+.cta-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 800;
+  color: var(--warm-white);
+  margin-bottom: var(--space-md);
+  line-height: 1.1;
+}
+
+.cta-sub {
   font-family: var(--font-accent);
   font-style: italic;
   font-size: clamp(16px, 2vw, 20px);
@@ -547,17 +588,24 @@ a:hover { color: var(--burnt-ember); }
   gap: var(--space-md);
 }
 
-#brand .cover-wordmark {
+.footer-brand {
+  font-family: var(--font-display);
   font-size: clamp(16px, 2.5vw, 20px);
+  font-weight: 800;
+  color: var(--warm-white);
 }
 
-#brand .cover-tagline {
+.footer-brand span { color: var(--amber); }
+
+.footer-tagline {
+  font-family: var(--font-accent);
+  font-style: italic;
   font-size: clamp(12px, 1.5vw, 14px);
-  margin-top: 4px;
   color: var(--ember-fog);
+  margin-top: 4px;
 }
 
-#support {
+.footer-powered {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 2px;
@@ -565,12 +613,12 @@ a:hover { color: var(--burnt-ember); }
   text-align: right;
 }
 
-#support a {
+.footer-powered a {
   color: var(--amber);
   text-decoration: none;
 }
 
-#support a:hover { color: var(--ember-tint); }
+.footer-powered a:hover { color: var(--ember-tint); }
 
 .footer-meta {
   font-family: var(--font-label);
@@ -587,13 +635,13 @@ a:hover { color: var(--burnt-ember); }
 
 /* ── RESPONSIVE ──────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .cover-tagline { display: none; }
+  .header-tagline { display: none; }
   .hero-actions { flex-direction: column; }
-  .cta-button, .cta-button-secondary { width: 100%; text-align: center; }
+  .btn-primary, .btn-secondary { width: 100%; text-align: center; }
   .footer-inner { flex-direction: column; text-align: center; }
-  #support { text-align: center; }
+  .footer-powered { text-align: center; }
 }
 
 @media (min-width: 641px) {
   .footer-inner { flex-direction: row; align-items: flex-start; }
-    }
+   }
