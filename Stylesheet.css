@@ -129,17 +129,16 @@ a:hover { color: var(--burnt-ember); }
 
 .gate-close {
   position: absolute;
-  top: 16px;
+  top: 9px;
   right: 16px;
-  font-size: var(--text-h2);
+  font-size: var(--text-h3);
   background: var(--warm-white);
   color: var(--deep-ink);
-  padding: 8px;
   border-radius: var(--radius-xs);
   border: none;
   cursor: pointer;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none;
 }
 
