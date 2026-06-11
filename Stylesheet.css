@@ -132,7 +132,15 @@ a:hover { color: var(--burnt-ember); }
   top: 16px;
   right: 16px;
   font-size: var(--text-h2);
-  text-width: 50px;
+  background: var(--warm-white);
+  color: var(--deep-ink);
+  padding: 8px;
+  border-radius: var(--radius-xs);
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .gate-edu-mark {
