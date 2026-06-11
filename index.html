@@ -76,7 +76,7 @@
           <p class="gate-error" id="code-error"></p>
           <button class="gate-btn gate-btn-primary" onclick="handleCodeSubmit()">Verify & Continue →</button>
         </div>
-        <p class="gate-note">Check the pinned message in the WhatsApp group for the code.</p>
+        <p class="gate-note">Check the pinned message in the<a class="whatsapp-link" href="#" target="_blank">WhatsApp group</a> for the code</p>
       </div>
 
       <!-- STEP 3: Success -->
@@ -95,7 +95,11 @@
         <div class="gate-form">
           <div>
             <label class="gate-field-label">Email Address</label>
-            <input class="gate-input" type="email" id="login-email" placeholder="your@email.com">
+            <input class="gate-input" type="email" id="login-email" placeholder="your@email.com" required>
+          </div>
+          <div>
+            <label class="gate-field-label">Password</label>
+            <input class="gate-input" type="password" id="login-password" placeholder="Enter your password" required>
           </div>
           <p class="gate-error" id="login-error"></p>
           <button class="gate-btn gate-btn-primary" onclick="handleLogin()">Login →</button>
