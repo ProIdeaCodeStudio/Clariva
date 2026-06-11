@@ -124,6 +124,14 @@ a:hover { color: var(--burnt-ember); }
   max-width: 460px;
   width: 100%;
   text-align: center;
+  position: relative;
+}
+
+.gate-close {
+   position: absolute;
+   top: 16px;
+   right: 16px;
+   font-size: var(--text-md);
 }
 
 .gate-edu-mark {
