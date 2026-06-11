@@ -128,10 +128,11 @@ a:hover { color: var(--burnt-ember); }
 }
 
 .gate-close {
-   position: absolute;
-   top: 16px;
-   right: 16px;
-   font-size: var(--text-md);
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: var(--text-h2);
+  text-width: 50px;
 }
 
 .gate-edu-mark {
