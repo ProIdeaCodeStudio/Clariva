@@ -289,7 +289,7 @@
     }
 
     function hideGate() {
-  document.getElementById('gate-overlay').classList.add('hidden');
+      document.getElementById('gate-overlay').classList.add('hidden');
 }
 
     function showStep(stepId) {
@@ -305,12 +305,18 @@
       return /^[\d\s\+\-\(\)]{10,}$/.test(phone);
     }
 
+    function isValidPassword(password) {
+      return password.length >= 6;
+   }
+
     async function handleFormSubmit(e) {
       e.preventDefault();
 
       const name  = document.getElementById('field-name').value.trim();
       const email = document.getElementById('field-email').value.trim();
       const phone = document.getElementById('field-phone').value.trim();
+      const password = document.getElementById('field-password').value.trim();
+      const level = document.getElementById('field-level').value;
       const error = document.getElementById('form-error');
       const submitBtn = document.querySelector('#step-1 .gate-btn-primary');
 
