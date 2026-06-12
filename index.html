@@ -388,7 +388,7 @@
       const code  = document.getElementById('field-code').value.trim().toUpperCase();
       const error = document.getElementById('code-error');
       const btn   = document.querySelector('#step-2 .gate-btn-primary');
-
+      
       if (!code) {
         error.textContent = 'Please enter the group code.';
         error.classList.add('visible');
@@ -404,23 +404,11 @@
       btn.disabled = true;
       btn.textContent = 'Verifying...';
 
-      const email = localStorage.getItem('proidea_email');
-      try {
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({ "Verified": true })
-        });
-        console.log('✓ Verified in database');
-      } catch (err) {
-        console.error('✗ Verification update failed:', err.message);
-      }
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      const { error: updateError } = await supabaseClient
+       .from('students')
+       .update({ Verified: true })
+       .eq('user_id', user.id);
 
       btn.disabled = false;
       btn.textContent = 'Verify & Continue →';
