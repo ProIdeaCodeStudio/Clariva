@@ -320,11 +320,12 @@
       const error = document.getElementById('form-error');
       const submitBtn = document.querySelector('#step-1 .gate-btn-primary');
 
-      if (!name || !email || !phone) {
-        error.textContent = 'Please fill in all fields.';
-        error.classList.add('visible');
-        return;
-      }
+      if (!name || !email || !phone || !password || !level) {
+         error.textContent = 'Please complete all fields.';
+         error.classList.add('visible');
+         return;
+       }
+      
       if (!isValidEmail(email)) {
         error.textContent = 'Please enter a valid email address.';
         error.classList.add('visible');
@@ -336,6 +337,12 @@
         return;
       }
 
+      if (!isValidPassword(password)) {
+        error.textContent = 'Password must be at least 6 characters.';
+        error.classList.add('visible');
+        return;
+     }
+      
       submitBtn.disabled = true;
       submitBtn.textContent = 'Checking...';
       error.classList.remove('visible');
