@@ -340,93 +340,44 @@
       if (!isValidPassword(password)) {
         error.textContent = 'Password must be at least 6 characters.';
         error.classList.add('visible');
-        return;
-     }
+      return;
+    }
       
       submitBtn.disabled = true;
       submitBtn.textContent = 'Checking...';
       error.classList.remove('visible');
 
-      // Duplicate check
-      try {
-        const checkResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}&select=id,Verified`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
-          }
-        });
-        const existing = await checkResponse.json();
-
-        if (existing.length > 0) {
-          localStorage.setItem('proidea_email', email);
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Create Account →';
-          if (existing[0].Verified === true) {
-            // Already verified — grant access and redirect
-            localStorage.setItem('proidea_access', 'granted');
-            window.location.href = 'Undergraduates.html';
-          } else {
-            // Registered but not verified — send to code step
-            showStep('step-2');
-          }
-          return;
-        }
-      } catch (err) {
-        console.error('✗ Duplicate check failed:', err.message);
-      }
-
       // Save to Supabase
-      let savedToDatabase = false;
-      try {
-        const controller = new AbortController();
-        const timeoutId  = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+        const { data, error: signUpError } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password
+       });
 
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/Form%20Submissions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            "Name": name,
-            "E-mail": email,
-            "Phone No.": phone,
-            "Verified": false
-          }),
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          savedToDatabase = true;
-          emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            from_name: name,
-            from_email: email,
-            phone: phone
-          }).then(() => console.log('✓ Email sent'))
-            .catch(err => console.error('✗ Email failed:', err));
-        } else {
-          const txt = await response.text();
-          error.textContent = '✗ Error ' + response.status + ': ' + txt;
-          error.classList.add('visible');
-        }
-      } catch (err) {
-        error.textContent = '✗ ' + err.message;
+      if (signUpError) {
+        error.textContent = '✗ ' + signUpError.message;
         error.classList.add('visible');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account →';
+        return;
       }
+      
+     const { error: insertError } = await supabaseClient
+       .from('students')
+       .insert({
+          user_id: data.user.id,
+          Name: name,
+         "E-mail": email,
+         "Phone No.": phone,
+          Level: level,
+       });
 
-      localStorage.setItem('proidea_name',  name);
-      localStorage.setItem('proidea_email', email);
-      localStorage.setItem('proidea_phone', phone);
-      localStorage.setItem('proidea_db_saved', savedToDatabase ? 'yes' : 'no');
-
-      if (!savedToDatabase) {
-        localStorage.setItem('proidea_pending_sync', JSON.stringify({ name, email, phone }));
-      }
+      if (insertError) {
+        error.textContent = '✗ ' + insertError.message;
+        error.classList.add('visible');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account →';
+        return;
+       }
 
       submitBtn.disabled = false;
       submitBtn.textContent = 'Create Account →';
