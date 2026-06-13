@@ -14,60 +14,8 @@
       emailjs.init(EMAILJS_PUBLIC_KEY);
       document.querySelector('.whatsapp-link').href = WHATSAPP_GROUP_URL;
 
-      // Force re-verify unverified accounts
-      const savedEmail = localStorage.getItem('proidea_email');
-      if (savedEmail && localStorage.getItem('proidea_access') === 'granted') {
-        try {
-          const checkResponse = await fetch(
-            `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(savedEmail)}&select=Verified`, {
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`
-            }
-          });
-          const data = await checkResponse.json();
-          if (data.length > 0 && data[0].Verified === false) {
-            localStorage.removeItem('proidea_access');
-          }
-        } catch (err) {
-          console.error('✗ Verification check failed:', err.message);
-        }
-      }
-
       // Access check — show correct step when gate opens
-      if (localStorage.getItem('proidea_access') === 'granted') {
-        showStep('step-4');
-      } else {
-        showStep('step-1');
-      }
-
-      // Retry pending sync
-      const pending = localStorage.getItem('proidea_pending_sync');
-      if (pending) {
-        const data = JSON.parse(pending);
-        fetch(`${SUPABASE_URL}/rest/v1/Form%20Submissions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            "Name": data.name,
-            "E-mail": data.email,
-            "Phone No.": data.phone,
-            "Verified": false
-          })
-        }).then(res => {
-          if (res.ok) {
-            localStorage.removeItem('proidea_pending_sync');
-            localStorage.setItem('proidea_db_saved', 'yes');
-            console.log('✓ Pending data synced');
-          }
-        }).catch(err => console.error('✗ Retry failed:', err.message));
-      }
-    };
+      showStep('step-1');
 
     function showGate() {
       document.getElementById('gate-overlay').classList.remove('hidden');
