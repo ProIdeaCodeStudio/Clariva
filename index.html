@@ -425,6 +425,7 @@
     
       async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
       const error = document.getElementById('login-error');
       const btn   = document.querySelector('#step-4 .gate-btn-primary');
 
@@ -433,8 +434,15 @@
         error.classList.add('visible');
         return;
       }
+        
       if (!isValidEmail(email)) {
         error.textContent = 'Please enter a valid email address.';
+        error.classList.add('visible');
+        return;
+      }
+
+      if (!password) {
+        error.textContent = 'Please enter your password.';
         error.classList.add('visible');
         return;
       }
