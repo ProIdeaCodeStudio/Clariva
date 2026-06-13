@@ -399,7 +399,7 @@
         error.classList.add('visible');
         return;
       }
-
+      
       error.classList.remove('visible');
       btn.disabled = true;
       btn.textContent = 'Verifying...';
@@ -414,8 +414,16 @@
       btn.textContent = 'Verify & Continue →';
       showStep('step-3');
     }
-
-    async function handleLogin() {
+      
+      if (updateError) {
+        error.textContent = '✗ ' + updateError.message;
+        error.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Verify & Continue →';
+        return;
+      }
+    
+      async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
       const error = document.getElementById('login-error');
       const btn   = document.querySelector('#step-4 .gate-btn-primary');
