@@ -1,5 +1,5 @@
-  <!-- ── SCRIPT FOR CLARIVA - FROM CONFUSION TO CONFIDENCE ─────────── -->
-  <!-- ── POWERED BY PRO IDEA ─────────── -->
+// ── SCRIPT FOR CLARIVA - FROM CONFUSION TO CONFIDENCE ──────────
+// ── POWERED BY PRO IDEA ──────────
     const EMAILJS_SERVICE_ID  = 'service_ugbnb2d';
     const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
     const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
@@ -195,11 +195,6 @@
        .update({ Verified: true })
        .eq('user_id', user.id);
 
-      btn.disabled = false;
-      btn.textContent = 'Verify & Continue →';
-      showStep('step-3');
-    }
-      
       if (updateError) {
         error.textContent = '✗ ' + updateError.message;
         error.classList.add('visible');
@@ -207,6 +202,11 @@
         btn.textContent = 'Verify & Continue →';
         return;
       }
+
+      btn.disabled = false;
+      btn.textContent = 'Verify & Continue →';
+      showStep('step-3');
+    }
     
       async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
@@ -236,46 +236,41 @@
       btn.textContent = 'Checking...';
       error.classList.remove('visible');
 
-      try {
-        const checkResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}&select=Verified`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
-          }
-        });
-        const data = await checkResponse.json();
+      // Sign in with Supabase Auth
+const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
+  email: email,
+  password: password
+});
 
-        if (data.length === 0) {
-          error.textContent = 'Email not found. Please create an account.';
-          error.classList.add('visible');
-          btn.disabled = false;
-          btn.textContent = 'Login →';
-          return;
-        }
+if (signInError) {
+  error.textContent = '✗ ' + signInError.message;
+  error.classList.add('visible');
+  btn.disabled = false;
+  btn.textContent = 'Login →';
+  return;
+}
 
-        localStorage.setItem('proidea_email', email);
+// Sign-in succeeded — now check verification status
+const { data: { user } } = await supabaseClient.auth.getUser();
+const { data: studentData, error: queryError } = await supabaseClient
+  .from('students')
+  .select('Verified')
+  .eq('user_id', user.id)
+  .single();
 
-        if (data[0].Verified === true) {
-          // Verified — grant access and redirect
-          localStorage.setItem('proidea_access', 'granted');
-          window.location.href = 'Undergraduates.html';
-        } else {
-          // Not verified — send to code step
-          btn.disabled = false;
-          btn.textContent = 'Login →';
-          showStep('step-2');
-        }
-      } catch (err) {
-        error.textContent = '✗ Error: ' + err.message;
-        error.classList.add('visible');
-        btn.disabled = false;
-        btn.textContent = 'Login →';
-      }
-    }
+if (queryError || !studentData) {
+  error.textContent = '✗ Profile not found. Please create an account.';
+  error.classList.add('visible');
+  btn.disabled = false;
+  btn.textContent = 'Login →';
+  return;
+}
 
-    function unlockContent() {
-      localStorage.setItem('proidea_access', 'granted');
-      document.getElementById('gate-overlay').classList.add('hidden');
-      window.location.href = 'Undergraduates.html';
-    }
+// Check verification status
+if (studentData.Verified === true) {
+  window.location.href = 'Undergraduates.html';
+} else {
+  btn.disabled = false;
+  btn.textContent = 'Login →';
+  showStep('step-2');
+}
