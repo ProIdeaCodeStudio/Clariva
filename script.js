@@ -12,9 +12,38 @@ const WHATSAPP_GROUP_URL  = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mo
 const GROUP_CODE          = 'PI2526';
 
 window.onload = async function () {
+  // Access guard for Undergraduates.html
+  if (window.location.href.includes('Undergraduates.html')) {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    
+    if (!user) {
+      window.location.href = 'index.html#step-1';
+      return;
+    }
+
+    const { data: studentData, error: queryError } = await supabaseClient
+      .from('students')
+      .select('Verified')
+      .eq('user_id', user.id)
+      .single();
+
+    if (queryError || !studentData) {
+      alert('There was an error checking your access. Please try again.');
+      window.location.href = 'index.html#step-1';
+      return;
+    }
+
+    if (!studentData.Verified) {
+      window.location.href = 'index.html#step-2';
+      return;
+    }
+  }
+  
+  // Initialize for all pages
   emailjs.init(EMAILJS_PUBLIC_KEY);
   document.querySelector('.whatsapp-link').href = WHATSAPP_GROUP_URL;
   showStep('step-1');
+};
 };
 
 function showGate() {
