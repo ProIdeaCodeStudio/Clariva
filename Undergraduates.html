@@ -144,49 +144,6 @@
       </div>
     </div>
   </footer>
-
-
-  <!-- ── ACCESS GUARD ───────────────────────────────────── -->
-  <script>
-    const SUPABASE_URL = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
-
-    // Check access on page load
-    window.onload = async function () {
-      const access = localStorage.getItem('proidea_access');
-      const email  = localStorage.getItem('proidea_email');
-
-      // No access at all — redirect to home
-      if (access !== 'granted' || !email) {
-        window.location.href = 'index.html';
-        return;
-      }
-
-      // Verify against database
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/Form%20Submissions?E-mail=eq.${encodeURIComponent(email)}&select=Verified`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
-          }
-        });
-        const data = await response.json();
-
-        // Not found or not verified — redirect to home
-        if (data.length === 0 || data[0].Verified !== true) {
-          localStorage.removeItem('proidea_access');
-          window.location.href = 'index.html';
-        }
-        // Verified — page loads normally, no action needed
-
-      } catch (err) {
-        // Network error — allow access if localStorage says granted
-        // This prevents locking out users with bad connection
-        console.error('✗ Access check failed:', err.message);
-      }
-    };
-  </script>
-
+  
 </body>
 </html>
