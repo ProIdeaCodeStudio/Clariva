@@ -6,7 +6,7 @@ const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
 const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
 const SUPABASE_URL        = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
 const SUPABASE_KEY        = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
-let supabaseClient       = null; // will be initialized when the Supabase library is available
+let supabaseClient        = null; // will be initialized when the Supabase library is available
 const WHATSAPP_GROUP_URL  = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
 const GROUP_CODE          = 'PI2526';
 
