@@ -6,14 +6,31 @@ const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
 const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
 const SUPABASE_URL        = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
 const SUPABASE_KEY        = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
-const { createClient }    = supabase;
-const supabaseClient      = createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabaseClient       = null; // will be initialized when the Supabase library is available
 const WHATSAPP_GROUP_URL  = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
 const GROUP_CODE          = 'PI2526';
 
 window.onload = async function () {
+  // Initialize Supabase client if the library is available
+  if (typeof supabase !== 'undefined' && supabase && typeof supabase.createClient === 'function') {
+    const { createClient } = supabase;
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else if (typeof createClient === 'function') {
+    // In case the createClient function was exposed differently
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else {
+    // If Supabase isn't available yet, we'll guard operations that need it later.
+    console.warn('Supabase library not detected on window at load time. Some features will be unavailable until it loads.');
+  }
+
   // Access guard for Undergraduates.html
   if (window.location.href.includes('Undergraduates.html')) {
+    if (!supabaseClient) {
+      console.error('Supabase client not available; redirecting to entry step.');
+      window.location.href = 'index.html#step-1';
+      return;
+    }
+
     const { data: { user } } = await supabaseClient.auth.getUser();
     
     if (!user) {
@@ -40,23 +57,31 @@ window.onload = async function () {
   }
   
   // Initialize for all pages
-  emailjs.init(EMAILJS_PUBLIC_KEY);
-  document.querySelector('.whatsapp-link').href = WHATSAPP_GROUP_URL;
+  if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  } else {
+    console.warn('EmailJS not detected on window at load time. Email features may not work.');
+  }
+
+  const waLink = document.querySelector('.whatsapp-link');
+  if (waLink) waLink.href = WHATSAPP_GROUP_URL;
   showStep('step-1');
-};
 };
 
 function showGate() {
-  document.getElementById('gate-overlay').classList.remove('hidden');
+  const gate = document.getElementById('gate-overlay');
+  if (gate) gate.classList.remove('hidden');
 }
 
 function hideGate() {
-  document.getElementById('gate-overlay').classList.add('hidden');
+  const gate = document.getElementById('gate-overlay');
+  if (gate) gate.classList.add('hidden');
 }
 
 function showStep(stepId) {
   document.querySelectorAll('.gate-step').forEach(s => s.classList.remove('active'));
-  document.getElementById(stepId).classList.add('active');
+  const el = document.getElementById(stepId);
+  if (el) el.classList.add('active');
 }
 
 function isValidEmail(email) {
@@ -73,6 +98,11 @@ function isValidPassword(password) {
 
 async function handleFormSubmit(e) {
   e.preventDefault();
+
+  if (!supabaseClient) {
+    alert('Service unavailable right now. Please try again later.');
+    return;
+  }
 
   const name  = document.getElementById('field-name').value.trim();
   const email = document.getElementById('field-email').value.trim();
@@ -145,13 +175,17 @@ async function handleFormSubmit(e) {
 
   // Send confirmation email via EmailJS
   try {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      from_name: 'Clariva',
-      from_email: 'clariva@proideacodestudio.com',
-      to_email: email,
-      to_name: name,
-      phone: phone
-    });
+    if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function') {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        from_name: 'Clariva',
+        from_email: 'clariva@proideacodestudio.com',
+        to_email: email,
+        to_name: name,
+        phone: phone
+      });
+    } else {
+      console.warn('EmailJS not available, skipping confirmation email.');
+    }
   } catch (emailError) {
     console.error('✗ Email sending failed:', emailError.message);
     // Don't block signup if email fails, just log it
@@ -163,6 +197,11 @@ async function handleFormSubmit(e) {
 }
 
 async function handleCodeSubmit() {
+  if (!supabaseClient) {
+    alert('Service unavailable right now. Please try again later.');
+    return;
+  }
+
   const code  = document.getElementById('field-code').value.trim().toUpperCase();
   const error = document.getElementById('code-error');
   const btn   = document.querySelector('#step-2 .gate-btn-primary');
@@ -203,6 +242,11 @@ async function handleCodeSubmit() {
 }
 
 async function handleLogin() {
+  if (!supabaseClient) {
+    alert('Service unavailable right now. Please try again later.');
+    return;
+  }
+
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
   const error = document.getElementById('login-error');
@@ -272,4 +316,4 @@ async function handleLogin() {
 
 function unlockContent() {
   window.location.href = 'Undergraduates.html';
-}
+                 }
