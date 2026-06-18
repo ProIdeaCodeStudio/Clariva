@@ -57,11 +57,11 @@ window.onload = async function () {
   }
   
   // Initialize for all pages
-  if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
-  } else {
-    console.warn('EmailJS not detected on window at load time. Email features may not work.');
-  }
+  // if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
+  //  emailjs.init(EMAILJS_PUBLIC_KEY);
+  // } else {
+    //console.warn('EmailJS not detected on window at load time. Email features may not work.');
+  // }
 
   const waLink = document.querySelector('.whatsapp-link');
   if (waLink) waLink.href = WHATSAPP_GROUP_URL;
@@ -174,22 +174,22 @@ async function handleFormSubmit(e) {
   }
 
   // Send confirmation email via EmailJS
-  try {
-    if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function') {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        from_name: 'Clariva',
-        from_email: 'clariva@proideacodestudio.com',
-        to_email: email,
-        to_name: name,
-        phone: phone
+  // try {
+    // if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function') {
+     //  await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+       //  from_name: 'Clariva',
+       //  from_email: 'clariva@proideacodestudio.com',
+       //  to_email: email,
+       // to_name: name,
+     //   phone: phone
       });
-    } else {
-      console.warn('EmailJS not available, skipping confirmation email.');
-    }
-  } catch (emailError) {
-    console.error('✗ Email sending failed:', emailError.message);
+   // } else {
+    //  console.warn('EmailJS not available, skipping confirmation email.');
+   // }
+//  } catch (emailError) {
+  //  console.error('✗ Email sending failed:', emailError.message);
     // Don't block signup if email fails, just log it
-  }
+ // }
 
   submitBtn.disabled = false;
   submitBtn.textContent = 'Create Account →';
