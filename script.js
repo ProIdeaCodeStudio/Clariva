@@ -182,7 +182,7 @@ async function handleFormSubmit(e) {
        //  to_email: email,
        // to_name: name,
      //   phone: phone
-      });
+      // });
    // } else {
     //  console.warn('EmailJS not available, skipping confirmation email.');
    // }
