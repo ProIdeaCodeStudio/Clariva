@@ -1,12 +1,14 @@
 // ── SCRIPT FOR CLARIVA - FROM CONFUSION TO CONFIDENCE ──────────
 // ── POWERED BY PRO IDEA ──────────
 
-//const EMAILJS_SERVICE_ID  = 'service_ugbnb2d';
-//const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
-//const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
+// Optional: uncomment these if you load EmailJS in HTML
+// const EMAILJS_SERVICE_ID  = 'service_ugbnb2d';
+// const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
+// const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
+
 const SUPABASE_URL        = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
 const SUPABASE_KEY        = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
-let supabaseClient        = null; // will be initialized when the Supabase library is available
+let supabaseClient       = null; // will be initialized when the Supabase library is available
 const WHATSAPP_GROUP_URL  = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
 const GROUP_CODE          = 'PI2526';
 
@@ -16,11 +18,10 @@ window.onload = async function () {
     const { createClient } = supabase;
     supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
   } else if (typeof createClient === 'function') {
-    // In case the createClient function was exposed differently
+    // In case createClient is exposed globally in a different way
     supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
   } else {
-    // If Supabase isn't available yet, we'll guard operations that need it later.
-    console.warn('Supabase library not detected on window at load time. Some features will be unavailable until it loads.');
+    console.warn('Supabase library not detected at load time. Some features will be unavailable until it loads.');
   }
 
   // Access guard for Undergraduates.html
@@ -32,7 +33,7 @@ window.onload = async function () {
     }
 
     const { data: { user } } = await supabaseClient.auth.getUser();
-    
+
     if (!user) {
       window.location.href = 'index.html#step-1';
       return;
@@ -55,16 +56,26 @@ window.onload = async function () {
       return;
     }
   }
-  
-  // Initialize for all pages
-  // if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
-  //  emailjs.init(EMAILJS_PUBLIC_KEY);
-  // } else {
-    //console.warn('EmailJS not detected on window at load time. Email features may not work.');
-  // }
 
+  // Initialize EmailJS only if it's loaded and you left the public key defined
+  if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
+    try {
+      if (typeof EMAILJS_PUBLIC_KEY !== 'undefined') {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+      } else {
+        // If you commented the EMAILJS_PUBLIC_KEY constant out, skip init.
+        console.warn('EMAILJS_PUBLIC_KEY not present; emailjs.init skipped.');
+      }
+    } catch (e) {
+      console.warn('emailjs.init failed', e);
+    }
+  }
+
+  // Safe DOM operation
   const waLink = document.querySelector('.whatsapp-link');
   if (waLink) waLink.href = WHATSAPP_GROUP_URL;
+
+  // Show the default gate step
   showStep('step-1');
 };
 
@@ -117,7 +128,7 @@ async function handleFormSubmit(e) {
     error.classList.add('visible');
     return;
   }
-  
+
   if (!isValidEmail(email)) {
     error.textContent = 'Please enter a valid email address.';
     error.classList.add('visible');
@@ -135,10 +146,12 @@ async function handleFormSubmit(e) {
     error.classList.add('visible');
     return;
   }
-  
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Checking...';
-  error.classList.remove('visible');
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Checking...';
+  }
+  if (error) error.classList.remove('visible');
 
   // Sign up with Supabase Auth
   const { data, error: signUpError } = await supabaseClient.auth.signUp({
@@ -147,13 +160,17 @@ async function handleFormSubmit(e) {
   });
 
   if (signUpError) {
-    error.textContent = '✗ ' + signUpError.message;
-    error.classList.add('visible');
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Create Account →';
+    if (error) {
+      error.textContent = '✗ ' + signUpError.message;
+      error.classList.add('visible');
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
     return;
   }
-  
+
   // Insert profile into students table
   const { error: insertError } = await supabaseClient
     .from('students')
@@ -166,33 +183,40 @@ async function handleFormSubmit(e) {
     });
 
   if (insertError) {
-    error.textContent = '✗ ' + insertError.message;
-    error.classList.add('visible');
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Create Account →';
+    if (error) {
+      error.textContent = '✗ ' + insertError.message;
+      error.classList.add('visible');
+    }
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
     return;
   }
 
-  // Send confirmation email via EmailJS
-  // try {
-    // if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function') {
-     //  await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-       //  from_name: 'Clariva',
-       //  from_email: 'clariva@proideacodestudio.com',
-       //  to_email: email,
-       // to_name: name,
-     //   phone: phone
-      // });
-   // } else {
-    //  console.warn('EmailJS not available, skipping confirmation email.');
-   // }
-//  } catch (emailError) {
-  //  console.error('✗ Email sending failed:', emailError.message);
-    // Don't block signup if email fails, just log it
- // }
+  // Send confirmation email via EmailJS (non-blocking; failure will not stop signup)
+  (async function sendConfirmation() {
+    try {
+      if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function'
+          && typeof EMAILJS_SERVICE_ID !== 'undefined' && typeof EMAILJS_TEMPLATE_ID !== 'undefined') {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          from_name: 'Clariva',
+          from_email: 'clariva@proideacodestudio.com',
+          to_email: email,
+          to_name: name,
+          phone: phone
+        });
+      }
+    } catch (emailError) {
+      // Log only — do not surface provider errors to users
+      console.warn('Confirmation email failed (non-blocking):', emailError && emailError.text ? emailError.text : emailError);
+    }
+  })();
 
-  submitBtn.disabled = false;
-  submitBtn.textContent = 'Create Account →';
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Account →';
+  }
   showStep('step-2');
 }
 
@@ -205,22 +229,28 @@ async function handleCodeSubmit() {
   const code  = document.getElementById('field-code').value.trim().toUpperCase();
   const error = document.getElementById('code-error');
   const btn   = document.querySelector('#step-2 .gate-btn-primary');
-  
+
   if (!code) {
-    error.textContent = 'Please enter the group code.';
-    error.classList.add('visible');
+    if (error) {
+      error.textContent = 'Please enter the group code.';
+      error.classList.add('visible');
+    }
     return;
   }
 
   if (code !== GROUP_CODE) {
-    error.textContent = '✗ Incorrect code. Check the pinned message in the WhatsApp group.';
-    error.classList.add('visible');
+    if (error) {
+      error.textContent = '✗ Incorrect code. Check the pinned message in the WhatsApp group.';
+      error.classList.add('visible');
+    }
     return;
   }
-  
-  error.classList.remove('visible');
-  btn.disabled = true;
-  btn.textContent = 'Verifying...';
+
+  if (error) error.classList.remove('visible');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+  }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { error: updateError } = await supabaseClient
@@ -229,15 +259,21 @@ async function handleCodeSubmit() {
     .eq('user_id', user.id);
 
   if (updateError) {
-    error.textContent = '✗ ' + updateError.message;
-    error.classList.add('visible');
-    btn.disabled = false;
-    btn.textContent = 'Verify & Continue →';
+    if (error) {
+      error.textContent = '✗ ' + updateError.message;
+      error.classList.add('visible');
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Verify & Continue →';
+    }
     return;
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Verify & Continue →';
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Verify & Continue →';
+  }
   showStep('step-3');
 }
 
@@ -253,26 +289,34 @@ async function handleLogin() {
   const btn   = document.querySelector('#step-4 .gate-btn-primary');
 
   if (!email) {
-    error.textContent = 'Please enter your email.';
-    error.classList.add('visible');
+    if (error) {
+      error.textContent = 'Please enter your email.';
+      error.classList.add('visible');
+    }
     return;
   }
-    
+
   if (!isValidEmail(email)) {
-    error.textContent = 'Please enter a valid email address.';
-    error.classList.add('visible');
+    if (error) {
+      error.textContent = 'Please enter a valid email address.';
+      error.classList.add('visible');
+    }
     return;
   }
 
   if (!password) {
-    error.textContent = 'Please enter your password.';
-    error.classList.add('visible');
+    if (error) {
+      error.textContent = 'Please enter your password.';
+      error.classList.add('visible');
+    }
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Checking...';
-  error.classList.remove('visible');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+  }
+  if (error) error.classList.remove('visible');
 
   // Sign in with Supabase Auth
   const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
@@ -281,10 +325,14 @@ async function handleLogin() {
   });
 
   if (signInError) {
-    error.textContent = '✗ ' + signInError.message;
-    error.classList.add('visible');
-    btn.disabled = false;
-    btn.textContent = 'Login →';
+    if (error) {
+      error.textContent = '✗ ' + signInError.message;
+      error.classList.add('visible');
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Login →';
+    }
     return;
   }
 
@@ -297,23 +345,28 @@ async function handleLogin() {
     .single();
 
   if (queryError || !studentData) {
-    error.textContent = '✗ Profile not found. Please create an account.';
-    error.classList.add('visible');
-    btn.disabled = false;
-    btn.textContent = 'Login →';
+    if (error) {
+      error.textContent = '✗ Profile not found. Please create an account.';
+      error.classList.add('visible');
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Login →';
+    }
     return;
   }
 
-  // Check verification status
   if (studentData.Verified === true) {
     window.location.href = 'Undergraduates.html';
   } else {
-    btn.disabled = false;
-    btn.textContent = 'Login →';
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Login →';
+    }
     showStep('step-2');
   }
 }
 
 function unlockContent() {
   window.location.href = 'Undergraduates.html';
-                 }
+}
