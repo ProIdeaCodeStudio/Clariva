@@ -9,7 +9,7 @@
   <title>Clariva — From Confusion to Confidence</title>
   <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="Stylesheet.css">
-  <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js" defer></script>
 </head>
@@ -77,7 +77,7 @@
           <p class="gate-error" id="code-error"></p>
           <button class="gate-btn gate-btn-primary" onclick="handleCodeSubmit()">Verify & Continue →</button>
         </div>
-        <p class="gate-note">Check the pinned message in the  <a class="whatsapp-link" href="#" target="_blank">WhatsApp group</a>   for the code</p>
+        <p class="gate-note">Check the pinned message in the<a class="whatsapp-link" href="#" target="_blank">WhatsApp group</a> for the code</p>
       </div>
 
       <!-- STEP 3: Success -->
@@ -127,6 +127,90 @@
     </div>
   </header>
 
-  <!-- rest of file unchanged -->
+
+  <!-- ── HERO ──────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="container">
+      <h1 class="hero-title">From <span>Confusion</span><br>to <span>Confidence.</span></h1>
+      <p class="hero-sub">"The right resources change everything."</p>
+      <p class="hero-description">Clariva gives Nigerian students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
+        <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See What's Inside</button>
+      </div>
+      <div class="hero-amber-line"></div>
+    </div>
+  </section>
+
+
+  <!-- ── FEATURES ──────────────────────────────────────── -->
+  <section id="features">
+    <div class="container">
+      <p class="features-label">What you get</p>
+      <h2 class="features-title">Everything you need.<br>All free.</h2>
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <div class="feature-number">01 — Materials</div>
+          <div class="feature-title">Study Materials</div>
+          <p class="feature-text">Curated PDF handouts, lecture notes and past questions across multiple courses and levels.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <div class="feature-number">02 — CBT</div>
+          <div class="feature-title">CBT Practice</div>
+          <p class="feature-text">Timed computer-based test simulations with questions drawn directly from past examination papers.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-number">03 — AI</div>
+          <div class="feature-title">AI Assistance</div>
+          <p class="feature-text">Ask questions, get explanations, and understand difficult concepts with AI-powered study support.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <div class="feature-number">04 — Community</div>
+          <div class="feature-title">Study Community</div>
+          <p class="feature-text">Join a WhatsApp community of students sharing resources, tips, and support for each other.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── CTA BANNER ────────────────────────────────────── -->
+  <section id="cta-banner">
+    <div class="container">
+      <p class="cta-label">Ready to start?</p>
+      <h2 class="cta-title">Your resources are waiting.</h2>
+      <p class="cta-sub">"From Confusion to Confidence."</p>
+      <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
+    </div>
+  </section>
+
+
+  <!-- ── FOOTER ─────────────────────────────────────────── -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">Clariva</div>
+          <div class="footer-tagline">"From Confusion to Confidence."</div>
+        </div>
+        <div class="footer-powered">
+          POWERED BY<br>
+          <a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank">PRO IDEA →</a>
+        </div>
+      </div>
+      <div class="footer-meta">
+        CLARIVA · FREE EDUCATIONAL RESOURCES · 2026
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
