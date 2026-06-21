@@ -115,35 +115,35 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  const name  = document.getElementById('field-name').value.trim();
-  const email = document.getElementById('field-email').value.trim();
-  const phone = document.getElementById('field-phone').value.trim();
-  const password = document.getElementById('field-password').value.trim();
-  const level = document.getElementById('field-level').value;
-  const error = document.getElementById('form-error');
+  const name      = document.getElementById('field-name').value.trim();
+  const email     = document.getElementById('field-email').value.trim();
+  const phone     = document.getElementById('field-phone').value.trim();
+  const password  = document.getElementById('field-password').value.trim();
+  const level     = document.getElementById('field-level').value;
+  const errorEl   = document.getElementById('form-error');
   const submitBtn = document.querySelector('#step-1 .gate-btn-primary');
 
   if (!name || !email || !phone || !password || !level) {
-    error.textContent = 'Please complete all fields.';
-    error.classList.add('visible');
+    errorEl.textContent = 'Please complete all fields.';
+    errorEl.classList.add('visible');
     return;
   }
 
   if (!isValidEmail(email)) {
-    error.textContent = 'Please enter a valid email address.';
-    error.classList.add('visible');
+    errorEl.textContent = 'Please enter a valid email address.';
+    errorEl.classList.add('visible');
     return;
   }
 
   if (!isValidPhone(phone)) {
-    error.textContent = 'Please enter a valid phone number (10+ digits).';
-    error.classList.add('visible');
+    errorEl.textContent = 'Please enter a valid phone number (10+ digits).';
+    errorEl.classList.add('visible');
     return;
   }
 
   if (!isValidPassword(password)) {
-    error.textContent = 'Password must be at least 6 characters.';
-    error.classList.add('visible');
+    errorEl.textContent = 'Password must be at least 6 characters.';
+    errorEl.classList.add('visible');
     return;
   }
 
@@ -151,19 +151,17 @@ async function handleFormSubmit(e) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Checking...';
   }
-  if (error) error.classList.remove('visible');
+  if (errorEl) errorEl.classList.remove('visible');
 
-  // Sign up with Supabase Auth
-  const { data, error: signUpError } = await supabaseClient.auth.signUp({
+  // 1) Create auth user (or sign up)
+  const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
     email: email,
     password: password
   });
 
   if (signUpError) {
-    if (error) {
-      error.textContent = '✗ ' + signUpError.message;
-      error.classList.add('visible');
-    }
+    errorEl.textContent = '✗ ' + signUpError.message;
+    errorEl.classList.add('visible');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Create Account →';
@@ -171,22 +169,62 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  // Insert profile into students table
-  const { error: insertError } = await supabaseClient
+  const userId = signUpData?.user?.id;
+  if (!userId) {
+    errorEl.textContent = '✗ Unexpected error: no user id returned.';
+    errorEl.classList.add('visible');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
+    return;
+  }
+
+  // 2) Check whether a students row already exists for this user_id
+  const { data: existing, error: checkError } = await supabaseClient
     .from('students')
-    .insert({
-      user_id: data.user.id,
-      Name: name,
-      "E-mail": email,
-      "Phone No.": phone,
-      Level: level
-    });
+    .select('id, user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (checkError) {
+    errorEl.textContent = '✗ ' + checkError.message;
+    errorEl.classList.add('visible');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
+    return;
+  }
+
+  if (existing && (existing.id || existing.user_id)) {
+    // Row already exists — proceed to step-2
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
+    showStep('step-2');
+    return;
+  }
+
+  // 3) No existing row: upsert the profile using user_id as conflict key to avoid duplicates
+  const profile = {
+    user_id: userId,
+    Name: name,
+    "E-mail": email,
+    "Phone No.": phone,
+    Level: level
+  };
+
+  const { data: inserted, error: insertError } = await supabaseClient
+    .from('students')
+    .upsert(profile, { onConflict: 'user_id' })
+    .select('id, user_id')
+    .maybeSingle();
 
   if (insertError) {
-    if (error) {
-      error.textContent = '✗ ' + insertError.message;
-      error.classList.add('visible');
-    }
+    errorEl.textContent = '✗ ' + insertError.message;
+    errorEl.classList.add('visible');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Create Account →';
@@ -194,30 +232,40 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  // Send confirmation email via EmailJS (non-blocking; failure will not stop signup)
-  (async function sendConfirmation() {
-    try {
-      if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function'
-          && typeof EMAILJS_SERVICE_ID !== 'undefined' && typeof EMAILJS_TEMPLATE_ID !== 'undefined') {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          from_name: 'Clariva',
-          from_email: 'clariva@proideacodestudio.com',
-          to_email: email,
-          to_name: name,
-          phone: phone
-        });
+  if (inserted && (inserted.id || inserted.user_id)) {
+    // success — send confirmation (non-blocking) and advance
+    (async function sendConfirmation() {
+      try {
+        if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function'
+            && typeof EMAILJS_SERVICE_ID !== 'undefined' && typeof EMAILJS_TEMPLATE_ID !== 'undefined') {
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            from_name: 'Clariva',
+            from_email: 'clariva@proideacodestudio.com',
+            to_email: email,
+            to_name: name,
+            phone: phone
+          });
+        }
+      } catch (emailError) {
+        console.warn('Confirmation email failed (non-blocking):', emailError && emailError.text ? emailError.text : emailError);
       }
-    } catch (emailError) {
-      // Log only — do not surface provider errors to users
-      console.warn('Confirmation email failed (non-blocking):', emailError && emailError.text ? emailError.text : emailError);
-    }
-  })();
+    })();
 
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
+    showStep('step-2');
+    return;
+  }
+
+  // Fallback error
+  errorEl.textContent = '✗ Unexpected error: could not create or find profile.';
+  errorEl.classList.add('visible');
   if (submitBtn) {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Create Account →';
   }
-  showStep('step-2');
 }
 
 async function handleCodeSubmit() {
@@ -253,7 +301,7 @@ async function handleCodeSubmit() {
   }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  const { error: updateError } = await supabaseClient;
+  const { error: updateError } = await supabaseClient
     .from('students')
     .update({ Verified: true })
     .eq('user_id', user.id);
