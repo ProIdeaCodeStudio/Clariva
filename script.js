@@ -161,10 +161,14 @@ async function handleFormSubmit(e) {
 
 // If signUp returned an error, handle it (existing logic)
 if (signUpError) {
-  // handle existing-account case or show error
-  ...
-  return;
-}
+    errorEl.textContent = '✗ ' + signUpError.message;
+    errorEl.classList.add('visible');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
+    return;
+  }
 
 // Determine userId and session: signUpData may not include a session
 let userId = signUpData?.user?.id;
