@@ -194,6 +194,7 @@ if (!sessionPresent) {
 
   userId = signInData?.user?.id;
 }
+  console.log({ signUpData, signUpError });
 
   // 2) Check whether a students row already exists for this user_id
   const { data: existing, error: checkError } = await supabaseClient
