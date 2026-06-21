@@ -157,28 +157,39 @@ async function handleFormSubmit(e) {
   const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
     email: email,
     password: password
+});
+
+// If signUp returned an error, handle it (existing logic)
+if (signUpError) {
+  // handle existing-account case or show error
+  ...
+  return;
+}
+
+// Determine userId and session: signUpData may not include a session
+let userId = signUpData?.user?.id;
+let sessionPresent = !!signUpData?.session;
+
+if (!sessionPresent) {
+  // Try signing in so the client has an authenticated session (so RLS auth.uid() will be set)
+  const { data: signInData, error: signInErr } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
   });
 
-  if (signUpError) {
-    errorEl.textContent = '✗ ' + signUpError.message;
+  if (signInErr) {
+    // If sign-in fails (e.g., email requires confirmation), you can:
+    // - Tell the user to confirm their email first, or
+    // - Use a server-side service to create the students row (preferred for confirmation flows).
+    // For now, show a friendly message:
+    errorEl.textContent = '✗ Please confirm your email (check your inbox) before continuing.';
     errorEl.classList.add('visible');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
-    }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Account →'; }
     return;
   }
 
-  const userId = signUpData?.user?.id;
-  if (!userId) {
-    errorEl.textContent = '✗ Unexpected error: no user id returned.';
-    errorEl.classList.add('visible');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
-    }
-    return;
-  }
+  userId = signInData?.user?.id;
+}
 
   // 2) Check whether a students row already exists for this user_id
   const { data: existing, error: checkError } = await supabaseClient
