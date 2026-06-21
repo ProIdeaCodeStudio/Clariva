@@ -253,7 +253,7 @@ async function handleCodeSubmit() {
   }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  const { error: updateError } = await supabaseClient
+  const { error: updateError } = await supabaseClient;
     .from('students')
     .update({ Verified: true })
     .eq('user_id', user.id);
