@@ -123,6 +123,8 @@ a:hover { color: var(--burnt-ember); }
   padding: clamp(28px, 4vw, 48px) clamp(20px, 3vw, 40px);
   max-width: 460px;
   width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   text-align: center;
   position: relative;
 }
