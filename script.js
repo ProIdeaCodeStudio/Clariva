@@ -194,12 +194,11 @@ if (!sessionPresent) {
 
   userId = signInData?.user?.id;
 }
-  console.log({ signUpData, signUpError });
 
   // 2) Check whether a students row already exists for this user_id
   const { data: existing, error: checkError } = await supabaseClient
     .from('students')
-    .select('id, user_id')
+    .select('id, user_id, Verified')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -214,14 +213,18 @@ if (!sessionPresent) {
   }
 
   if (existing && (existing.id || existing.user_id)) {
-    // Row already exists — proceed to step-2
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
+    if (existing.Verified === true) {
+      showStep('step-4');
     }
-    showStep('step-2');
-    return;
-  }
+      else {
+        showStep('step-2');
+      }
+    if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Account →';
+    }
+  return;
+}
 
   // 3) No existing row: upsert the profile using user_id as conflict key to avoid duplicates
   const profile = {
