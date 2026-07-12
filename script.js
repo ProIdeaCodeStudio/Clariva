@@ -381,16 +381,76 @@ async function handleCodeSubmit() {
     btn.textContent = 'Verifying...';
   }
 
-  // Call the Edge Function to verify the code on the server
-  const { data, error: functionError } = await supabaseClient.functions.invoke('verify-group-code', {
-    body: { code: code }
-  });
+  // Call the Edge Function to verify the code on the server, with diagnostics and a fallback
+  try {
+    let verified = false;
+    let serverError = null;
 
-  // Check the response
-  if (functionError || !data?.verified) {
-    const errorMsg = functionError?.message || data?.error || 'Verification failed. Please try again.';
+    // Try supabase client invoke first (preferred)
+    try {
+      const resp = await supabaseClient.functions.invoke('verify-group-code', {
+        body: JSON.stringify({ code: code }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      // supabase-js returns { data, error }
+      if (resp?.data?.verified) verified = true;
+      else if (resp?.data?.error) serverError = resp.data.error;
+      else if (resp?.error) serverError = resp.error.message || String(resp.error);
+    } catch (invokeErr) {
+      console.warn('functions.invoke failed:', invokeErr);
+      serverError = invokeErr?.message || String(invokeErr);
+    }
+
+    // If not verified yet, attempt a direct fetch to the function URL as a fallback.
+    if (!verified) {
+      try {
+        // Try to obtain a session access token if available
+        let token = null;
+        try {
+          const sess = await supabaseClient.auth.getSession();
+          token = sess?.data?.session?.access_token || sess?.data?.session?.accessToken || null;
+        } catch (tErr) {
+          console.warn('Could not read session token:', tErr);
+        }
+
+        const fnUrl = SUPABASE_URL.replace(/\/$/, '') + '/functions/v1/verify-group-code';
+        const fetchOpts = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code })
+        };
+        if (token) fetchOpts.headers.Authorization = 'Bearer ' + token;
+
+        const fResp = await fetch(fnUrl, fetchOpts);
+        const j = await fResp.json().catch(() => null);
+        if (fResp.ok && j?.verified) {
+          verified = true;
+        } else {
+          serverError = j?.error || j?.message || `Function returned ${fResp.status}`;
+        }
+      } catch (fetchErr) {
+        console.warn('Fallback fetch to function failed:', fetchErr);
+        serverError = fetchErr?.message || String(fetchErr);
+      }
+    }
+
+    // Final check
+    if (!verified) {
+      const errorMsg = serverError || 'Verification failed. Please try again.';
+      if (errorEl) {
+        errorEl.textContent = '✗ ' + errorMsg;
+        errorEl.classList.add('visible');
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Verify & Continue →';
+      }
+      return;
+    }
+  } catch (outerErr) {
+    console.error('Verification flow error:', outerErr);
     if (errorEl) {
-      errorEl.textContent = '✗ ' + errorMsg;
+      errorEl.textContent = '✗ ' + (outerErr?.message || 'Unexpected error during verification');
       errorEl.classList.add('visible');
     }
     if (btn) {
