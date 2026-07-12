@@ -16,38 +16,38 @@
 <body>
 
   <!-- ── GATE OVERLAY ───────────────────────────────────── -->
-  <div id="gate-overlay" class="hidden">
+  <div id="gate-overlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="gate-title-step-1">
     <div class="gate-box">
 
       <div class="gate-edu-mark">Clariva · Student Access
-      <button class="gate-close" onclick="hideGate()">X</button>
+      <button type="button" class="gate-close" id="gate-close">X</button>
       </div>
       <div class="gate-divider"></div>
 
       <!-- STEP 1: Register -->
       <div class="gate-step active" id="step-1">
-        <div class="gate-title">Create Account</div>
+        <div class="gate-title" id="gate-title-step-1">Create Account</div>
         <div class="gate-subtitle">Join the Clariva community to access free educational resources.</div>
         <br>
-        <form class="gate-form" id="access-form" onsubmit="handleFormSubmit(event)">
+        <form class="gate-form" id="access-form">
           <div>
-            <label class="gate-field-label">Full Name</label>
+            <label class="gate-field-label" for="field-name">Full Name</label>
             <input class="gate-input" type="text" id="field-name" placeholder="Your full name" required>
           </div>
           <div>
-            <label class="gate-field-label">Email Address</label>
+            <label class="gate-field-label" for="field-email">Email Address</label>
             <input class="gate-input" type="email" id="field-email" placeholder="your@email.com" required>
           </div>
           <div>
-            <label class="gate-field-label">Phone Number</label>
+            <label class="gate-field-label" for="field-phone">Phone Number</label>
             <input class="gate-input" type="tel" id="field-phone" placeholder="+234 xxx xxx xxxx" required>
           </div>
           <div>
-            <label class="gate-field-label">Password</label>
+            <label class="gate-field-label" for="field-password">Password</label>
             <input class="gate-input" type="password" id="field-password" placeholder="Create a password" required>
           </div>
           <div>
-            <label class="gate-field-label">Level</label>
+            <label class="gate-field-label" for="field-level">Level</label>
             <select class="gate-input" id="field-level" required>
               <option value="" disabled selected>Select your level</option>
               <option value="100">100 Level</option>
@@ -57,7 +57,7 @@
           <p class="gate-error" id="form-error"></p>
           <button class="gate-btn gate-btn-primary" type="submit">Create Account →</button>
         </form>
-        <p class="gate-note" style="margin-top:16px;">Already have an account? <a href="#" onclick="showStep('step-4'); return false;">Login here</a></p>
+        <p class="gate-note" style="margin-top:16px;">Already have an account? <a class="gate-link" href="javascript:void(0)" id="show-login-link">Login here</a></p>
       </div>
 
       <!-- STEP 2: WhatsApp + Code -->
@@ -67,17 +67,17 @@
         <br>
         <div class="whatsapp-box">
           <p>Join the Clariva WhatsApp group. The access code is pinned in the group chat.</p>
-          <a class="whatsapp-link" href="#" target="_blank">JOIN WHATSAPP GROUP</a>
+          <a class="whatsapp-link" id="join-whatsapp-group" href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">JOIN WHATSAPP GROUP</a>
         </div>
         <div class="gate-form">
           <div>
-            <label class="gate-field-label">Group Access Code</label>
+            <label class="gate-field-label" for="field-code">Group Access Code</label>
             <input class="gate-input" type="text" id="field-code" placeholder="Enter code from WhatsApp group" style="text-transform:uppercase; letter-spacing:3px;">
           </div>
           <p class="gate-error" id="code-error"></p>
-          <button class="gate-btn gate-btn-primary" onclick="handleCodeSubmit()">Verify & Continue →</button>
+          <button type="button" class="gate-btn gate-btn-primary" id="verify-code-button">Verify & Continue →</button>
         </div>
-        <p class="gate-note">Check the pinned message in the<a class="whatsapp-link" href="#" target="_blank">WhatsApp group</a> for the code</p>
+          <p class="gate-note">Check the pinned message in the <a class="whatsapp-link" id="join-whatsapp-note" href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">WhatsApp group</a> for the code</p>
       </div>
 
       <!-- STEP 3: Success -->
@@ -85,7 +85,7 @@
         <div class="success-icon">🔥</div>
         <div class="gate-title">Welcome to Clariva!</div>
         <p class="success-text">Your account is verified. You now have full access to all educational resources, CBT practice, and AI assistance.</p>
-        <button class="gate-btn gate-btn-primary" onclick="unlockContent()">Access Resources →</button>
+        <button type="button" class="gate-btn gate-btn-primary" id="unlock-content-button">Access Resources →</button>
       </div>
 
       <!-- STEP 4: Login -->
@@ -95,16 +95,16 @@
         <br>
         <div class="gate-form">
           <div>
-            <label class="gate-field-label">Email Address</label>
+            <label class="gate-field-label" for="login-email">Email Address</label>
             <input class="gate-input" type="email" id="login-email" placeholder="your@email.com" required>
           </div>
           <div>
-            <label class="gate-field-label">Password</label>
+            <label class="gate-field-label" for="login-password">Password</label>
             <input class="gate-input" type="password" id="login-password" placeholder="Enter your password" required>
           </div>
           <p class="gate-error" id="login-error"></p>
-          <button class="gate-btn gate-btn-primary" onclick="handleLogin()">Login →</button>
-          <button class="gate-btn gate-btn-outline" onclick="showStep('step-1')">Create New Account</button>
+          <button type="button" class="gate-btn gate-btn-primary" id="login-button">Login →</button>
+          <button type="button" class="gate-btn gate-btn-outline" id="show-register-step-button">Create New Account</button>
         </div>
       </div>
 
@@ -121,8 +121,8 @@
           <div class="header-tagline">"From Confusion to Confidence."</div>
         </div>
         <div>
-          <button class="header-btn" onclick="showGate()">Get Started</button>
-          <button class="header-btn" onclick="showGate(); showStep('step-4')">Login</button>
+          <button type="button" class="header-btn js-open-gate">Get Started</button>
+          <button type="button" class="header-btn js-open-login">Login</button>
         </div>
     </div>
     </div>
@@ -136,8 +136,8 @@
       <p class="hero-sub">"The right resources change everything."</p>
       <p class="hero-description">Clariva gives Nigerian students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
       <div class="hero-actions">
-        <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
-        <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See What's Inside</button>
+      <button type="button" class="btn-primary js-open-gate">Get Free Access →</button>
+      <button type="button" class="btn-secondary" id="scroll-features-button">See What's Inside</button>
       </div>
       <div class="hero-amber-line"></div>
     </div>
@@ -190,7 +190,7 @@
       <p class="cta-label">Ready to start?</p>
       <h2 class="cta-title">Your resources are waiting.</h2>
       <p class="cta-sub">"From Confusion to Confidence."</p>
-      <button class="btn-primary" onclick="showGate()">Get Free Access →</button>
+      <button type="button" class="btn-primary js-open-gate">Get Free Access →</button>
     </div>
   </section>
 

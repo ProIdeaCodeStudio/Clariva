@@ -6,11 +6,32 @@
 // const EMAILJS_TEMPLATE_ID = 'template_i3betj5';
 // const EMAILJS_PUBLIC_KEY  = '3Do3--5-daxIAi1jF';
 
-const SUPABASE_URL        = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
-const SUPABASE_KEY        = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
-let supabaseClient       = null; // will be initialized when the Supabase library is available
-const WHATSAPP_GROUP_URL  = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
-const GROUP_CODE          = 'PI2526';
+const SUPABASE_URL = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
+let supabaseClient = null; // will be initialized when the Supabase library is available
+const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
+let gateTriggerElement = null; // stores the element that opened the gate for focus restoration
+
+function showGlobalError(msg) {
+  const el = document.querySelector('.gate-error');
+  if (el) {
+    el.textContent = msg;
+    el.classList.add('visible');
+  } else {
+    console.warn(msg);
+  }
+}
+
+async function getCurrentUser() {
+  if (!supabaseClient) return null;
+  try {
+    const resp = await supabaseClient.auth.getUser();
+    return resp?.data?.user || null;
+  } catch (e) {
+    console.warn('getCurrentUser failed', e);
+    return null;
+  }
+}
 
 window.onload = async function () {
   // Initialize Supabase client if the library is available
@@ -32,7 +53,7 @@ window.onload = async function () {
       return;
     }
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const user = await getCurrentUser();
 
     if (!user) {
       window.location.href = 'index.html#step-1';
@@ -46,7 +67,7 @@ window.onload = async function () {
       .single();
 
     if (queryError || !studentData) {
-      alert('There was an error checking your access. Please try again.');
+      console.warn('There was an error checking access:', queryError);
       window.location.href = 'index.html#step-1';
       return;
     }
@@ -72,8 +93,50 @@ window.onload = async function () {
   }
 
   // Safe DOM operation
-  const waLink = document.querySelector('.whatsapp-link');
-  if (waLink) waLink.href = WHATSAPP_GROUP_URL;
+  const waLink = document.querySelectorAll('.whatsapp-link');
+  waLink.forEach(a => a.setAttribute('href', WHATSAPP_GROUP_URL));
+
+  // Wire UI interactions (avoid inline onclick attributes)
+  const accessForm = document.getElementById('access-form');
+  if (accessForm) accessForm.addEventListener('submit', handleFormSubmit);
+
+  const gateClose = document.getElementById('gate-close');
+  if (gateClose) gateClose.addEventListener('click', hideGate);
+
+  // Store trigger element for focus restoration when gate closes
+  document.querySelectorAll('.js-open-gate').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      gateTriggerElement = e.target;
+      showGate();
+    });
+  });
+  
+  const openLogin = document.querySelector('.js-open-login');
+  if (openLogin) {
+    openLogin.addEventListener('click', (e) => {
+      gateTriggerElement = e.target;
+      showGate();
+      showStep('step-4');
+    });
+  }
+
+  const showLoginLink = document.getElementById('show-login-link');
+  if (showLoginLink) showLoginLink.addEventListener('click', (e) => { e.preventDefault(); showStep('step-4'); });
+
+  const verifyBtn = document.getElementById('verify-code-button');
+  if (verifyBtn) verifyBtn.addEventListener('click', handleCodeSubmit);
+
+  const unlockBtn = document.getElementById('unlock-content-button');
+  if (unlockBtn) unlockBtn.addEventListener('click', unlockContent);
+
+  const loginBtn = document.getElementById('login-button');
+  if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+
+  const showRegBtn = document.getElementById('show-register-step-button');
+  if (showRegBtn) showRegBtn.addEventListener('click', () => showStep('step-1'));
+
+  const scrollFeatures = document.getElementById('scroll-features-button');
+  if (scrollFeatures) scrollFeatures.addEventListener('click', () => document.getElementById('features').scrollIntoView({ behavior: 'smooth' }));
 
   // Show the default gate step
   showStep('step-1');
@@ -81,12 +144,19 @@ window.onload = async function () {
 
 function showGate() {
   const gate = document.getElementById('gate-overlay');
-  if (gate) gate.classList.remove('hidden');
+  if (gate) {
+    gate.classList.remove('hidden');
+    // Move focus to the first field for keyboard accessibility
+    const firstField = document.getElementById('field-name');
+    if (firstField) firstField.focus();
+  }
 }
 
 function hideGate() {
   const gate = document.getElementById('gate-overlay');
   if (gate) gate.classList.add('hidden');
+  // Optionally return focus to the button that opened the gate
+  if (gateTriggerElement) gateTriggerElement.focus();
 }
 
 function showStep(stepId) {
@@ -111,16 +181,16 @@ async function handleFormSubmit(e) {
   e.preventDefault();
 
   if (!supabaseClient) {
-    alert('Service unavailable right now. Please try again later.');
+    showGlobalError('Service unavailable right now. Please try again later.');
     return;
   }
 
-  const name      = document.getElementById('field-name').value.trim();
-  const email     = document.getElementById('field-email').value.trim();
-  const phone     = document.getElementById('field-phone').value.trim();
-  const password  = document.getElementById('field-password').value.trim();
-  const level     = document.getElementById('field-level').value;
-  const errorEl   = document.getElementById('form-error');
+  const name = document.getElementById('field-name').value.trim();
+  const email = document.getElementById('field-email').value.trim();
+  const phone = document.getElementById('field-phone').value.trim();
+  const password = document.getElementById('field-password').value.trim();
+  const level = document.getElementById('field-level').value;
+  const errorEl = document.getElementById('form-error');
   const submitBtn = document.querySelector('#step-1 .gate-btn-primary');
 
   if (!name || !email || !phone || !password || !level) {
@@ -157,10 +227,10 @@ async function handleFormSubmit(e) {
   const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
     email: email,
     password: password
-});
+  });
 
-// If signUp returned an error, handle it (existing logic)
-if (signUpError) {
+  // If signUp returned an error, handle it (existing logic)
+  if (signUpError) {
     errorEl.textContent = '✗ ' + signUpError.message;
     errorEl.classList.add('visible');
     if (submitBtn) {
@@ -170,30 +240,30 @@ if (signUpError) {
     return;
   }
 
-// Determine userId and session: signUpData may not include a session
-let userId = signUpData?.user?.id;
-let sessionPresent = !!signUpData?.session;
+  // Determine userId and session: signUpData may not include a session
+  let userId = signUpData?.user?.id;
+  let sessionPresent = !!signUpData?.session;
 
-if (!sessionPresent) {
-  // Try signing in so the client has an authenticated session (so RLS auth.uid() will be set)
-  const { data: signInData, error: signInErr } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
+  if (!sessionPresent) {
+    // Try signing in so the client has an authenticated session (so RLS auth.uid() will be set)
+    const { data: signInData, error: signInErr } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
 
-  if (signInErr) {
-    // If sign-in fails (e.g., email requires confirmation), you can:
-    // - Tell the user to confirm their email first, or
-    // - Use a server-side service to create the students row (preferred for confirmation flows).
-    // For now, show a friendly message:
-    errorEl.textContent = '✗ Please confirm your email (check your inbox) before continuing.';
-    errorEl.classList.add('visible');
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Account →'; }
-    return;
+    if (signInErr) {
+      // If sign-in fails (e.g., email requires confirmation), you can:
+      // - Tell the user to confirm their email first, or
+      // - Use a server-side service to create the students row (preferred for confirmation flows).
+      // For now, show a friendly message:
+      errorEl.textContent = '✗ Please confirm your email (check your inbox) before continuing.';
+      errorEl.classList.add('visible');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Account →'; }
+      return;
+    }
+
+    userId = signInData?.user?.id;
   }
-
-  userId = signInData?.user?.id;
-}
 
   // 2) Check whether a students row already exists for this user_id
   const { data: existing, error: checkError } = await supabaseClient
@@ -216,15 +286,15 @@ if (!sessionPresent) {
     if (existing.Verified === true) {
       showStep('step-4');
     }
-      else {
-        showStep('step-2');
-      }
-    if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Create Account →';
+    else {
+      showStep('step-2');
     }
-  return;
-}
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account →';
+    }
+    return;
+  }
 
   // 3) No existing row: upsert the profile using user_id as conflict key to avoid duplicates
   const profile = {
@@ -256,7 +326,7 @@ if (!sessionPresent) {
     (async function sendConfirmation() {
       try {
         if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function'
-            && typeof EMAILJS_SERVICE_ID !== 'undefined' && typeof EMAILJS_TEMPLATE_ID !== 'undefined') {
+          && typeof EMAILJS_SERVICE_ID !== 'undefined' && typeof EMAILJS_TEMPLATE_ID !== 'undefined') {
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
             from_name: 'Clariva',
             from_email: 'clariva@proideacodestudio.com',
@@ -289,46 +359,39 @@ if (!sessionPresent) {
 
 async function handleCodeSubmit() {
   if (!supabaseClient) {
-    alert('Service unavailable right now. Please try again later.');
+    showGlobalError('Service unavailable right now. Please try again later.');
     return;
   }
 
-  const code  = document.getElementById('field-code').value.trim().toUpperCase();
-  const error = document.getElementById('code-error');
-  const btn   = document.querySelector('#step-2 .gate-btn-primary');
+  const code = document.getElementById('field-code').value.trim().toUpperCase();
+  const errorEl = document.getElementById('code-error');
+  const btn = document.querySelector('#step-2 .gate-btn-primary');
 
   if (!code) {
-    if (error) {
-      error.textContent = 'Please enter the group code.';
-      error.classList.add('visible');
+    if (errorEl) {
+      errorEl.textContent = 'Please enter the group code.';
+      errorEl.classList.add('visible');
     }
     return;
   }
 
-  if (code !== GROUP_CODE) {
-    if (error) {
-      error.textContent = '✗ Incorrect code. Check the pinned message in the WhatsApp group.';
-      error.classList.add('visible');
-    }
-    return;
-  }
-
-  if (error) error.classList.remove('visible');
+  if (errorEl) errorEl.classList.remove('visible');
   if (btn) {
     btn.disabled = true;
     btn.textContent = 'Verifying...';
   }
 
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  const { error: updateError } = await supabaseClient
-    .from('students')
-    .update({ Verified: true })
-    .eq('user_id', user.id);
+  // Call the Edge Function to verify the code on the server
+  const { data, error: functionError } = await supabaseClient.functions.invoke('verify-group-code', {
+    body: { code: code }
+  });
 
-  if (updateError) {
-    if (error) {
-      error.textContent = '✗ ' + updateError.message;
-      error.classList.add('visible');
+  // Check the response
+  if (functionError || !data?.verified) {
+    const errorMsg = functionError?.message || data?.error || 'Verification failed. Please try again.';
+    if (errorEl) {
+      errorEl.textContent = '✗ ' + errorMsg;
+      errorEl.classList.add('visible');
     }
     if (btn) {
       btn.disabled = false;
@@ -337,6 +400,7 @@ async function handleCodeSubmit() {
     return;
   }
 
+  // Success — the Edge Function already updated Verified = true in the database
   if (btn) {
     btn.disabled = false;
     btn.textContent = 'Verify & Continue →';
@@ -353,7 +417,7 @@ async function handleLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
   const error = document.getElementById('login-error');
-  const btn   = document.querySelector('#step-4 .gate-btn-primary');
+  const btn = document.querySelector('#step-4 .gate-btn-primary');
 
   if (!email) {
     if (error) {
