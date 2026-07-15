@@ -44,6 +44,12 @@ window.onload = async function () {
   } else {
     console.warn('Supabase library not detected at load time. Some features will be unavailable until it loads.');
   }
+  const backToLoginBtn = document.getElementById('back-to-login-button');
+  if (backToLoginBtn) {
+    backToLoginBtn.addEventListener('click', () => {
+      showStep('step-4');
+    });
+  }
 
   // Access guard for Undergraduates.html
   if (window.location.href.includes('Undergraduates.html')) {
