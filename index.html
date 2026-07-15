@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Clariva — Free educational resources, CBT practice and AI assistance for Nigerian undergraduate students.">
-  <meta name="keywords" content="Clariva, free educational materials, undergraduate, FUTA, CBT, past questions, Nigeria students">
+  <meta name="description"
+    content="Clariva — Free educational resources, CBT practice and AI assistance for Nigerian undergraduate students.">
+  <meta name="keywords"
+    content="Clariva, free educational materials, undergraduate, FUTA, CBT, past questions, Nigeria students">
   <meta name="author" content="Pro Idea">
   <title>Clariva — From Confusion to Confidence</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
   <link rel="stylesheet" href="Stylesheet.css">
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js" defer></script>
 </head>
+
 <body>
 
   <!-- ── GATE OVERLAY ───────────────────────────────────── -->
@@ -20,7 +25,7 @@
     <div class="gate-box">
 
       <div class="gate-edu-mark">Clariva · Student Access
-      <button type="button" class="gate-close" id="gate-close">X</button>
+        <button type="button" class="gate-close" id="gate-close">X</button>
       </div>
       <div class="gate-divider"></div>
 
@@ -57,34 +62,41 @@
           <p class="gate-error" id="form-error"></p>
           <button class="gate-btn gate-btn-primary" type="submit">Create Account →</button>
         </form>
-        <p class="gate-note" style="margin-top:16px;">Already have an account? <a class="gate-link" href="javascript:void(0)" id="show-login-link">Login here</a></p>
+        <p class="gate-note" style="margin-top:16px;">Already have an account? <a class="gate-link"
+            href="javascript:void(0)" id="show-login-link">Login here</a></p>
       </div>
 
       <!-- STEP 2: WhatsApp + Code -->
       <div class="gate-step" id="step-2">
         <div class="gate-title">Join the Community</div>
-        <div class="gate-subtitle">One last step — join our WhatsApp group and enter the code from the pinned message.</div>
+        <div class="gate-subtitle">One last step — join our WhatsApp group and enter the code from the pinned message.
+        </div>
         <br>
         <div class="whatsapp-box">
           <p>Join the Clariva WhatsApp group. The access code is pinned in the group chat.</p>
-          <a class="whatsapp-link" id="join-whatsapp-group" href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">JOIN WHATSAPP GROUP</a>
+          <a class="whatsapp-link" id="join-whatsapp-group"
+            href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">JOIN WHATSAPP GROUP</a>
         </div>
         <div class="gate-form">
           <div>
             <label class="gate-field-label" for="field-code">Group Access Code</label>
-            <input class="gate-input" type="text" id="field-code" placeholder="Enter code from WhatsApp group" style="text-transform:uppercase; letter-spacing:3px;">
+            <input class="gate-input" type="text" id="field-code" placeholder="Enter code from WhatsApp group"
+              style="text-transform:uppercase; letter-spacing:3px;">
           </div>
           <p class="gate-error" id="code-error"></p>
           <button type="button" class="gate-btn gate-btn-primary" id="verify-code-button">Verify & Continue →</button>
         </div>
-          <p class="gate-note">Check the pinned message in the <a class="whatsapp-link" id="join-whatsapp-note" href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">WhatsApp group</a> for the code</p>
+        <p class="gate-note">Check the pinned message in the <a class="whatsapp-link" id="join-whatsapp-note"
+            href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">WhatsApp group</a> for the
+          code</p>
       </div>
 
       <!-- STEP 3: Success -->
       <div class="gate-step" id="step-3">
         <div class="success-icon">🔥</div>
         <div class="gate-title">Welcome to Clariva!</div>
-        <p class="success-text">Your account is verified. You now have full access to all educational resources, CBT practice, and AI assistance.</p>
+        <p class="success-text">Your account is verified. You now have full access to all educational resources, CBT
+          practice, and AI assistance.</p>
         <button type="button" class="gate-btn gate-btn-primary" id="unlock-content-button">Access Resources →</button>
       </div>
 
@@ -102,9 +114,15 @@
             <label class="gate-field-label" for="login-password">Password</label>
             <input class="gate-input" type="password" id="login-password" placeholder="Enter your password" required>
           </div>
+
+          <div class="gate-forgot-password">
+            <a href="#" id="forgot-password-link">Forgot Password?</a>
+          </div>
+
           <p class="gate-error" id="login-error"></p>
           <button type="button" class="gate-btn gate-btn-primary" id="login-button">Login →</button>
-          <button type="button" class="gate-btn gate-btn-outline" id="show-register-step-button">Create New Account</button>
+          <button type="button" class="gate-btn gate-btn-outline" id="show-register-step-button">Create New
+            Account</button>
         </div>
       </div>
 
@@ -124,7 +142,7 @@
           <button type="button" class="header-btn js-open-gate">Get Started</button>
           <button type="button" class="header-btn js-open-login">Login</button>
         </div>
-    </div>
+      </div>
     </div>
   </header>
 
@@ -134,10 +152,11 @@
     <div class="container">
       <h1 class="hero-title">From <span>Confusion</span><br>to <span>Confidence.</span></h1>
       <p class="hero-sub">"The right resources change everything."</p>
-      <p class="hero-description">Clariva gives Nigerian students free access to curated study materials, CBT practice tools, and AI-powered assistance — all in one place.</p>
+      <p class="hero-description">Clariva gives Nigerian students free access to curated study materials, CBT practice
+        tools, and AI-powered assistance — all in one place.</p>
       <div class="hero-actions">
-      <button type="button" class="btn-primary js-open-gate">Get Free Access →</button>
-      <button type="button" class="btn-secondary" id="scroll-features-button">See What's Inside</button>
+        <button type="button" class="btn-primary js-open-gate">Get Free Access →</button>
+        <button type="button" class="btn-secondary" id="scroll-features-button">See What's Inside</button>
       </div>
       <div class="hero-amber-line"></div>
     </div>
@@ -155,28 +174,32 @@
           <div class="feature-icon">📚</div>
           <div class="feature-number">01 — Materials</div>
           <div class="feature-title">Study Materials</div>
-          <p class="feature-text">Curated PDF handouts, lecture notes and past questions across multiple courses and levels.</p>
+          <p class="feature-text">Curated PDF handouts, lecture notes and past questions across multiple courses and
+            levels.</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🧠</div>
           <div class="feature-number">02 — CBT</div>
           <div class="feature-title">CBT Practice</div>
-          <p class="feature-text">Timed computer-based test simulations with questions drawn directly from past examination papers.</p>
+          <p class="feature-text">Timed computer-based test simulations with questions drawn directly from past
+            examination papers.</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🤖</div>
           <div class="feature-number">03 — AI</div>
           <div class="feature-title">AI Assistance</div>
-          <p class="feature-text">Ask questions, get explanations, and understand difficult concepts with AI-powered study support.</p>
+          <p class="feature-text">Ask questions, get explanations, and understand difficult concepts with AI-powered
+            study support.</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">💬</div>
           <div class="feature-number">04 — Community</div>
           <div class="feature-title">Study Community</div>
-          <p class="feature-text">Join a WhatsApp community of students sharing resources, tips, and support for each other.</p>
+          <p class="feature-text">Join a WhatsApp community of students sharing resources, tips, and support for each
+            other.</p>
         </div>
 
       </div>
@@ -214,4 +237,5 @@
     </div>
   </footer>
 </body>
+
 </html>
