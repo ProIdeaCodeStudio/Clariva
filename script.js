@@ -50,6 +50,10 @@ window.onload = async function () {
       showStep('step-4');
     });
   }
+  const sendResetBtn = document.getElementById('send-reset-link-button');
+  if (sendResetBtn) {
+    sendResetBtn.addEventListener('click', handlePasswordReset);
+  }
 
   // Access guard for Undergraduates.html
   if (window.location.href.includes('Undergraduates.html')) {
@@ -569,6 +573,10 @@ async function handleLogin() {
     }
     showStep('step-2');
   }
+}
+
+async function handlePasswordReset() {
+  alert("Password reset is not connected yet.");
 }
 
 function unlockContent() {
