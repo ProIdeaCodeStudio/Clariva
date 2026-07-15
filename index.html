@@ -125,6 +125,39 @@
             Account</button>
         </div>
       </div>
+      <!-- STEP 5: Forgot Password -->
+      <div class="gate-step" id="step-5">
+        <div class="gate-title">Reset Password</div>
+
+        <div class="gate-subtitle">
+          Enter the email address associated with your Clariva account.
+          We'll send you a password reset link.
+        </div>
+
+        <br>
+
+        <div class="gate-form">
+
+          <div>
+            <label class="gate-field-label" for="reset-email">
+              Email Address
+            </label>
+
+            <input class="gate-input" type="email" id="reset-email" placeholder="your@email.com" required>
+          </div>
+
+          <p class="gate-error" id="reset-error"></p>
+
+          <button type="button" class="gate-btn gate-btn-primary" id="send-reset-link-button">
+            Send Reset Link →
+          </button>
+
+          <button type="button" class="gate-btn gate-btn-outline" id="back-to-login-button">
+            ← Back to Login
+          </button>
+
+        </div>
+      </div>
 
     </div>
   </div>
