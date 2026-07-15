@@ -134,6 +134,10 @@ window.onload = async function () {
 
   const showRegBtn = document.getElementById('show-register-step-button');
   if (showRegBtn) showRegBtn.addEventListener('click', () => showStep('step-1'));
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', showForgotPasswordStep);
+  }
 
   const scrollFeatures = document.getElementById('scroll-features-button');
   if (scrollFeatures) scrollFeatures.addEventListener('click', () => document.getElementById('features').scrollIntoView({ behavior: 'smooth' }));
@@ -163,6 +167,11 @@ function showStep(stepId) {
   document.querySelectorAll('.gate-step').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(stepId);
   if (el) el.classList.add('active');
+}
+
+function showForgotPasswordStep(e) {
+  e.preventDefault();
+  showStep('step-5');
 }
 
 function isValidEmail(email) {
