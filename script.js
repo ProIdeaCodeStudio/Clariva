@@ -110,7 +110,7 @@ window.onload = async function () {
       showGate();
     });
   });
-  
+
   const openLogin = document.querySelector('.js-open-login');
   if (openLogin) {
     openLogin.addEventListener('click', (e) => {
@@ -231,12 +231,43 @@ async function handleFormSubmit(e) {
 
   // If signUp returned an error, handle it (existing logic)
   if (signUpError) {
-    errorEl.textContent = '✗ ' + signUpError.message;
-    errorEl.classList.add('visible');
+
+    const msg = signUpError.message.toLowerCase();
+
+    if (
+      msg.includes("already registered") ||
+      msg.includes("already exists") ||
+      msg.includes("already been registered")
+    ) {
+
+      showStep("step-4");
+
+      const loginError = document.getElementById("login-error");
+
+      if (loginError) {
+        loginError.textContent =
+          "Welcome back! An account already exists for this email. Please sign in.";
+        loginError.classList.add("visible");
+      }
+
+      const loginEmail = document.getElementById("login-email");
+      if (loginEmail) {
+        loginEmail.value = email;
+        loginEmail.focus();
+      }
+
+    } else {
+
+      errorEl.textContent = "✗ " + signUpError.message;
+      errorEl.classList.add("visible");
+
+    }
+
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
+      submitBtn.textContent = "Create Account →";
     }
+
     return;
   }
 
