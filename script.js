@@ -401,39 +401,6 @@ async function handleCodeSubmit() {
       serverError = invokeErr?.message || String(invokeErr);
     }
 
-    // If not verified yet, attempt a direct fetch to the function URL as a fallback.
-    if (!verified) {
-      try {
-        // Try to obtain a session access token if available
-        let token = null;
-        try {
-          const sess = await supabaseClient.auth.getSession();
-          token = sess?.data?.session?.access_token || sess?.data?.session?.accessToken || null;
-        } catch (tErr) {
-          console.warn('Could not read session token:', tErr);
-        }
-
-        const fnUrl = SUPABASE_URL.replace(/\/$/, '') + '/functions/v1/verify-group-code';
-        const fetchOpts = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: code })
-        };
-        if (token) fetchOpts.headers.Authorization = 'Bearer ' + token;
-
-        const fResp = await fetch(fnUrl, fetchOpts);
-        const j = await fResp.json().catch(() => null);
-        if (fResp.ok && j?.verified) {
-          verified = true;
-        } else {
-          serverError = j?.error || j?.message || `Function returned ${fResp.status}`;
-        }
-      } catch (fetchErr) {
-        console.warn('Fallback fetch to function failed:', fetchErr);
-        serverError = fetchErr?.message || String(fetchErr);
-      }
-    }
-
     // Final check
     if (!verified) {
       const errorMsg = serverError || 'Verification failed. Please try again.';
