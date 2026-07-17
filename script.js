@@ -44,6 +44,7 @@ window.onload = async function () {
   } else {
     console.warn('Supabase library not detected at load time. Some features will be unavailable until it loads.');
   }
+  initializeResetPasswordPage();
   const backToLoginBtn = document.getElementById('back-to-login-button');
   if (backToLoginBtn) {
     backToLoginBtn.addEventListener('click', () => {
@@ -577,6 +578,71 @@ async function handleLogin() {
 
 async function handlePasswordReset() {
   alert("Password reset is not connected yet.");
+}
+async function initializeResetPasswordPage() {
+
+  if (!window.location.pathname.endsWith("reset-password.html")) {
+    return;
+  }
+
+  console.log("Reset password page loaded.");
+
+  const passwordInput = document.getElementById("new-password");
+  const confirmInput = document.getElementById("confirm-password");
+  const resetButton = document.getElementById("reset-password-button");
+  const errorElement = document.getElementById("reset-error");
+
+  resetButton.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const newPassword = passwordInput.value.trim();
+    const confirmPassword = confirmInput.value.trim();
+
+    if (!newPassword || !confirmPassword) {
+      if (errorElement) {
+        errorElement.textContent = 'Please fill in all fields.';
+        errorElement.classList.add('visible');
+      }
+      return;
+
+      resetButton.disabled = true;
+      resetButton.textContent = "Resetting...";
+      const { error } = await supabaseClient.auth.updateUser({
+        password: newPassword
+      });
+      if (error) {
+        errorElement.textContent = error.message;
+        errorElement.classList.add("visible");
+
+        resetButton.disabled = false;
+        resetButton.textContent = "Reset Password";
+
+        return;
+      }
+      alert("Password reset successfully!");
+      window.location.href = "index.html#step-4";
+    }
+    if (newPassword.length < 6) {
+      errorElement.textContent =
+        "Password must be at least 6 characters.";
+      errorElement.classList.add("visible");
+      return;
+    }
+  }
+
+    if (newPassword !== confirmPassword) {
+    if (errorElement) {
+      errorElement.textContent = 'Passwords do not match.';
+      errorElement.classList.add('visible');
+    }
+    return;
+  }
+
+  // Here you would typically call a function to reset the password
+  // For now, we'll just show a success message
+  if (errorElement) {
+    errorElement.classList.remove('visible');
+  }
+});
 }
 
 function unlockContent() {
