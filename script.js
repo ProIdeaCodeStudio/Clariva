@@ -673,6 +673,23 @@ async function handlePasswordReset() {
   let seconds = 60;
 
   sendButton.textContent = `You can request another email in ${seconds}s`;
+  const countdown = setInterval(() => {
+
+    seconds--;
+
+    sendButton.textContent = `You can request another email in ${seconds}s`;
+
+    if (seconds <= 0) {
+
+      clearInterval(countdown);
+
+      sendButton.disabled = false;
+
+      sendButton.textContent = "Send Reset Link";
+
+    }
+
+  }, 1000);
 }
 
 async function initializeResetPasswordPage() {
