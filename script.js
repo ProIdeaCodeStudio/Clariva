@@ -205,13 +205,20 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  function showNotification(title, message, type = "success", callback = null) {
+  function showNotification(
+    title,
+    message,
+    type = "success",
+    buttonText = "Continue",
+    callback = null
+  ) {
 
     const overlay = document.getElementById("notification-overlay");
     const icon = document.getElementById("notification-icon");
     const titleElement = document.getElementById("notification-title");
     const messageElement = document.getElementById("notification-message");
     const button = document.getElementById("notification-button");
+    button.textContent = buttonText;
 
     titleElement.textContent = title;
     messageElement.textContent = message;
@@ -250,7 +257,6 @@ async function handleFormSubmit(e) {
       }
 
     };
-
   }
 
   const name = document.getElementById('field-name').value.trim();
@@ -628,6 +634,7 @@ async function handlePasswordReset() {
 
   const emailInput = document.getElementById("reset-email");
   const errorElement = document.getElementById("reset-error");
+  const sendButton = document.getElementById("send-reset-link-button");
 
   const email = emailInput.value.trim();
 
@@ -655,8 +662,17 @@ async function handlePasswordReset() {
     return;
   }
 
-  alert("Password reset email sent. Please check your inbox.");
+  showNotification(
+    "Check Your Email",
+    "We've sent a password reset link to your email address. Please check your inbox (and your Spam folder if you don't see it).",
+    "info",
+    "OK"
+  );
+  sendButton.disabled = true;
 
+  let seconds = 60;
+
+  sendButton.textContent = `You can request another email in ${seconds}s`;
 }
 
 async function initializeResetPasswordPage() {
@@ -722,10 +738,15 @@ async function initializeResetPasswordPage() {
       return;
     }
 
-    alert("Password updated successfully!");
-
-    window.location.href = "index.html";
-
+    showNotification(
+      "Password Updated",
+      "Your password has been updated successfully. You can now sign in with your new password.",
+      "success",
+      "Go to Login",
+      () => {
+        window.location.href = "index.html";
+      }
+    );
   });
 }
 function unlockContent() {
