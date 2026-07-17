@@ -357,6 +357,83 @@ a:hover {
   margin-bottom: var(--space-lg);
 }
 
+/* ── NOTIFICATION MODAL ───────────────────────────────────── */
+
+.notification-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--deep-ink-97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 24px);
+  z-index: 2000;
+
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.notification-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notification-modal {
+  background: var(--warm-white);
+  border: var(--border-thin);
+  border-radius: var(--radius-lg);
+
+  width: min(460px, 92vw);
+
+  padding: clamp(28px, 4vw, 42px);
+
+  text-align: center;
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.20);
+
+  animation: notificationPop .28s ease;
+}
+
+@keyframes notificationPop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.notification-icon {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--amber);
+  color: var(--warm-white);
+
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.notification-title {
+  margin-bottom: 12px;
+}
+
+.notification-message {
+  margin-bottom: 28px;
+  line-height: 1.7;
+}
 
 /* ── HEADER ──────────────────────────────────────────────── */
 #header {
