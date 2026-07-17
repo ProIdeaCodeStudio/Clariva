@@ -205,6 +205,54 @@ async function handleFormSubmit(e) {
     return;
   }
 
+  function showNotification(title, message, type = "success", callback = null) {
+
+    const overlay = document.getElementById("notification-overlay");
+    const icon = document.getElementById("notification-icon");
+    const titleElement = document.getElementById("notification-title");
+    const messageElement = document.getElementById("notification-message");
+    const button = document.getElementById("notification-button");
+
+    titleElement.textContent = title;
+    messageElement.textContent = message;
+
+    switch (type) {
+
+      case "success":
+        icon.textContent = "✓";
+        icon.style.background = "var(--amber)";
+        break;
+
+      case "error":
+        icon.textContent = "✕";
+        icon.style.background = "#c0392b";
+        break;
+
+      case "warning":
+        icon.textContent = "!";
+        icon.style.background = "#f39c12";
+        break;
+
+      case "info":
+        icon.textContent = "i";
+        icon.style.background = "#2980b9";
+        break;
+    }
+
+    overlay.classList.remove("hidden");
+
+    button.onclick = () => {
+
+      overlay.classList.add("hidden");
+
+      if (callback) {
+        callback();
+      }
+
+    };
+
+  }
+
   const name = document.getElementById('field-name').value.trim();
   const email = document.getElementById('field-email').value.trim();
   const phone = document.getElementById('field-phone').value.trim();
