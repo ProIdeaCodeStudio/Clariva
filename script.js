@@ -577,8 +577,40 @@ async function handleLogin() {
 }
 
 async function handlePasswordReset() {
-  alert("Password reset is not connected yet.");
+
+  const emailInput = document.getElementById("reset-email");
+  const errorElement = document.getElementById("reset-error");
+
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    errorElement.textContent = "Please enter your email.";
+    errorElement.classList.add("visible");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    errorElement.textContent = "Please enter a valid email address.";
+    errorElement.classList.add("visible");
+    return;
+  }
+
+  errorElement.classList.remove("visible");
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: "https://proideacodestudio.github.io/Clariva/reset-password.html"
+  });
+
+  if (error) {
+    errorElement.textContent = error.message;
+    errorElement.classList.add("visible");
+    return;
+  }
+
+  alert("Password reset email sent. Please check your inbox.");
+
 }
+
 async function initializeResetPasswordPage() {
 
   if (!window.location.pathname.endsWith("reset-password.html")) {
@@ -622,6 +654,30 @@ async function initializeResetPasswordPage() {
 
     // Clear previous error
     errorElement.classList.remove("visible");
+    const {
+      data: { session }
+    } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+      errorElement.textContent =
+        "This password reset link has expired. Please request a new one.";
+      errorElement.classList.add("visible");
+      return;
+    }
+    const { error } = await supabaseClient.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      errorElement.textContent = error.message;
+      errorElement.classList.add("visible");
+      return;
+    }
+
+    alert("Password updated successfully!");
+
+    window.location.href = "index.html";
+
   });
 }
 function unlockContent() {
