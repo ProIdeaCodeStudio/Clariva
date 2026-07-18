@@ -253,14 +253,12 @@ function showStep(stepId) {
   if (el) el.classList.add('active');
 }
 
-
-
 function showForgotPasswordStep(e) {
   e.preventDefault();
 
-  copyEmail("login-email", "reset-email");
-
   showStep("step-5");
+
+  copyEmail("login-email", "reset-email");
 }
 
 function isValidEmail(email) {
@@ -340,6 +338,8 @@ async function handleFormSubmit(e) {
 
       showStep("step-4");
 
+      copyEmail("field-email", "login-email");
+
       const loginError = document.getElementById("login-error");
 
       if (loginError) {
@@ -347,8 +347,6 @@ async function handleFormSubmit(e) {
           "Welcome back! An account already exists for this email. Please sign in.";
         loginError.classList.add("visible");
       }
-
-      copyEmail("field-email", "login-email");
 
       const loginEmail = document.getElementById("login-email");
       if (loginEmail) {
