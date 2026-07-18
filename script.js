@@ -198,7 +198,26 @@ window.onload = async function () {
   if (loginBtn) loginBtn.addEventListener('click', handleLogin);
 
   const showRegBtn = document.getElementById('show-register-step-button');
-  if (showRegBtn) showRegBtn.addEventListener('click', () => showStep('step-1'));
+  if (showRegBtn) {
+    showRegBtn.addEventListener('click', () => {
+
+      copyEmail("login-email", "field-email");
+
+      showStep("step-1");
+
+    });
+  }
+
+  function copyEmail(fromId, toId) {
+
+    const from = document.getElementById(fromId);
+    const to = document.getElementById(toId);
+
+    if (!from || !to) return;
+
+    to.value = from.value.trim();
+
+  }
   const forgotPasswordLink = document.getElementById('forgot-password-link');
   if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener('click', showForgotPasswordStep);
@@ -234,9 +253,14 @@ function showStep(stepId) {
   if (el) el.classList.add('active');
 }
 
+
+
 function showForgotPasswordStep(e) {
   e.preventDefault();
-  showStep('step-5');
+
+  copyEmail("login-email", "reset-email");
+
+  showStep("step-5");
 }
 
 function isValidEmail(email) {
@@ -324,9 +348,10 @@ async function handleFormSubmit(e) {
         loginError.classList.add("visible");
       }
 
+      copyEmail("field-email", "login-email");
+
       const loginEmail = document.getElementById("login-email");
       if (loginEmail) {
-        loginEmail.value = email;
         loginEmail.focus();
       }
 
@@ -588,14 +613,23 @@ async function handleLogin() {
   });
 
   if (signInError) {
-    if (error) {
-      error.textContent = '✗ ' + signInError.message;
-      error.classList.add('visible');
+
+    let message = "Unable to sign in. Please check your email and password.";
+
+    if (signInError.message.toLowerCase().includes("email not confirmed")) {
+      message = "Please verify your email before signing in.";
     }
+
+    if (error) {
+      error.textContent = message;
+      error.classList.add("visible");
+    }
+
     if (btn) {
       btn.disabled = false;
-      btn.textContent = 'Login →';
+      btn.textContent = "Login →";
     }
+
     return;
   }
 
