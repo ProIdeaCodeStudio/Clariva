@@ -256,7 +256,7 @@ function showStep(stepId) {
 function showForgotPasswordStep(e) {
   e.preventDefault();
 
-  showStep("step-5");
+  showStep("step-5")
 
   copyEmail("login-email", "reset-email");
 }
