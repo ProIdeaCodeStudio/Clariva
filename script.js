@@ -207,17 +207,7 @@ window.onload = async function () {
 
     });
   }
-
-  function copyEmail(fromId, toId) {
-
-    const from = document.getElementById(fromId);
-    const to = document.getElementById(toId);
-
-    if (!from || !to) return;
-
-    to.value = from.value.trim();
-
-  }
+  
   const forgotPasswordLink = document.getElementById('forgot-password-link');
   if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener('click', showForgotPasswordStep);
@@ -251,6 +241,17 @@ function showStep(stepId) {
   document.querySelectorAll('.gate-step').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(stepId);
   if (el) el.classList.add('active');
+}
+
+function copyEmail(fromId, toId) {
+
+    const from = document.getElementById(fromId);
+    const to = document.getElementById(toId);
+
+    if (!from || !to) return;
+
+    to.value = from.value.trim();
+
 }
 
 function showForgotPasswordStep(e) {
