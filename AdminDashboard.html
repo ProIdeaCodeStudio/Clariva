@@ -26,7 +26,7 @@
       </div>
     </div>
   </header>
-  <main class="container">
+  <main class="container" id="admin-dashboard" hidden>
     <section id="features">
   <p class="features-label">Administration</p>
   <h1 class="features-title">Admin Dashboard</h1>
@@ -58,5 +58,63 @@
   </div>
 </section>
   </main>
+  <script>
+  window.addEventListener('load', async () => {
+    const dashboard = document.getElementById('admin-dashboard');
+
+    try {
+      if (!window.supabaseClient) {
+        throw new Error('Supabase client is not initialized.');
+      }
+
+      const { data: { user }, error: authError } =
+        await window.supabaseClient.auth.getUser();
+
+      if (authError || !user) {
+        window.location.replace('index.html#step-1');
+        return;
+      }
+
+      const { data: profile, error: profileError } =
+        await window.supabaseClient
+          .from('students')
+          .select('Verified, Role')
+          .eq('user_id', user.id)
+          .single();
+
+      if (profileError || !profile) {
+        throw new Error('Unable to verify your account permissions.');
+      }
+
+      if (profile.Verified !== true) {
+        window.location.replace('index.html#step-2');
+        return;
+      }
+
+      if (String(profile.Role).toLowerCase() !== 'admin') {
+        if (String(profile.Role).toLowerCase() === 'owner') {
+          window.location.replace('OwnerDashboard.html');
+        } else {
+          window.location.replace('Undergraduates.html');
+        }
+        return;
+      }
+
+      if (dashboard) {
+        dashboard.hidden = false;
+      }
+    } catch (error) {
+      console.error('Admin Dashboard access check failed:', error);
+
+      document.body.innerHTML = `
+        <main class="container">
+          <h1>Unable to verify access</h1>
+          <p>Please return to Clariva and try again.</p>
+          <a href="index.html">Return to Clariva</a>
+        </main>
+      `;
+    }
+  });
+</script>
 </body>
 </html>
