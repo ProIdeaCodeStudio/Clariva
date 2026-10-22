@@ -187,24 +187,6 @@ window.onload = async function () {
     }
   }
 
-    const { data: studentData, error: queryError } = await supabaseClient
-      .from('students')
-      .select('Verified')
-      .eq('user_id', user.id)
-      .single();
-
-    if (queryError || !studentData) {
-      console.warn('There was an error checking access:', queryError);
-      window.location.href = 'index.html#step-1';
-      return;
-    }
-
-    if (!studentData.Verified) {
-      window.location.href = 'index.html#step-2';
-      return;
-    }
-  }
-
   // Initialize EmailJS only if it's loaded and you left the public key defined
   if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
     try {
