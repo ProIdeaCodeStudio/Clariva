@@ -110,20 +110,82 @@ window.onload = async function () {
     sendResetBtn.addEventListener('click', handlePasswordReset);
   }
 
-  // Access guard for Undergraduates.html
-  if (window.location.href.includes('Undergraduates.html')) {
+  
+  // Shared access guard for protected dashboard pages
+  const currentPage = window.location.pathname.split('/').pop();
+
+  const isUndergraduatesPage = currentPage === 'Undergraduates.html';
+  const isAdminDashboard = currentPage === 'AdminDashboard.html';
+
+  if (isUndergraduatesPage || isAdminDashboard) {
+    const dashboard = isAdminDashboard
+      ? document.getElementById('admin-dashboard')
+      : null;
+
     if (!supabaseClient) {
-      console.error('Supabase client not available; redirecting to entry step.');
-      window.location.href = 'index.html#step-1';
+      console.error('Supabase client is unavailable.');
+      window.location.replace('index.html#step-1');
       return;
     }
 
-    const user = await getCurrentUser();
+    try {
+      const user = await getCurrentUser();
 
-    if (!user) {
-      window.location.href = 'index.html#step-1';
+      if (!user) {
+        window.location.replace('index.html#step-1');
+        return;
+      }
+
+      const { data: profile, error: profileError } =
+        await supabaseClient
+          .from('students')
+          .select('Verified, Role')
+          .eq('user_id', user.id)
+          .single();
+
+      if (profileError || !profile) {
+        console.error('Unable to verify account permissions:', profileError);
+        window.location.replace('index.html#step-1');
+        return;
+      }
+
+      if (profile.Verified !== true) {
+        window.location.replace('index.html#step-2');
+        return;
+      }
+
+      const role = String(profile.Role || '').toLowerCase();
+
+      if (isAdminDashboard) {
+        if (role !== 'admin') {
+          if (role === 'student') {
+            window.location.replace('Undergraduates.html');
+          } else {
+            window.location.replace('index.html#step-1');
+          }
+          return;
+        }
+
+        if (dashboard) {
+          dashboard.hidden = false;
+        }
+      } else {
+        if (role === 'admin') {
+          window.location.replace('AdminDashboard.html');
+          return;
+        }
+
+        if (role !== 'student') {
+          window.location.replace('index.html#step-1');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Dashboard access check failed:', error);
+      window.location.replace('index.html#step-1');
       return;
     }
+  }
 
     const { data: studentData, error: queryError } = await supabaseClient
       .from('students')
