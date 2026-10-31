@@ -157,7 +157,7 @@ window.onload = async function () {
       const role = String(profile.Role || '').toLowerCase();
 
       if (isAdminDashboard) {
-        if (role !== 'admin') {
+        if (!['admin', 'owner'].includes(role)) {
           if (role === 'student') {
             window.location.replace('Undergraduates.html');
           } else {
@@ -170,7 +170,7 @@ window.onload = async function () {
           dashboard.hidden = false;
         }
       } else {
-        if (role === 'admin') {
+        if (['admin', 'owner'].includes(role)) {
           window.location.replace('AdminDashboard.html');
           return;
         }
