@@ -3,61 +3,319 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Clariva — From Confusion to Confidence">
-  <meta name="keywords" content="education, students, University, 100 level, 200 level, Clariva, materials, PDF, notes, past questions, answers, solutions">
-  <meta name="author" content="Pro Idea">
+  <meta name="description" content="Clariva administrator dashboard">
   <title>Clariva — Admin Dashboard</title>
+
   <link rel="stylesheet" href="Stylesheet.css">
-  <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js" defer></script>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+
+  <style>
+    /* Dashboard-only styles. The site's existing stylesheet remains in use. */
+    .admin-main { padding: 3rem 0 5rem; }
+    .admin-intro { margin-bottom: 2rem; }
+    .admin-kicker, .admin-section-kicker {
+      color: var(--amber, #E8941A); font-size: .75rem;
+      letter-spacing: .14em; text-transform: uppercase;
+    }
+    .admin-title {
+      color: var(--deep-ink, #111008); font-size: clamp(2rem, 5vw, 3rem);
+      margin: .4rem 0;
+    }
+    .admin-description, .admin-panel-intro, .admin-muted, .admin-file-note {
+      color: var(--ember-fog, #8A7A5A);
+    }
+    .admin-nav {
+      display: flex; flex-wrap: wrap; gap: .65rem;
+      margin: 1.5rem 0 2rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--parchment, #DDD0B3);
+    }
+    .admin-nav a {
+      display: inline-block; padding: .65rem .9rem;
+      background: var(--parchment, #DDD0B3); color: var(--deep-ink, #111008);
+      border-radius: 4px; text-decoration: none; font-size: .8rem;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .admin-nav a:hover, .admin-nav a:focus {
+      background: var(--amber, #E8941A);
+    }
+    .admin-panel {
+      margin: 0 0 1.5rem; padding: clamp(1.1rem, 3vw, 1.8rem);
+      background: #fffdf7; border: 1px solid var(--parchment, #DDD0B3);
+      border-radius: 8px;
+    }
+    .admin-panel h2 { margin: .35rem 0 .5rem; color: var(--deep-ink, #111008); }
+    .admin-form-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem; margin-top: 1.25rem;
+    }
+    .admin-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+    .admin-field-full { grid-column: 1 / -1; }
+    .admin-field label {
+      color: var(--deep-ink, #111008); font-size: .75rem;
+      letter-spacing: .07em; text-transform: uppercase;
+    }
+    .admin-field input, .admin-field select, .admin-field textarea {
+      width: 100%; box-sizing: border-box; padding: .75rem;
+      border: 1px solid var(--parchment, #DDD0B3); border-radius: 4px;
+      background: var(--warm-white, #F5EDD8); color: var(--deep-ink, #111008);
+      font: inherit;
+    }
+    .admin-field textarea { min-height: 100px; resize: vertical; }
+    .admin-file-note, .admin-muted { font-size: .8rem; }
+    .admin-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
+    .admin-button {
+      padding: .8rem 1.1rem; border: 1px solid var(--amber, #E8941A);
+      border-radius: 4px; background: var(--amber, #E8941A);
+      color: var(--deep-ink, #111008); cursor: pointer;
+      font-size: .78rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .admin-button-secondary { background: transparent; border-color: var(--ember-fog, #8A7A5A); }
+    .admin-stat-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .8rem; margin-top: 1.2rem;
+    }
+    .admin-stat {
+      padding: 1rem; background: var(--warm-white, #F5EDD8);
+      border: 1px solid var(--parchment, #DDD0B3); border-radius: 6px;
+    }
+    .admin-stat-label {
+      display: block; color: var(--ember-fog, #8A7A5A);
+      font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    }
+    .admin-stat-value {
+      display: block; margin-top: .35rem; color: var(--deep-ink, #111008);
+      font-size: 1.6rem; font-weight: 800;
+    }
+    .admin-filter-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: .8rem; margin: 1.2rem 0;
+    }
+    .admin-placeholder {
+      padding: 1.5rem; border: 1px dashed var(--ember-fog, #8A7A5A);
+      border-radius: 6px; background: var(--warm-white, #F5EDD8);
+      color: var(--ember-fog, #8A7A5A); text-align: center;
+    }
+    .admin-placeholder strong {
+      display: block; margin-bottom: .35rem; color: var(--deep-ink, #111008);
+    }
+    @media (max-width: 700px) {
+      .admin-form-grid, .admin-stat-grid { grid-template-columns: 1fr; }
+      .admin-filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .admin-field-full { grid-column: auto; }
+    }
+    @media (max-width: 430px) {
+      .admin-filter-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
+
 <body>
   <header id="header">
     <div class="container">
       <div class="header-inner">
         <div>
           <div class="edu-wordmark">Clariva</div>
-          <div class="header-tagline">"From Confusion to Confidence."</div>
+          <div class="header-tagline">From Confusion to Confidence.</div>
         </div>
         <a href="index.html" class="header-btn">Home</a>
       </div>
     </div>
   </header>
-  <main class="container" id="admin-dashboard" hidden>
-    <section id="features">
-  <p class="features-label">Administration</p>
-  <h1 class="features-title">Admin Dashboard</h1>
 
-  <div class="features-grid">
-    <article class="feature-card">
-      <div class="feature-icon">📚</div>
-      <h2 class="feature-title">Resource Management</h2>
-      <p class="feature-text">
-        Manage learning resources and course materials.
-      </p>
-    </article>
+  <!-- script.js controls access to this protected dashboard. -->
+  <main class="container admin-main" id="admin-dashboard" hidden>
+    <section class="admin-intro" aria-labelledby="admin-page-title">
+      <p class="admin-kicker">Administration</p>
+      <h1 class="admin-title" id="admin-page-title">Admin Dashboard</h1>
+      <p class="admin-description">Manage learning resources and monitor the Clariva platform.</p>
+    </section>
 
-    <article class="feature-card">
-      <div class="feature-icon">👥</div>
-      <h2 class="feature-title">User Overview</h2>
-      <p class="feature-text">
-        Review registered users and verification status.
-      </p>
-    </article>
+    <nav class="admin-nav" aria-label="Dashboard sections">
+      <a href="#resource-management">Resources</a>
+      <a href="#upload-resource">Upload</a>
+      <a href="#manage-resources">Manage</a>
+      <a href="#user-overview">Users</a>
+      <a href="#platform-overview">Platform</a>
+    </nav>
 
-    <article class="feature-card">
-      <div class="feature-icon">📊</div>
-      <h2 class="feature-title">Platform Overview</h2>
-      <p class="feature-text">
-        View resource activity and platform information.
-      </p>
-    </article>
-  </div>
-</section>
+    <section class="admin-panel" id="resource-management">
+      <p class="admin-section-kicker">Learning materials</p>
+      <h2>Resource Management</h2>
+      <p class="admin-panel-intro">Add course materials and maintain the resources available to verified students.</p>
+      <div class="admin-stat-grid" aria-label="Resource summary">
+        <div class="admin-stat">
+          <span class="admin-stat-label">Total resources</span>
+          <span class="admin-stat-value" id="resource-total">—</span>
+        </div>
+        <div class="admin-stat">
+          <span class="admin-stat-label">Featured resources</span>
+          <span class="admin-stat-value" id="resource-featured-total">—</span>
+        </div>
+        <div class="admin-stat">
+          <span class="admin-stat-label">Downloads</span>
+          <span class="admin-stat-value" id="resource-download-total">—</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="upload-resource">
+      <p class="admin-section-kicker">Add to library</p>
+      <h2>Upload Resource</h2>
+      <p class="admin-panel-intro">Enter the resource details and select the document to add to Clariva.</p>
+
+      <!-- Supabase upload handling will be connected in the next implementation stage. -->
+      <form id="resource-upload-form">
+        <div class="admin-form-grid">
+          <div class="admin-field admin-field-full">
+            <label for="resource-title">Resource title</label>
+            <input id="resource-title" name="title" type="text" maxlength="160"
+              placeholder="e.g. Complete Lecture Handout" required>
+          </div>
+
+          <div class="admin-field admin-field-full">
+            <label for="resource-description">Description</label>
+            <textarea id="resource-description" name="description" maxlength="1000"
+              placeholder="Briefly describe this resource"></textarea>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-department">Department</label>
+            <input id="resource-department" name="department" type="text"
+              placeholder="e.g. Electrical and Electronics Engineering">
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-level">Level</label>
+            <select id="resource-level" name="level" required>
+              <option value="">Select level</option>
+              <option value="100">100 Level</option>
+              <option value="200">200 Level</option>
+              <option value="300">300 Level</option>
+              <option value="400">400 Level</option>
+              <option value="500">500 Level</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-semester">Semester</label>
+            <select id="resource-semester" name="semester" required>
+              <option value="">Select semester</option>
+              <option value="1">First semester</option>
+              <option value="2">Second semester</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-course-code">Course code</label>
+            <input id="resource-course-code" name="course_code" type="text"
+              maxlength="30" placeholder="e.g. EEE 101">
+          </div>
+
+          <div class="admin-field admin-field-full">
+            <label for="resource-course-title">Course title</label>
+            <input id="resource-course-title" name="course_title" type="text"
+              maxlength="160" placeholder="e.g. Introduction to Electrical Engineering">
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-type">Resource type</label>
+            <select id="resource-type" name="resource_type" required>
+              <option value="">Select resource type</option>
+              <option value="Lecture Note">Lecture note</option>
+              <option value="Handout">Handout</option>
+              <option value="Past Questions">Past questions</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Textbook">Textbook</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-file">Document file</label>
+            <input id="resource-file" name="file" type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+            <span class="admin-file-note">PDF, DOC, DOCX, PPT or PPTX. Maximum 50 MB.</span>
+          </div>
+        </div>
+
+        <div class="admin-actions">
+          <button class="admin-button" type="submit" id="resource-upload-button">Upload Resource</button>
+          <button class="admin-button admin-button-secondary" type="reset">Clear Form</button>
+        </div>
+        <p class="admin-muted" id="resource-upload-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="admin-panel" id="manage-resources">
+      <p class="admin-section-kicker">Library administration</p>
+      <h2>Manage Resources</h2>
+      <p class="admin-panel-intro">Find resources and narrow the list by course, level, semester or type.</p>
+
+      <div class="admin-filter-row">
+        <div class="admin-field">
+          <label for="resource-search">Search resources</label>
+          <input id="resource-search" type="search" placeholder="Search title or course">
+        </div>
+        <div class="admin-field">
+          <label for="filter-level">Level</label>
+          <select id="filter-level">
+            <option value="">All levels</option>
+            <option value="100">100 Level</option>
+            <option value="200">200 Level</option>
+            <option value="300">300 Level</option>
+            <option value="400">400 Level</option>
+            <option value="500">500 Level</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <label for="filter-semester">Semester</label>
+          <select id="filter-semester">
+            <option value="">All semesters</option>
+            <option value="1">First semester</option>
+            <option value="2">Second semester</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <label for="filter-type">Resource type</label>
+          <select id="filter-type">
+            <option value="">All types</option>
+            <option value="Lecture Note">Lecture note</option>
+            <option value="Handout">Handout</option>
+            <option value="Past Questions">Past questions</option>
+            <option value="Assignment">Assignment</option>
+            <option value="Textbook">Textbook</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="resource-list" class="admin-placeholder">
+        <strong>Resource list will appear here</strong>
+        Resource loading, filtering and management actions will be connected in the next stages.
+      </div>
+    </section>
+
+    <section class="admin-panel" id="user-overview">
+      <p class="admin-section-kicker">Accounts</p>
+      <h2>User Overview</h2>
+      <p class="admin-panel-intro">A future overview of registered users and verification status.</p>
+      <div class="admin-placeholder">
+        <strong>User overview is not connected yet</strong>
+        This section is reserved for a later dashboard enhancement.
+      </div>
+    </section>
+
+    <section class="admin-panel" id="platform-overview">
+      <p class="admin-section-kicker">Platform activity</p>
+      <h2>Platform Overview</h2>
+      <p class="admin-panel-intro">A future summary of resource activity and platform information.</p>
+      <div class="admin-placeholder">
+        <strong>Platform statistics are not connected yet</strong>
+        Resource and download metrics will be populated after the resource workflow is implemented.
+      </div>
+    </section>
   </main>
-  
 </body>
 </html>
