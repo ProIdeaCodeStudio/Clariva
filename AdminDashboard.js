@@ -1,4 +1,3 @@
-
 /* ============================================================
    CLARIVA — ADMIN DASHBOARD
    Resource upload, listing, search, filters and statistics.
@@ -620,8 +619,8 @@
     loadResources();
   }
 
-  document.addEventListener(
-    'DOMContentLoaded',
-    initializeAdminDashboard
-  );
+  window.addEventListener(
+  'load',
+  initializeAdminDashboard
+);
 })();
