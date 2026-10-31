@@ -191,55 +191,57 @@
         downloads.toLocaleString();
     }
   }
+   /* ============================================================
+   SEARCH AND FILTERS
+   ============================================================ */
 
-  /* ============================================================
-     SEARCH AND FILTERS
-     ============================================================ */
+let appliedSearch = '';
 
-  function getFilteredResources() {
-    const search = (getElement('resource-search')?.value || '')
-      .trim()
+function getFilteredResources() {
+  const search = appliedSearch.trim().toLowerCase();
+
+  const level = getElement('filter-level')?.value || '';
+  const semester = getElement('filter-semester')?.value || '';
+  const type = getElement('filter-type')?.value || '';
+
+  return resources.filter(resource => {
+    // Search only text-based resource information.
+    // Resource type, level and semester are excluded.
+    const searchableText = [
+      resource.title,
+      resource.description,
+      resource.course_code,
+      resource.course_title,
+      resource.department,
+      resource.file_name
+    ]
+      .filter(Boolean)
+      .join(' ')
       .toLowerCase();
 
-    const level = getElement('filter-level')?.value || '';
-    const semester = getElement('filter-semester')?.value || '';
-    const type = getElement('filter-type')?.value || '';
+    // The complete search phrase must appear in the same order.
+    const matchesSearch =
+      !search || searchableText.includes(search);
 
-    return resources.filter(resource => {
-      const searchableText = [
-        resource.title,
-        resource.description,
-        resource.course_code,
-        resource.course_title,
-        resource.department,
-        resource.resource_type,
-        resource.file_name
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+    // These selections only narrow the search results.
+    const matchesLevel =
+      !level || String(resource.level) === level;
 
-      const matchesSearch =
-        !search || searchableText.includes(search);
+    const matchesSemester =
+      !semester || String(resource.semester) === semester;
 
-      const matchesLevel =
-        !level || String(resource.level) === level;
+    const matchesType =
+      !type || resource.resource_type === type;
 
-      const matchesSemester =
-        !semester || String(resource.semester) === semester;
-
-      const matchesType =
-        !type || resource.resource_type === type;
-
-      return (
-        matchesSearch &&
-        matchesLevel &&
-        matchesSemester &&
-        matchesType
-      );
-    });
-  }
-
+    return (
+      matchesSearch &&
+      matchesLevel &&
+      matchesSemester &&
+      matchesType
+    );
+  });
+}
+   
   /* ============================================================
      RESOURCE DISPLAY
      ============================================================ */
@@ -603,10 +605,25 @@
     }
 
     const search = getElement('resource-search');
+const searchButton = getElement('resource-search-button');
 
-    if (search) {
-      search.addEventListener('input', renderResources);
+function applySearch() {
+  appliedSearch = search?.value || '';
+  renderResources();
+}
+
+if (searchButton) {
+  searchButton.addEventListener('click', applySearch);
+}
+
+if (search) {
+  search.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      applySearch();
     }
+  });
+}
 
     ['filter-level', 'filter-semester', 'filter-type'].forEach(id => {
       const filter = getElement(id);
