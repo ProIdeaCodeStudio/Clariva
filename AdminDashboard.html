@@ -433,9 +433,22 @@
 
       <div class="admin-filter-row">
         <div class="admin-field">
-          <label for="resource-search">Search resources</label>
-          <input id="resource-search" type="search" placeholder="Search title or course">
-        </div>
+  <label for="resource-search">Search resources</label>
+  <div class="admin-search-controls">
+    <input
+      id="resource-search"
+      type="search"
+      placeholder="Search title or course"
+    >
+    <button
+      class="admin-button"
+      type="button"
+      id="resource-search-button"
+    >
+      Search
+    </button>
+  </div>
+</div>
         <div class="admin-field">
           <label for="filter-level">Level</label>
           <select id="filter-level">
