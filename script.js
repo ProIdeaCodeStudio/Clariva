@@ -110,7 +110,7 @@ window.onload = async function () {
     sendResetBtn.addEventListener('click', handlePasswordReset);
   }
 
-  
+
   // Shared access guard for protected dashboard pages
   const currentPage = window.location.pathname.split('/').pop();
 
@@ -251,7 +251,7 @@ window.onload = async function () {
 
     });
   }
-  
+
   const forgotPasswordLink = document.getElementById('forgot-password-link');
   if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener('click', showForgotPasswordStep);
@@ -260,7 +260,7 @@ window.onload = async function () {
   const scrollFeatures = document.getElementById('scroll-features-button');
   if (scrollFeatures) scrollFeatures.addEventListener('click', () => document.getElementById('features').scrollIntoView({ behavior: 'smooth' }));
 
-    // Show the default gate step
+  // Show the default gate step
   showStep('step-1');
 
   // Authentication checks and page initialization are complete.
@@ -300,12 +300,12 @@ function showStep(stepId) {
 
 function copyEmail(fromId, toId) {
 
-    const from = document.getElementById(fromId);
-    const to = document.getElementById(toId);
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
 
-    if (!from || !to) return;
+  if (!from || !to) return;
 
-    to.value = from.value.trim();
+  to.value = from.value.trim();
 
 }
 
