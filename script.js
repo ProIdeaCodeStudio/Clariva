@@ -260,8 +260,20 @@ window.onload = async function () {
   const scrollFeatures = document.getElementById('scroll-features-button');
   if (scrollFeatures) scrollFeatures.addEventListener('click', () => document.getElementById('features').scrollIntoView({ behavior: 'smooth' }));
 
-  // Show the default gate step
+    // Show the default gate step
   showStep('step-1');
+
+  // Authentication checks and page initialization are complete.
+  const pageLoader = document.getElementById('clariva-page-loader');
+
+  if (pageLoader) {
+    pageLoader.classList.add('is-hidden');
+
+    window.setTimeout(() => {
+      pageLoader.remove();
+    }, 500);
+  }
+};
 };
 
 function showGate() {
