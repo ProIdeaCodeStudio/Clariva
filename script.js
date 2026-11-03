@@ -274,7 +274,6 @@ window.onload = async function () {
     }, 500);
   }
 };
-};
 
 function showGate() {
   const gate = document.getElementById('gate-overlay');
