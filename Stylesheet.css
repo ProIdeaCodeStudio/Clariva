@@ -885,3 +885,69 @@ a:hover {
     align-items: flex-start;
   }
 }
+/* ============================================================
+   CLARIVA — BRANDING & INITIAL PAGE LOADER
+   ============================================================ */
+
+.clariva-navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.clariva-navbar-wordmark {
+  display: block;
+  width: clamp(150px, 22vw, 210px);
+  height: auto;
+  object-fit: contain;
+}
+
+.clariva-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--deep-ink);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+
+.clariva-page-loader.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.clariva-loader-wordmark {
+  display: block;
+  width: min(68vw, 360px);
+  height: auto;
+  object-fit: contain;
+  animation: clarivaWordmarkPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes clarivaWordmarkPulse {
+  0%, 100% {
+    opacity: 0.78;
+    transform: scale(0.985);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .clariva-navbar-wordmark {
+    width: 145px;
+  }
+
+  .clariva-loader-wordmark {
+    width: min(76vw, 300px);
+  }
+}
