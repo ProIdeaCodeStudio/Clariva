@@ -73,8 +73,8 @@
 
   --gradient-metallic:
     linear-gradient(135deg, var(--ash), var(--bronze), var(--ash));
-   
-   /* Typography */
+
+  /* Typography */
   --font-display: 'Syne', sans-serif;
   --font-accent: 'Cormorant Garamond', serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
@@ -459,7 +459,7 @@ a:hover {
   text-align: center;
 
   box-shadow:
-    0 24px 60px rgba(0,0,0,.20);
+    0 24px 60px rgba(0, 0, 0, .20);
 
   animation: notificationPop .28s ease;
 }
@@ -885,6 +885,7 @@ a:hover {
     align-items: flex-start;
   }
 }
+
 /* ============================================================
    CLARIVA — BRANDING & INITIAL PAGE LOADER
    ============================================================ */
@@ -929,8 +930,11 @@ a:hover {
   object-fit: contain;
   animation: clarivaMarkPulse 2.2s ease-in-out infinite;
 }
+
 @keyframes clarivaMarkPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.72;
     transform: scale(0.96);
   }
@@ -947,7 +951,7 @@ a:hover {
   }
 }
 
-  .clariva-loader-wordmark {
-    width: min(76vw, 300px);
-  }
+.clariva-loader-wordmark {
+  width: min(76vw, 300px);
+}
 }
