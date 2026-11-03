@@ -892,13 +892,13 @@ a:hover {
 .clariva-navbar-brand {
   display: inline-flex;
   align-items: center;
-  text-decoration: none;
   flex-shrink: 0;
 }
 
 .clariva-navbar-wordmark {
   display: block;
   width: clamp(150px, 22vw, 210px);
+  max-height: 52px;
   height: auto;
   object-fit: contain;
 }
@@ -946,6 +946,7 @@ a:hover {
   .clariva-navbar-wordmark {
     width: 145px;
   }
+}
 
   .clariva-loader-wordmark {
     width: min(76vw, 300px);
