@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Clariva — From Confusion to Confidence">
-  <meta name="keywords" content="education, students, University, 100 level, 200 level, Clariva, materials, PDF, notes, past questions, answers, solutions">
+  <meta name="keywords"
+    content="education, students, University, 100 level, 200 level, Clariva, materials, PDF, notes, past questions, answers, solutions">
   <meta name="author" content="Pro Idea">
   <title>Clariva — Admin Dashboard</title>
   <link rel="stylesheet" href="Stylesheet.css">
@@ -16,301 +18,294 @@
   <script src="AdminDashboard.js" defer></script>
 
   <style>
-    
-/* ============================================================
+    /* ============================================================
    CLARIVA — ADMIN DASHBOARD
    Uses the existing Ember Design System.
    Dashboard-specific styles only.
    ============================================================ */
 
-.admin-main {
-  padding-top: var(--space-xl);
-  padding-bottom: var(--space-2xl);
-}
+    .admin-main {
+      padding-top: var(--space-xl);
+      padding-bottom: var(--space-2xl);
+    }
 
-.admin-intro {
-  margin-bottom: var(--space-lg);
-}
+    .admin-intro {
+      margin-bottom: var(--space-lg);
+    }
 
-.admin-kicker,
-.admin-section-kicker {
-  font-family: var(--font-label);
-  font-size: var(--text-label);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--amber);
-}
+    .admin-kicker,
+    .admin-section-kicker {
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
 
-.admin-title {
-  font-family: var(--font-display);
-  font-size: var(--text-hero);
-  font-weight: 800;
-  line-height: 1.15;
-  color: var(--deep-ink);
-  margin: var(--space-xs) 0;
-}
+    .admin-title {
+      font-family: var(--font-display);
+      font-size: var(--text-hero);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--deep-ink);
+      margin: var(--space-xs) 0;
+    }
 
-.admin-description,
-.admin-panel-intro,
-.admin-muted,
-.admin-file-note {
-  font-family: var(--font-body);
-  color: var(--ember-fog);
-}
+    .admin-description,
+    .admin-panel-intro,
+    .admin-muted,
+    .admin-file-note {
+      font-family: var(--font-body);
+      color: var(--ember-fog);
+    }
 
-.admin-description {
-  font-size: var(--text-md);
-}
+    .admin-description {
+      font-size: var(--text-md);
+    }
 
-.admin-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin: var(--space-lg) 0;
-  padding-bottom: var(--space-md);
-  border-bottom: var(--border-thin);
-}
+    .admin-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin: var(--space-lg) 0;
+      padding-bottom: var(--space-md);
+      border-bottom: var(--border-thin);
+    }
 
-.admin-nav a {
-  display: inline-block;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--parchment);
-  color: var(--deep-ink);
-  border-radius: var(--radius-xs);
-  text-decoration: none;
-  font-family: var(--font-label);
-  font-size: var(--text-label);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  transition: var(--transition);
-}
+    .admin-nav a {
+      display: inline-block;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--parchment);
+      color: var(--deep-ink);
+      border-radius: var(--radius-xs);
+      text-decoration: none;
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: var(--transition);
+    }
 
-.admin-nav a:hover,
-.admin-nav a:focus {
-  background: var(--amber);
-  color: var(--deep-ink);
-}
+    .admin-nav a:hover,
+    .admin-nav a:focus {
+      background: var(--amber);
+      color: var(--deep-ink);
+    }
 
-.admin-panel {
-  margin-bottom: var(--space-lg);
-  padding: clamp(20px, 3vw, 40px);
-  background: var(--warm-white);
-  border: var(--border-thin);
-  border-radius: var(--radius-md);
-}
+    .admin-panel {
+      margin-bottom: var(--space-lg);
+      padding: clamp(20px, 3vw, 40px);
+      background: var(--warm-white);
+      border: var(--border-thin);
+      border-radius: var(--radius-md);
+    }
 
-.admin-panel h2 {
-  font-family: var(--font-display);
-  font-size: var(--text-h2);
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--deep-ink);
-  margin: var(--space-xs) 0 var(--space-sm);
-}
+    .admin-panel h2 {
+      font-family: var(--font-display);
+      font-size: var(--text-h2);
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--deep-ink);
+      margin: var(--space-xs) 0 var(--space-sm);
+    }
 
-.admin-panel-intro {
-  font-size: var(--text-md);
-  margin-bottom: var(--space-md);
-}
+    .admin-panel-intro {
+      font-size: var(--text-md);
+      margin-bottom: var(--space-md);
+    }
 
-.admin-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-}
+    .admin-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
 
-.admin-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  min-width: 0;
-}
+    .admin-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-width: 0;
+    }
 
-.admin-field-full {
-  grid-column: 1 / -1;
-}
+    .admin-field-full {
+      grid-column: 1 / -1;
+    }
 
-.admin-field label {
-  font-family: var(--font-label);
-  font-size: var(--text-label);
-  letter-spacing: 1px;
-  color: var(--ember-fog);
-  text-transform: uppercase;
-}
+    .admin-field label {
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      color: var(--ember-fog);
+      text-transform: uppercase;
+    }
 
-.admin-field input,
-.admin-field select,
-.admin-field textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: var(--space-sm) var(--space-md);
-  border: var(--border-thin);
-  border-radius: var(--radius-sm);
-  background: var(--parchment);
-  color: var(--deep-ink);
-  font-family: var(--font-body);
-  font-size: var(--text-md);
-  font-weight: 400;
-  line-height: 1.6;
-}
+    .admin-field input,
+    .admin-field select,
+    .admin-field textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--space-sm) var(--space-md);
+      border: var(--border-thin);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--deep-ink);
+      font-family: var(--font-body);
+      font-size: var(--text-md);
+      font-weight: 400;
+      line-height: 1.6;
+    }
 
-.admin-field input:focus,
-.admin-field select:focus,
-.admin-field textarea:focus {
-  outline: none;
-  border-color: var(--amber);
-  background: var(--warm-white);
-}
+    .admin-field input:focus,
+    .admin-field select:focus,
+    .admin-field textarea:focus {
+      outline: none;
+      border-color: var(--amber);
+      background: var(--warm-white);
+    }
 
-.admin-field textarea {
-  min-height: 120px;
-  resize: vertical;
-}
+    .admin-field textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
 
-.admin-file-note,
-.admin-muted {
-  font-size: var(--text-sm);
-}
+    .admin-file-note,
+    .admin-muted {
+      font-size: var(--text-sm);
+    }
 
-.admin-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-top: var(--space-lg);
-}
+    .admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+    }
 
-.admin-button {
-  padding: var(--space-sm) var(--space-md);
-  border: var(--border-amber);
-  border-radius: var(--radius-xs);
-  background: var(--amber);
-  color: var(--deep-ink);
-  font-family: var(--font-label);
-  font-size: var(--text-label);
-  font-weight: 400;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: var(--transition);
-}
+    .admin-button {
+      padding: var(--space-sm) var(--space-md);
+      border: var(--border-amber);
+      border-radius: var(--radius-xs);
+      background: var(--amber);
+      color: var(--deep-ink);
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      font-weight: 400;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition);
+    }
 
-.admin-button:hover,
-.admin-button:focus {
-  background: var(--ember-tint);
-}
+    .admin-button:hover,
+    .admin-button:focus {
+      background: var(--ember-tint);
+    }
 
-.admin-button-secondary {
-  background: transparent;
-  border-color: var(--ember-fog);
-  color: var(--deep-ink);
-}
+    .admin-button-secondary {
+      background: transparent;
+      border-color: var(--ember-fog);
+      color: var(--deep-ink);
+    }
 
-.admin-button-secondary:hover,
-.admin-button-secondary:focus {
-  background: var(--parchment);
-}
+    .admin-button-secondary:hover,
+    .admin-button-secondary:focus {
+      background: var(--parchment);
+    }
 
-.admin-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-}
+    .admin-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
 
-.admin-stat {
-  padding: var(--space-md);
-  background: var(--parchment);
-  border: var(--border-thin);
-  border-radius: var(--radius-sm);
-}
+    .admin-stat {
+      padding: var(--space-md);
+      background: var(--parchment);
+      border: var(--border-thin);
+      border-radius: var(--radius-sm);
+    }
 
-.admin-stat-label {
-  display: block;
-  font-family: var(--font-label);
-  font-size: var(--text-label);
-  letter-spacing: 1px;
-  color: var(--ember-fog);
-  text-transform: uppercase;
-}
+    .admin-stat-label {
+      display: block;
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      color: var(--ember-fog);
+      text-transform: uppercase;
+    }
 
-.admin-stat-value {
-  display: block;
-  margin-top: var(--space-xs);
-  color: var(--deep-ink);
-  font-family: var(--font-display);
-  font-size: var(--text-h2);
-  font-weight: 800;
-}
+    .admin-stat-value {
+      display: block;
+      margin-top: var(--space-xs);
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+      font-size: var(--text-h2);
+      font-weight: 800;
+    }
 
-.admin-filter-row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: var(--space-md);
-  margin: var(--space-lg) 0;
-}
+    .admin-filter-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--space-md);
+      margin: var(--space-lg) 0;
+    }
 
-.admin-placeholder {
-  padding: var(--space-lg);
-  border: 1px dashed var(--ember-fog);
-  border-radius: var(--radius-sm);
-  background: var(--parchment);
-  color: var(--ember-fog);
-  text-align: center;
-}
+    .admin-placeholder {
+      padding: var(--space-lg);
+      border: 1px dashed var(--ember-fog);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--ember-fog);
+      text-align: center;
+    }
 
-.admin-placeholder strong {
-  display: block;
-  margin-bottom: var(--space-xs);
-  color: var(--deep-ink);
-  font-family: var(--font-display);
-}
+    .admin-placeholder strong {
+      display: block;
+      margin-bottom: var(--space-xs);
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+    }
 
-@media (max-width: 700px) {
-  .admin-form-grid,
-  .admin-stat-grid {
-    grid-template-columns: 1fr;
-  }
+    @media (max-width: 700px) {
 
-  .admin-filter-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+      .admin-form-grid,
+      .admin-stat-grid {
+        grid-template-columns: 1fr;
+      }
 
-  .admin-field-full {
-    grid-column: auto;
-  }
-}
+      .admin-filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
 
-@media (max-width: 430px) {
-  .admin-filter-row {
-    grid-template-columns: 1fr;
-  }
-}
+      .admin-field-full {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .admin-filter-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
   <div id="clariva-page-loader" class="clariva-page-loader" role="status" aria-label="Loading Clariva">
-  <img
-    src="ClarivaTpLetterMark.png"
-    alt=""
-    class="clariva-loader-mark"
-  >
-</div>
+    <img src="ClarivaTpLetterMark.png" alt="" class="clariva-loader-mark">
+  </div>
   </div>
   <header id="header">
     <div class="container">
       <div class="header-inner">
         <div>
           <div class="clariva-navbar-brand" aria-label="Clariva">
-  <img
-    src="ClarivaTpWordMark.png"
-    alt="Clariva — From Confusion to Confidence"
-    class="clariva-navbar-wordmark"
-  >
-</div>
+            <img src="ClarivaTpWordMark.png" alt="Clariva — From Confusion to Confidence"
+              class="clariva-navbar-wordmark">
+          </div>
+        </div>
       </div>
-    </div>
   </header>
 
   <!-- script.js controls access to this protected dashboard. -->
@@ -398,14 +393,13 @@
 
           <div class="admin-field">
             <label for="resource-course-code">Course code</label>
-            <input id="resource-course-code" name="course_code" type="text"
-              maxlength="30" placeholder="e.g. EEE 101">
+            <input id="resource-course-code" name="course_code" type="text" maxlength="30" placeholder="e.g. EEE 101">
           </div>
 
           <div class="admin-field admin-field-full">
             <label for="resource-course-title">Course title</label>
-            <input id="resource-course-title" name="course_title" type="text"
-              maxlength="160" placeholder="e.g. Introduction to Electrical Engineering">
+            <input id="resource-course-title" name="course_title" type="text" maxlength="160"
+              placeholder="e.g. Introduction to Electrical Engineering">
           </div>
 
           <div class="admin-field">
@@ -423,8 +417,7 @@
 
           <div class="admin-field">
             <label for="resource-file">Document file</label>
-            <input id="resource-file" name="file" type="file"
-              accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
             <span class="admin-file-note">PDF, DOC, DOCX, PPT or PPTX. Maximum 50 MB.</span>
           </div>
         </div>
@@ -444,22 +437,14 @@
 
       <div class="admin-filter-row">
         <div class="admin-field">
-  <label for="resource-search">Search resources</label>
-  <div class="admin-search-controls">
-    <input
-      id="resource-search"
-      type="search"
-      placeholder="Search title or course"
-    >
-    <button
-      class="admin-button"
-      type="button"
-      id="resource-search-button"
-    >
-      Search
-    </button>
-  </div>
-</div>
+          <label for="resource-search">Search resources</label>
+          <div class="admin-search-controls">
+            <input id="resource-search" type="search" placeholder="Search title or course">
+            <button class="admin-button" type="button" id="resource-search-button">
+              Search
+            </button>
+          </div>
+        </div>
         <div class="admin-field">
           <label for="filter-level">Level</label>
           <select id="filter-level">
@@ -520,4 +505,5 @@
     </section>
   </main>
 </body>
+
 </html>
