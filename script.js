@@ -630,6 +630,7 @@ async function handleCodeSubmit() {
   showStep('step-3');
 }
 
+try {
 async function handleLogin() {
   if (!supabaseClient) {
     alert('Service unavailable right now. Please try again later.');
@@ -716,6 +717,17 @@ window.location.href = 'Undergraduates.html';
     if (buttonLoading) buttonLoading.restore();
     showStep('step-2');
   }
+  } catch (exception) {
+  console.error('Login process failed:', exception);
+
+  if (buttonLoading) buttonLoading.restore();
+
+  if (error) {
+    error.textContent =
+      'An unexpected error occurred. Please try again.';
+    error.classList.add('visible');
+  }
+}
 }
 
 async function handlePasswordReset() {
