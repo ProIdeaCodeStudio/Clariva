@@ -329,6 +329,38 @@ function isValidPassword(password) {
   return password.length >= 6;
 }
 
+function startButtonLoading(button, loadingText) {
+  if (!button) return null;
+
+  const originalContent = button.innerHTML;
+  const wasDisabled = button.disabled;
+
+  button.disabled = true;
+  button.classList.add('is-loading');
+  button.setAttribute('aria-busy', 'true');
+
+  const mark = document.createElement('img');
+  mark.src = 'ClarivaTpLetterMark.png';
+  mark.alt = '';
+  mark.className = 'gate-btn-loader-mark';
+  mark.setAttribute('aria-hidden', 'true');
+
+  const label = document.createElement('span');
+  label.className = 'gate-btn-loading-text';
+  label.textContent = loadingText;
+
+  button.replaceChildren(mark, label);
+
+  return {
+    restore() {
+      button.innerHTML = originalContent;
+      button.disabled = wasDisabled;
+      button.classList.remove('is-loading');
+      button.removeAttribute('aria-busy');
+    }
+  };
+}
+
 async function handleFormSubmit(e) {
   e.preventDefault();
 
