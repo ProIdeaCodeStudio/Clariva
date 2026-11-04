@@ -562,7 +562,7 @@ async function handleFormSubmit(e) {
     errorEl.classList.add('visible');
   }
 }
-
+}
 async function handleCodeSubmit() {
   if (!supabaseClient) {
     showGlobalError('Service unavailable right now. Please try again later.');
