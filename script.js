@@ -853,7 +853,6 @@ async function initializeResetPasswordPage() {
   errorElement.classList.add("visible");
   return;
 }
-    }
     if (buttonLoading) buttonLoading.restore();
     showNotification(
       "Password Updated",
