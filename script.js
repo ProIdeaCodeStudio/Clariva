@@ -765,12 +765,6 @@ async function handlePasswordReset() {
     errorElement.classList.add("visible");
     return;
   }
-} catch (error) {
-  if (buttonLoading) buttonLoading.restore();
-  errorElement.textContent = error.message || "Unable to send reset email. Please try again.";
-  errorElement.classList.add("visible");
-  return;
-}
 
   if (buttonLoading) buttonLoading.restore();
   
@@ -802,6 +796,12 @@ async function handlePasswordReset() {
     }
 
   }, 1000);
+} catch (error) {
+  if (buttonLoading) buttonLoading.restore();
+  errorElement.textContent = error.message || "Unable to send reset email. Please try again.";
+  errorElement.classList.add("visible");
+  return;
+  }
 }
 
 async function initializeResetPasswordPage() {
