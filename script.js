@@ -551,7 +551,6 @@ async function handleFormSubmit(e) {
   errorEl.textContent = '✗ Unexpected error: could not create or find profile.';
   errorEl.classList.add('visible');
   if (buttonLoading) buttonLoading.restore();
-}
   } catch (error) {
   console.error('Registration process failed:', error);
 
