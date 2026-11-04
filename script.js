@@ -727,17 +727,28 @@ async function handlePasswordReset() {
   }
 
   errorElement.classList.remove("visible");
+  const buttonLoading = startButtonLoading(sendButton, "Sending Reset Link...");
 
+  try {
   const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
     redirectTo: "https://proideacodestudio.github.io/Clariva/reset-password.html"
   });
 
   if (error) {
+    if (buttonLoading) buttonLoading.restore();
     errorElement.textContent = error.message;
     errorElement.classList.add("visible");
     return;
   }
+} catch (error) {
+  if (buttonLoading) buttonLoading.restore();
+  errorElement.textContent = error.message || "Unable to send reset email. Please try again.";
+  errorElement.classList.add("visible");
+  return;
+}
 
+  if (buttonLoading) buttonLoading.restore();
+  
   showNotification(
     "Check Your Email",
     "We've sent a password reset link to your email address. Please check your inbox (and your Spam folder if you don't see it).",
