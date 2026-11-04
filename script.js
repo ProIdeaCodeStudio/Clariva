@@ -401,10 +401,7 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Checking...';
-  }
+  const buttonLoading = startButtonLoading(submitBtn, 'Creating Account...');
   if (errorEl) errorEl.classList.remove('visible');
 
   // 1) Create auth user (or sign up)
@@ -448,10 +445,7 @@ async function handleFormSubmit(e) {
 
     }
 
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Create Account →";
-    }
+  if (buttonLoading) buttonLoading.restore();
 
     return;
   }
@@ -474,7 +468,7 @@ async function handleFormSubmit(e) {
       // For now, show a friendly message:
       errorEl.textContent = '✗ Please confirm your email (check your inbox) before continuing.';
       errorEl.classList.add('visible');
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Account →'; }
+            if (buttonLoading) buttonLoading.restore();
       return;
     }
 
@@ -491,10 +485,7 @@ async function handleFormSubmit(e) {
   if (checkError) {
     errorEl.textContent = '✗ ' + checkError.message;
     errorEl.classList.add('visible');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
-    }
+    if (buttonLoading) buttonLoading.restore();
     return;
   }
 
@@ -505,10 +496,7 @@ async function handleFormSubmit(e) {
     else {
       showStep('step-2');
     }
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
-    }
+   if (buttonLoading) buttonLoading.restore();
     return;
   }
 
@@ -530,10 +518,7 @@ async function handleFormSubmit(e) {
   if (insertError) {
     errorEl.textContent = '✗ ' + insertError.message;
     errorEl.classList.add('visible');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
-    }
+  if (buttonLoading) buttonLoading.restore();
     return;
   }
 
@@ -556,10 +541,7 @@ async function handleFormSubmit(e) {
       }
     })();
 
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Account →';
-    }
+        if (buttonLoading) buttonLoading.restore();
     showStep('step-2');
     return;
   }
@@ -567,10 +549,7 @@ async function handleFormSubmit(e) {
   // Fallback error
   errorEl.textContent = '✗ Unexpected error: could not create or find profile.';
   errorEl.classList.add('visible');
-  if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Create Account →';
-  }
+  if (buttonLoading) buttonLoading.restore();
 }
 
 async function handleCodeSubmit() {
