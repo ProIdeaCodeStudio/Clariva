@@ -333,6 +333,44 @@ a:hover {
   opacity: 0.6;
   cursor: not-allowed;
 }
+/* ── BUTTON LOADING STATE ─────────────────────────────── */
+
+.gate-btn.is-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: wait;
+}
+
+.gate-btn.is-loading:hover {
+  transform: none;
+}
+
+.gate-btn-loader-mark {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex: 0 0 22px;
+  animation: clarivaButtonSpin 1.8s linear infinite;
+}
+
+.gate-btn-loading-text {
+  line-height: 1.2;
+}
+
+@keyframes clarivaButtonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate-btn-loader-mark {
+    animation: none;
+  }
+}
 
 .gate-btn-outline {
   background: transparent;
