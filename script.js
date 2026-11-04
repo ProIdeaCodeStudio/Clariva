@@ -871,14 +871,7 @@ async function initializeResetPasswordPage() {
     errorElement.classList.add("visible");
     return;
   }
-} catch (error) {
-  if (buttonLoading) buttonLoading.restore();
-  errorElement.textContent =
-    error.message || "Unable to update your password. Please try again.";
-  errorElement.classList.add("visible");
-  return;
-}
-    if (buttonLoading) buttonLoading.restore();
+ if (buttonLoading) buttonLoading.restore();
     showNotification(
       "Password Updated",
       "Your password has been updated successfully. You can now sign in with your new password.",
@@ -888,6 +881,14 @@ async function initializeResetPasswordPage() {
         window.location.href = "index.html";
       }
     );
+      } catch (error) {
+  if (buttonLoading) buttonLoading.restore();
+  errorElement.textContent =
+    error.message || "Unable to update your password. Please try again.";
+  errorElement.classList.add("visible");
+  return;
+}
+
   });
 }
 function unlockContent() {
