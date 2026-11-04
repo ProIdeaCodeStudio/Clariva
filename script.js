@@ -630,7 +630,6 @@ async function handleCodeSubmit() {
   showStep('step-3');
 }
 
-try {
 async function handleLogin() {
   if (!supabaseClient) {
     alert('Service unavailable right now. Please try again later.');
@@ -668,6 +667,8 @@ async function handleLogin() {
 
   const buttonLoading = startButtonLoading(btn, 'Signing In...');
 if (error) error.classList.remove('visible');
+
+  try {
 
   // Sign in with Supabase Auth
   const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
