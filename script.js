@@ -822,24 +822,37 @@ async function initializeResetPasswordPage() {
 
     // Clear previous error
     errorElement.classList.remove("visible");
-    const {
-      data: { session }
-    } = await supabaseClient.auth.getSession();
+    const buttonLoading = startButtonLoading(resetButton, "Updating Password...");
+    try {
+  const {
+    data: { session }
+  } = await supabaseClient.auth.getSession();
 
-    if (!session) {
-      errorElement.textContent =
-        "This password reset link has expired. Please request a new one.";
-      errorElement.classList.add("visible");
-      return;
-    }
-    const { error } = await supabaseClient.auth.updateUser({
-      password: newPassword
-    });
+  if (!session) {
+    if (buttonLoading) buttonLoading.restore();
+    errorElement.textContent =
+      "This password reset link has expired. Please request a new one.";
+    errorElement.classList.add("visible");
+    return;
+  }
 
-    if (error) {
-      errorElement.textContent = error.message;
-      errorElement.classList.add("visible");
-      return;
+  const { error } = await supabaseClient.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    if (buttonLoading) buttonLoading.restore();
+    errorElement.textContent = error.message;
+    errorElement.classList.add("visible");
+    return;
+  }
+} catch (error) {
+  if (buttonLoading) buttonLoading.restore();
+  errorElement.textContent =
+    error.message || "Unable to update your password. Please try again.";
+  errorElement.classList.add("visible");
+  return;
+}
     }
 
     showNotification(
@@ -851,6 +864,7 @@ async function initializeResetPasswordPage() {
         window.location.href = "index.html";
       }
     );
+  if (buttonLoading) buttonLoading.restore();
   });
 }
 function unlockContent() {
