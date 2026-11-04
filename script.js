@@ -854,7 +854,7 @@ async function initializeResetPasswordPage() {
   return;
 }
     }
-
+    if (buttonLoading) buttonLoading.restore();
     showNotification(
       "Password Updated",
       "Your password has been updated successfully. You can now sign in with your new password.",
@@ -864,7 +864,6 @@ async function initializeResetPasswordPage() {
         window.location.href = "index.html";
       }
     );
-  if (buttonLoading) buttonLoading.restore();
   });
 }
 function unlockContent() {
