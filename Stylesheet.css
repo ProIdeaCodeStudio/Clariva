@@ -33,6 +33,7 @@
   --cream: #FBF7ED;
 
   --ember-deep: #8F4D0A;
+  --ember-text: #7A4208;
   --amber-light: #F3A93A;
   --amber-highlight: #FFC36A;
 
@@ -225,7 +226,7 @@ a:hover {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 4px;
-  color: var(--amber);
+  color: var(--ember-text);
   text-transform: uppercase;
   margin-bottom: var(--space-sm);
 }
@@ -242,7 +243,7 @@ a:hover {
 .gate-subtitle {
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--ember-fog);
+  color: var(--ember-text);
   margin-bottom: var(--space-lg);
   line-height: 1.6;
 }
@@ -274,7 +275,7 @@ a:hover {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 2px;
-  color: var(--ember-fog);
+  color: var(--ember-text);
   display: block;
   margin-bottom: 5px;
   text-transform: uppercase;
@@ -301,7 +302,7 @@ a:hover {
 }
 
 .gate-input::placeholder {
-  color: var(--ember-fog);
+  color: var(--ember-text);
 }
 
 .gate-btn {
@@ -374,8 +375,8 @@ a:hover {
 
 .gate-btn-outline {
   background: transparent;
-  color: var(--amber);
-  border: 1.5px solid var(--amber);
+  color: var(--ember-text);
+  border: 1.5px solid var(--ember-text);
   margin-top: var(--space-sm);
 }
 
@@ -431,7 +432,7 @@ a:hover {
 
 .gate-note {
   font-size: var(--text-sm);
-  color: var(--ember-fog);
+  color: var(--ember-text);
   margin-top: var(--space-md);
   font-style: italic;
 }
@@ -443,7 +444,7 @@ a:hover {
 }
 
 .gate-forgot-password a {
-  color: var(--amber);
+  color: var(--ember-text);
   text-decoration: none;
   font-size: 0.9rem;
 }
