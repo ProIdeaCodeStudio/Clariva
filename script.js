@@ -404,6 +404,7 @@ async function handleFormSubmit(e) {
   const buttonLoading = startButtonLoading(submitBtn, 'Creating Account...');
   if (errorEl) errorEl.classList.remove('visible');
 
+  try {
   // 1) Create auth user (or sign up)
   const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
     email: email,
@@ -550,6 +551,17 @@ async function handleFormSubmit(e) {
   errorEl.textContent = '✗ Unexpected error: could not create or find profile.';
   errorEl.classList.add('visible');
   if (buttonLoading) buttonLoading.restore();
+}
+  } catch (error) {
+  console.error('Registration process failed:', error);
+
+  if (buttonLoading) buttonLoading.restore();
+
+  if (errorEl) {
+    errorEl.textContent =
+      '✗ An unexpected error occurred. Please try again.';
+    errorEl.classList.add('visible');
+  }
 }
 
 async function handleCodeSubmit() {
