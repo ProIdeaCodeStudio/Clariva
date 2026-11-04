@@ -653,11 +653,8 @@ async function handleLogin() {
     return;
   }
 
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Checking...';
-  }
-  if (error) error.classList.remove('visible');
+  const buttonLoading = startButtonLoading(btn, 'Signing In...');
+if (error) error.classList.remove('visible');
 
   // Sign in with Supabase Auth
   const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
@@ -678,10 +675,7 @@ async function handleLogin() {
       error.classList.add("visible");
     }
 
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Login →";
-    }
+    if (buttonLoading) buttonLoading.restore();
 
     return;
   }
@@ -699,20 +693,15 @@ async function handleLogin() {
       error.textContent = '✗ Profile not found. Please create an account.';
       error.classList.add('visible');
     }
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Login →';
-    }
+    if (buttonLoading) buttonLoading.restore();
     return;
   }
 
   if (studentData.Verified === true) {
-    window.location.href = 'Undergraduates.html';
+    if (buttonLoading) buttonLoading.restore();
+window.location.href = 'Undergraduates.html';
   } else {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Login →';
-    }
+    if (buttonLoading) buttonLoading.restore();
     showStep('step-2');
   }
 }
