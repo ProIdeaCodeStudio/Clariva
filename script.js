@@ -571,10 +571,7 @@ async function handleCodeSubmit() {
   }
 
   if (errorEl) errorEl.classList.remove('visible');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Verifying...';
-  }
+  const buttonLoading = startButtonLoading(btn, 'Verifying...');
 
   // Call the Edge Function to verify the code on the server, with diagnostics and a fallback
   try {
@@ -603,10 +600,7 @@ async function handleCodeSubmit() {
         errorEl.textContent = '✗ ' + errorMsg;
         errorEl.classList.add('visible');
       }
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = 'Verify & Continue →';
-      }
+      if (buttonLoading) buttonLoading.restore();
       return;
     }
   } catch (outerErr) {
@@ -615,18 +609,12 @@ async function handleCodeSubmit() {
       errorEl.textContent = '✗ ' + (outerErr?.message || 'Unexpected error during verification');
       errorEl.classList.add('visible');
     }
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Verify & Continue →';
-    }
+    if (buttonLoading) buttonLoading.restore();
     return;
   }
 
   // Success — the Edge Function already updated Verified = true in the database
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = 'Verify & Continue →';
-  }
+  if (buttonLoading) buttonLoading.restore();
   showStep('step-3');
 }
 
