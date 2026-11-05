@@ -622,7 +622,7 @@ a:hover {
 }
 
 .hero-title span {
-  color: var(--ember-text);
+  color: color: var(--amber);;
 }
 
 .hero-sub {
