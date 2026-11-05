@@ -607,7 +607,7 @@ a:hover {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 4px;
-  color: var(--amber);
+  color: var(--ember-text);
   text-transform: uppercase;
   margin-bottom: var(--space-md);
 }
@@ -622,14 +622,14 @@ a:hover {
 }
 
 .hero-title span {
-  color: var(--amber);
+  color: var(--ember-text);
 }
 
 .hero-sub {
   font-family: var(--font-accent);
   font-style: italic;
   font-size: clamp(18px, 2.5vw, 24px);
-  color: var(--ember-fog);
+  color: var(--ember-text);
   margin-bottom: var(--space-lg);
   max-width: 560px;
 }
@@ -708,7 +708,7 @@ a:hover {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 4px;
-  color: var(--amber);
+  color: var(--ember-text);
   text-transform: uppercase;
   margin-bottom: var(--space-md);
 }
@@ -751,7 +751,7 @@ a:hover {
   font-family: var(--font-label);
   font-size: var(--text-label);
   letter-spacing: 3px;
-  color: var(--amber);
+  color: var(--ember-text);
   margin-bottom: var(--space-sm);
   text-transform: uppercase;
 }
@@ -767,7 +767,7 @@ a:hover {
 
 .feature-text {
   font-size: var(--text-md);
-  color: var(--ember-fog);
+  color: var(--ember-text);
   line-height: 1.6;
 }
 
@@ -784,12 +784,12 @@ a:hover {
 }
 
 .feature-card a:hover .feature-text {
-  color: var(--amber);
+  color: var(--ember-text);
   text-decoration: underline;
 }
 
 .feature-card a:active .feature-text {
-  color: var(--burnt-ember);
+  color: var(--ember-text);
 }
 
 
