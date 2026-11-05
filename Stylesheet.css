@@ -774,7 +774,8 @@ a:hover {
 
 /* ── RESOURCES SECTION (Undergraduates page) ─────────────── */
 .resources-section {
-  padding: var(--space-xl) 0;
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-xl);
 }
 
 .feature-card a {
