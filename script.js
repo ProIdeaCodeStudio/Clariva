@@ -40,26 +40,57 @@ function showNotification(
   titleElement.textContent = title;
   messageElement.textContent = message;
 
-  switch (type) {
+    switch (type) {
 
     case "success":
-      icon.textContent = "✓";
-      icon.style.background = "var(--amber)";
+      icon.className = "notification-icon notification-icon-success";
+      icon.innerHTML = `
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="17" fill="none"
+            stroke="currentColor" stroke-width="3"/>
+          <path d="M15 24L21 30L33 17"
+            fill="none" stroke="currentColor" stroke-width="3.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
       break;
 
     case "error":
-      icon.textContent = "✕";
-      icon.style.background = "#c0392b";
+      icon.className = "notification-icon notification-icon-error";
+      icon.innerHTML = `
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="17" fill="none"
+            stroke="currentColor" stroke-width="3"/>
+          <path d="M18 18L30 30M30 18L18 30"
+            fill="none" stroke="currentColor" stroke-width="3.5"
+            stroke-linecap="round"/>
+        </svg>`;
       break;
 
     case "warning":
-      icon.textContent = "!";
-      icon.style.background = "#f39c12";
+      icon.className = "notification-icon notification-icon-warning";
+      icon.innerHTML = `
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M24 7L44 40H4Z"
+            fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linejoin="round"/>
+          <path d="M24 18V28"
+            stroke="currentColor" stroke-width="3.5"
+            stroke-linecap="round"/>
+          <circle cx="24" cy="34" r="1.8" fill="currentColor"/>
+        </svg>`;
       break;
 
     case "info":
-      icon.textContent = "i";
-      icon.style.background = "#2980b9";
+      icon.className = "notification-icon notification-icon-info";
+      icon.innerHTML = `
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="17" fill="none"
+            stroke="currentColor" stroke-width="3"/>
+          <circle cx="24" cy="16" r="2" fill="currentColor"/>
+          <path d="M24 22V33"
+            stroke="currentColor" stroke-width="3.5"
+            stroke-linecap="round"/>
+        </svg>`;
       break;
   }
 
