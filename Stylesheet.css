@@ -518,20 +518,37 @@ a:hover {
 .notification-icon {
   width: 72px;
   height: 72px;
-
   margin: 0 auto 20px;
-
   border-radius: 50%;
-
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  background: var(--amber);
-  color: var(--warm-white);
+.notification-icon svg {
+  width: 38px;
+  height: 38px;
+  display: block;
+}
 
-  font-size: 34px;
-  font-weight: 700;
+.notification-icon-success {
+  background: #E8941A;
+  color: #111008;
+}
+
+.notification-icon-error {
+  background: #FCE5E2;
+  color: #C0392B;
+}
+
+.notification-icon-warning {
+  background: #FFF0D5;
+  color: #B5660F;
+}
+
+.notification-icon-info {
+  background: #DDEBF7;
+  color: #24649A;
 }
 
 .notification-title {
