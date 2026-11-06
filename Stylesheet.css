@@ -211,15 +211,29 @@ a:hover {
   position: absolute;
   top: 9px;
   right: 16px;
-  font-size: var(--text-h3);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   background: var(--warm-white);
   color: var(--deep-ink);
-  border-radius: var(--radius-xs);
   border: none;
+  border-radius: var(--radius-xs);
   cursor: pointer;
-  text-transform: uppercase;
-  font-weight: 500;
-  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.gate-close svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+.gate-close:hover {
+  background: var(--amber);
+  color: var(--deep-ink);
 }
 
 .gate-edu-mark {
