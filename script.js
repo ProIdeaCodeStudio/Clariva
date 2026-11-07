@@ -543,29 +543,6 @@ async function handleFormSubmit(e) {
   }
 }
 }
-async function handleCodeSubmit() {
-  if (!supabaseClient) {
-    showGlobalError('Service unavailable right now. Please try again later.');
-    return;
-  }
-
-  const code = document.getElementById('field-code').value.trim().toUpperCase();
-  const errorEl = document.getElementById('code-error');
-  const btn = document.querySelector('#step-2 .gate-btn-primary');
-
-  if (!code) {
-    if (errorEl) {
-      errorEl.textContent = 'Please enter the group code.';
-      errorEl.classList.add('visible');
-    }
-    return;
-  }
-
-  if (errorEl) errorEl.classList.remove('visible');
-  const buttonLoading = startButtonLoading(btn, 'Verifying...');
-
-  // Call the Edge Function to verify the code on the server, with diagnostics and a fallback
-  try {
 async function handleLogin() {
   if (!supabaseClient) {
     alert('Service unavailable right now. Please try again later.');
