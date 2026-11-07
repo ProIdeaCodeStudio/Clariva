@@ -512,106 +512,31 @@ async function handleFormSubmit(e) {
     return;
   }
 
-  // Determine userId and session: signUpData may not include a session
-  let userId = signUpData?.user?.id;
-  let sessionPresent = !!signUpData?.session;
 
-  if (!sessionPresent) {
-    // Try signing in so the client has an authenticated session (so RLS auth.uid() will be set)
-    const { data: signInData, error: signInErr } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
+  // The database trigger creates the student profile automatically.
+  // Supabase handles email confirmation.
 
-    if (signInErr) {
-      // If sign-in fails (e.g., email requires confirmation), you can:
-      // - Tell the user to confirm their email first, or
-      // - Use a server-side service to create the students row (preferred for confirmation flows).
-      // For now, show a friendly message:
-      errorEl.textContent = '✗ Please confirm your email (check your inbox) before continuing.';
-      errorEl.classList.add('visible');
-            if (buttonLoading) buttonLoading.restore();
-      return;
-    }
-
-    userId = signInData?.user?.id;
-  }
-
-  // 2) Check whether a students row already exists for this user_id
-  const { data: existing, error: checkError } = await supabaseClient
-    .from('students')
-    .select('id, user_id, Verified')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (checkError) {
-    errorEl.textContent = '✗ ' + checkError.message;
+  if (!signUpData?.user) {
+    errorEl.textContent = '✗ Account creation could not be completed. Please try again.';
     errorEl.classList.add('visible');
     if (buttonLoading) buttonLoading.restore();
     return;
   }
 
-  if (existing && (existing.id || existing.user_id)) {
-    if (existing.Verified === true) {
-      showStep('step-4');
-    }
-    else {
-      showStep('step-2');
-    }
-   if (buttonLoading) buttonLoading.restore();
-    return;
-  }
-
-  // 3) No existing row: upsert the profile using user_id as conflict key to avoid duplicates
-  const profile = {
-    user_id: userId,
-    Name: name,
-    "E-mail": email,
-    "Phone No.": phone,
-    Level: level
-  };
-
-  const { data: inserted, error: insertError } = await supabaseClient
-    .from('students')
-.insert(profile)
-    .select('id, user_id')
-    .maybeSingle();
-
-  if (insertError) {
-    errorEl.textContent = '✗ ' + insertError.message;
-    errorEl.classList.add('visible');
   if (buttonLoading) buttonLoading.restore();
-    return;
-  }
 
-  if (inserted && (inserted.id || inserted.user_id)) {
-    // success — send confirmation (non-blocking) and advance
-    (async function sendConfirmation() {
-      try {
-        if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.send === 'function'
-          && typeof EMAILJS_SERVICE_ID !== 'undefined' && typeof EMAILJS_TEMPLATE_ID !== 'undefined') {
-          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            from_name: 'Clariva',
-            from_email: 'clariva@proideacodestudio.com',
-            to_email: email,
-            to_name: name,
-            phone: phone
-          });
-        }
-      } catch (emailError) {
-        console.warn('Confirmation email failed (non-blocking):', emailError && emailError.text ? emailError.text : emailError);
-      }
-    })();
+  showNotification(
+    "Confirm Your Email",
+    `We've sent a confirmation link to ${email}. Open the link to verify your email address. Once confirmed, return here and sign in.`,
+    "email-sent",
+    "Go to Login",
+    () => {
+      copyEmail("field-email", "login-email");
+      showStep("step-4");
+    }
+  );
 
-        if (buttonLoading) buttonLoading.restore();
-    showStep('step-2');
-    return;
-  }
-
-  // Fallback error
-  errorEl.textContent = '✗ Unexpected error: could not create or find profile.';
-  errorEl.classList.add('visible');
-  if (buttonLoading) buttonLoading.restore();
+  return;
   } catch (error) {
   console.error('Registration process failed:', error);
 
