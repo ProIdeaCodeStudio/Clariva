@@ -333,6 +333,19 @@ a:hover {
   margin-top: var(--space-xs);
 }
 
+.gate-btn .gate-arrow-icon {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.gate-btn .gate-arrow-back {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
 .gate-btn-primary {
   background: var(--amber);
   color: var(--deep-ink);
