@@ -152,6 +152,12 @@ window.onload = async function () {
       showStep('step-3');
     });
   }
+  const emailConfirmationLoginBtn = document.getElementById('email-confirmation-login-button');
+if (emailConfirmationLoginBtn) {
+  emailConfirmationLoginBtn.addEventListener('click', () => {
+    showStep('step-3');
+  });
+}
   const sendResetBtn = document.getElementById('send-reset-link-button');
   if (sendResetBtn) {
     sendResetBtn.addEventListener('click', handlePasswordReset);
