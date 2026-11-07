@@ -1032,25 +1032,25 @@ a:hover {
   pointer-events: none;
 }
 
+
 .clariva-loader-mark {
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
-  animation: clarivaMarkPulse 2.2s ease-in-out infinite;
+  animation: clarivaMarkPulse 2.4s ease-in-out infinite;
 }
 
 @keyframes clarivaMarkPulse {
-
   0%,
   100% {
-    opacity: 0.72;
-    transform: scale(0.96);
+    opacity: 0.65;
+    transform: scale(0.88);
   }
 
   50% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.08);
   }
 }
 
