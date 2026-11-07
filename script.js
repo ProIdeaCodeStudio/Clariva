@@ -279,12 +279,6 @@ window.onload = async function () {
   const showLoginLink = document.getElementById('show-login-link');
   if (showLoginLink) showLoginLink.addEventListener('click', (e) => { e.preventDefault(); showStep('step-4'); });
 
-  const verifyBtn = document.getElementById('verify-code-button');
-  if (verifyBtn) verifyBtn.addEventListener('click', handleCodeSubmit);
-
-  const unlockBtn = document.getElementById('unlock-content-button');
-  if (unlockBtn) unlockBtn.addEventListener('click', unlockContent);
-
   const loginBtn = document.getElementById('login-button');
   if (loginBtn) loginBtn.addEventListener('click', handleLogin);
 
@@ -572,49 +566,6 @@ async function handleCodeSubmit() {
 
   // Call the Edge Function to verify the code on the server, with diagnostics and a fallback
   try {
-    let verified = false;
-    let serverError = null;
-
-    // Try supabase client invoke first (preferred)
-    try {
-      const resp = await supabaseClient.functions.invoke('verify-group-code', {
-        body: JSON.stringify({ code: code }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      // supabase-js returns { data, error }
-      if (resp?.data?.verified) verified = true;
-      else if (resp?.data?.error) serverError = resp.data.error;
-      else if (resp?.error) serverError = resp.error.message || String(resp.error);
-    } catch (invokeErr) {
-      console.warn('functions.invoke failed:', invokeErr);
-      serverError = invokeErr?.message || String(invokeErr);
-    }
-
-    // Final check
-    if (!verified) {
-      const errorMsg = serverError || 'Verification failed. Please try again.';
-      if (errorEl) {
-        errorEl.textContent = '✗ ' + errorMsg;
-        errorEl.classList.add('visible');
-      }
-      if (buttonLoading) buttonLoading.restore();
-      return;
-    }
-  } catch (outerErr) {
-    console.error('Verification flow error:', outerErr);
-    if (errorEl) {
-      errorEl.textContent = '✗ ' + (outerErr?.message || 'Unexpected error during verification');
-      errorEl.classList.add('visible');
-    }
-    if (buttonLoading) buttonLoading.restore();
-    return;
-  }
-
-  // Success — the Edge Function already updated Verified = true in the database
-  if (buttonLoading) buttonLoading.restore();
-  showStep('step-3');
-}
-
 async function handleLogin() {
   if (!supabaseClient) {
     alert('Service unavailable right now. Please try again later.');
@@ -875,7 +826,4 @@ async function initializeResetPasswordPage() {
 }
 
   });
-}
-function unlockContent() {
-  window.location.href = "Undergraduates.html";
 }
