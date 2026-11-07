@@ -310,16 +310,22 @@ window.onload = async function () {
   // Show the default gate step
   showStep('step-1');
 
-  // Authentication checks and page initialization are complete.
-  const pageLoader = document.getElementById('clariva-page-loader');
+// Authentication checks and page initialization are complete.
+const pageLoader = document.getElementById('clariva-page-loader');
 
-  if (pageLoader) {
+if (pageLoader) {
+  const minimumDisplayTime = 5000;
+  const elapsedTime = performance.now();
+  const remainingTime = Math.max(0, minimumDisplayTime - elapsedTime);
+
+  window.setTimeout(() => {
     pageLoader.classList.add('is-hidden');
 
     window.setTimeout(() => {
       pageLoader.remove();
     }, 500);
-  }
+  }, remainingTime);
+}
 };
 
 function showGate() {
