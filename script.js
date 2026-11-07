@@ -459,9 +459,17 @@ async function handleFormSubmit(e) {
 
   try {
   // 1) Create auth user (or sign up)
+  
   const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
     email: email,
-    password: password
+    password: password,
+    options: {
+      data: {
+        full_name: name,
+        phone: phone,
+        level: level
+      }
+    }
   });
 
   // If signUp returned an error, handle it (existing logic)
