@@ -817,7 +817,7 @@ async function handlePasswordReset() {
   showNotification(
     "Check Your Email",
     "We've sent a password reset link to your email address. Please check your inbox (and your Spam folder if you don't see it).",
-        "email-sent",,
+        "email-sent",
     "OK"
   );
   sendButton.disabled = true;
