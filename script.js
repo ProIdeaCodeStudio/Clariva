@@ -80,7 +80,23 @@ function showNotification(
         </svg>`;
       break;
 
-    case "info":
+        case "email-sent":
+      icon.className = "notification-icon notification-icon-email-sent";
+      icon.innerHTML = `
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <rect x="5" y="10" width="38" height="28" rx="4"
+            fill="none" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M7 13L24 27L41 13"
+            fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="36" cy="34" r="10"
+            fill="#E8941A" stroke="#111008" stroke-width="1.5"/>
+          <path d="M31.5 34L35 37.5L41 30.5"
+            fill="none" stroke="#111008" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+      break;
+      case "info":
       icon.className = "notification-icon notification-icon-info";
       icon.innerHTML = `
         <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -801,7 +817,7 @@ async function handlePasswordReset() {
   showNotification(
     "Check Your Email",
     "We've sent a password reset link to your email address. Please check your inbox (and your Spam folder if you don't see it).",
-    "info",
+        "email-sent",,
     "OK"
   );
   sendButton.disabled = true;
