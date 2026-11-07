@@ -588,6 +588,12 @@ a:hover {
   color: #24649A;
 }
 
+.notification-icon-email-sent {
+  background: #111008;
+  color: #F5EDD8;
+  border: 2px solid #E8941A;
+}
+
 .notification-title {
   margin-bottom: 12px;
 }
