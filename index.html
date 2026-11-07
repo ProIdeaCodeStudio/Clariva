@@ -80,60 +80,34 @@
             href="javascript:void(0)" id="show-login-link">Login here</a></p>
       </div>
 
-      <!-- STEP 2: WhatsApp + Code -->
+            <!-- STEP 2: Email Confirmation -->
       <div class="gate-step" id="step-2">
-        <div class="gate-title">Join the Community</div>
-        <div class="gate-subtitle">One last step — join our WhatsApp group and enter the code from the pinned message.
+        <div class="gate-title">Confirm Your Email</div>
+        <div class="gate-subtitle">
+          Your account has been created. Confirm your email address to activate your Clariva access.
         </div>
         <br>
+
         <div class="whatsapp-box">
-          <p>Join the Clariva WhatsApp group. The access code is pinned in the group chat.</p>
+          <p>
+            Open the confirmation link sent to the email address you registered with.
+            After confirming your email, return to Clariva and sign in.
+          </p>
+        </div>
+
+        <p class="gate-note">
+          Can't find the email? Check your spam or junk folder.
+        </p>
+
+        <p class="gate-note">
+          Want to connect with other students?
           <a class="whatsapp-link" id="join-whatsapp-group"
-            href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">JOIN WHATSAPP GROUP</a>
-        </div>
-        <div class="gate-form">
-          <div>
-            <label class="gate-field-label" for="field-code">Group Access Code</label>
-            <input class="gate-input" type="text" id="field-code" placeholder="Enter code from WhatsApp group"
-              style="text-transform:uppercase; letter-spacing:3px;">
-          </div>
-          <p class="gate-error" id="code-error"></p>
-          <button type="button" class="gate-btn gate-btn-primary" id="verify-code-button">Verify & Continue
-<svg class="gate-arrow-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-  <path d="M5 12H19M13 6L19 12L13 18"
-    stroke="currentColor" stroke-width="1.5"
-    stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-          </button>
-        </div>
-        <p class="gate-note">Check the pinned message in the <a class="whatsapp-link" id="join-whatsapp-note"
-            href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t" target="_blank">WhatsApp group</a> for the
-          code</p>
+            href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t"
+            target="_blank" rel="noopener noreferrer">Join the optional WhatsApp community</a>.
+          Joining is not required for verification.
+        </p>
       </div>
-
-      <!-- STEP 3: Success -->
-      <div class="gate-step" id="step-3">
-        <div class="success-icon" aria-label="Registration successful">
-  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true">
-    <circle cx="32" cy="32" r="27" fill="#F5EDD8" stroke="#E8941A" stroke-width="2.5"/>
-    <path d="M20 32.5L28 40L44 24"
-      stroke="#111008" stroke-width="4.5"
-      stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-        </div>
-        <div class="gate-title">Welcome to Clariva!</div>
-        <p class="success-text">Your account is verified. You now have full access to all educational resources, CBT
-          practice, and AI assistance.</p>
-        <button type="button" class="gate-btn gate-btn-primary" id="unlock-content-button">Access Resources
-<svg class="gate-arrow-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-  <path d="M5 12H19M13 6L19 12L13 18"
-    stroke="currentColor" stroke-width="1.5"
-    stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-        </button>
-      </div>
-
+      
       <!-- STEP 4: Login -->
       <div class="gate-step" id="step-4">
         <div class="gate-title">Welcome Back</div>
