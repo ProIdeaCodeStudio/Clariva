@@ -565,7 +565,7 @@ async function handleFormSubmit(e) {
 
   const { data: inserted, error: insertError } = await supabaseClient
     .from('students')
-    .upsert(profile, { onConflict: 'user_id' })
+.insert(profile)
     .select('id, user_id')
     .maybeSingle();
 
