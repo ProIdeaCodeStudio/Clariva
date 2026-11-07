@@ -149,7 +149,7 @@ window.onload = async function () {
   const backToLoginBtn = document.getElementById('back-to-login-button');
   if (backToLoginBtn) {
     backToLoginBtn.addEventListener('click', () => {
-      showStep('step-4');
+      showStep('step-3');
     });
   }
   const sendResetBtn = document.getElementById('send-reset-link-button');
@@ -272,12 +272,12 @@ window.onload = async function () {
     openLogin.addEventListener('click', (e) => {
       gateTriggerElement = e.target;
       showGate();
-      showStep('step-4');
+      showStep('step-3');
     });
   }
 
   const showLoginLink = document.getElementById('show-login-link');
-  if (showLoginLink) showLoginLink.addEventListener('click', (e) => { e.preventDefault(); showStep('step-4'); });
+  if (showLoginLink) showLoginLink.addEventListener('click', (e) => { e.preventDefault(); showStep('step-3'); });
 
   const loginBtn = document.getElementById('login-button');
   if (loginBtn) loginBtn.addEventListener('click', handleLogin);
@@ -359,7 +359,7 @@ function copyEmail(fromId, toId) {
 function showForgotPasswordStep(e) {
   e.preventDefault();
 
-  showStep("step-5")
+  showStep("step-4")
 
   copyEmail("login-email", "reset-email");
 }
@@ -477,7 +477,7 @@ async function handleFormSubmit(e) {
       msg.includes("already been registered")
     ) {
 
-      showStep("step-4");
+      showStep("step-3");
 
       copyEmail("field-email", "login-email");
 
@@ -526,7 +526,7 @@ async function handleFormSubmit(e) {
     "Go to Login",
     () => {
       copyEmail("field-email", "login-email");
-      showStep("step-4");
+      showStep("step-3");
     }
   );
 
@@ -552,7 +552,7 @@ async function handleLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
   const error = document.getElementById('login-error');
-  const btn = document.querySelector('#step-4 .gate-btn-primary');
+  const btn = document.querySelector('#step-3 .gate-btn-primary');
 
   if (!email) {
     if (error) {
