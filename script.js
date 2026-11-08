@@ -783,14 +783,28 @@ async function initializeResetPasswordPage() {
     errorElement.classList.remove("visible");
     const buttonLoading = startButtonLoading(resetButton, "Updating Password...");
     try {
-  const {
+    const {
     data: { session }
   } = await supabaseClient.auth.getSession();
 
-  if (!session) {
+  const recoveryMarker = JSON.parse(
+    sessionStorage.getItem(recoveryMarkerKey) || "null"
+  );
+
+  const validRecoverySession =
+    session &&
+    recoveryMarker &&
+    recoveryMarker.userId === session.user.id &&
+    Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
+
+  if (!validRecoverySession) {
+    sessionStorage.removeItem(recoveryMarkerKey);
+
     if (buttonLoading) buttonLoading.restore();
+
     errorElement.textContent =
-      "This password reset link has expired. Please request a new one.";
+      "Your password reset session is missing or has expired. Please request a new reset link.";
+
     errorElement.classList.add("visible");
     return;
   }
@@ -805,6 +819,9 @@ async function initializeResetPasswordPage() {
     errorElement.classList.add("visible");
     return;
   }
+
+    sessionStorage.removeItem(recoveryMarkerKey);
+      
  if (buttonLoading) buttonLoading.restore();
     showNotification(
       "Password Updated",
