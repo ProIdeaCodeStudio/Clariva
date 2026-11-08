@@ -736,6 +736,21 @@ async function initializeResetPasswordPage() {
   const resetButton = document.getElementById("reset-password-button");
   const errorElement = document.getElementById("reset-error");
   if (!resetButton) return;
+    const recoveryMarkerKey = "clariva-password-recovery";
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
+      sessionStorage.setItem(
+        recoveryMarkerKey,
+        JSON.stringify({
+          userId: session.user.id,
+          createdAt: Date.now()
+        })
+      );
+    } else if (event === "SIGNED_OUT") {
+      sessionStorage.removeItem(recoveryMarkerKey);
+    }
+  });
 
   resetButton.addEventListener("click", async (e) => {
     e.preventDefault();
