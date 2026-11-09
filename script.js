@@ -464,12 +464,13 @@ async function handleFormSubmit(e) {
     email: email,
     password: password,
     options: {
-      data: {
-        full_name: name,
-        phone: phone,
-        level: level
-      }
-    }
+  emailRedirectTo: 'https://proideacodestudio.github.io/Clariva/',
+  data: {
+    full_name: name,
+    phone: phone,
+    level: level
+  }
+}
   });
 
   // If signUp returned an error, handle it (existing logic)
