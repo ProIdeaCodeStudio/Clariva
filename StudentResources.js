@@ -1,0 +1,303 @@
+// Clariva student Resource Library
+// Student access is restricted by verified account status and academic level.
+// Department and semester are descriptive metadata, not access restrictions.
+
+(() => {
+  'use strict';
+
+  const SUPABASE_URL = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
+  const BUCKET_NAME = 'clariva-resources';
+  const SIGNED_URL_TTL_SECONDS = 300;
+
+  let client = null;
+  let resources = [];
+
+  const getElement = id => document.getElementById(id);
+
+  function setLibraryStatus(message, state = 'info') {
+    const status = getElement('student-library-status');
+    if (!status) return;
+
+    status.textContent = message;
+    status.dataset.state = state;
+    status.hidden = !message;
+  }
+
+  function makeTextElement(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    element.textContent = text || '';
+    return element;
+  }
+
+  function getResourceSearchText(resource) {
+    return [
+      resource.title,
+      resource.description,
+      resource.department,
+      resource.course_code,
+      resource.course_title,
+      resource.resource_type,
+      resource.file_name
+    ].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  function formatFileSize(bytes) {
+    const size = Number(bytes);
+    if (!Number.isFinite(size) || size <= 0) return '';
+
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = size;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex += 1;
+    }
+
+    return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+  }
+
+  function createResourceCard(resource) {
+    const card = document.createElement('article');
+    card.className = 'student-resource-card';
+
+    const metaParts = [
+      resource.course_code,
+      resource.department,
+      resource.resource_type,
+      resource.semester ? `Semester ${resource.semester}` : ''
+    ].filter(Boolean);
+
+    card.appendChild(makeTextElement(
+      'p',
+      'student-resource-meta',
+      metaParts.join(' · ') || 'Learning resource'
+    ));
+
+    card.appendChild(makeTextElement(
+      'h3',
+      '',
+      resource.title || resource.file_name || 'Untitled resource'
+    ));
+
+    if (resource.description) {
+      card.appendChild(makeTextElement(
+        'p',
+        'student-resource-description',
+        resource.description
+      ));
+    }
+
+    const details = [
+      resource.course_title,
+      formatFileSize(resource.file_size)
+    ].filter(Boolean);
+
+    if (details.length) {
+      card.appendChild(makeTextElement(
+        'p',
+        'student-resource-description',
+        details.join(' · ')
+      ));
+    }
+
+    const openButton = document.createElement('button');
+    openButton.type = 'button';
+    openButton.className = 'student-resource-open';
+    openButton.textContent = 'Open resource';
+    openButton.disabled = !resource.file_url;
+    openButton.addEventListener('click', () => openResource(resource, openButton));
+
+    card.appendChild(openButton);
+    return card;
+  }
+
+  function renderResourceCards(container, items, emptyMessage) {
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (!items.length) {
+      container.appendChild(makeTextElement(
+        'p',
+        'student-library-status',
+        emptyMessage
+      ));
+      return;
+    }
+
+    items.forEach(resource => {
+      container.appendChild(createResourceCard(resource));
+    });
+  }
+
+  function getFilteredResources() {
+    const search = (getElement('resource-search')?.value || '').trim().toLowerCase();
+    const type = getElement('resource-type-filter')?.value || '';
+
+    return resources.filter(resource => {
+      const matchesSearch = !search || getResourceSearchText(resource).includes(search);
+      const matchesType = !type || resource.resource_type === type;
+      return matchesSearch && matchesType;
+    });
+  }
+
+  function renderResources() {
+    const filtered = getFilteredResources();
+    const featured = filtered.filter(resource => resource.featured === true);
+
+    renderResourceCards(
+      getElement('featured-resources'),
+      featured,
+      'There are no featured resources available at the moment.'
+    );
+
+    renderResourceCards(
+      getElement('all-resources'),
+      filtered,
+      resources.length
+        ? 'No resources match your search or selected filter.'
+        : 'No resources have been published for your level yet.'
+    );
+  }
+
+  function populateResourceTypeFilter() {
+    const filter = getElement('resource-type-filter');
+    if (!filter) return;
+
+    const selectedValue = filter.value;
+    const types = [...new Set(
+      resources.map(resource => resource.resource_type).filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+
+    filter.replaceChildren(new Option('All resource types', ''));
+
+    types.forEach(type => {
+      filter.add(new Option(type, type));
+    });
+
+    filter.value = types.includes(selectedValue) ? selectedValue : '';
+  }
+
+  async function openResource(resource, button) {
+    if (!resource.file_url) {
+      setLibraryStatus('This resource does not have an attached file.', 'error');
+      return;
+    }
+
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Preparing file...';
+
+    try {
+      // Storage RLS independently verifies the signed-in student's level.
+      const { data, error } = await client
+        .storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(resource.file_url, SIGNED_URL_TTL_SECONDS);
+
+      if (error) throw error;
+      if (!data?.signedUrl) {
+        throw new Error('Supabase did not return a secure file link.');
+      }
+
+      const openedWindow = window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+      if (!openedWindow) {
+        window.location.assign(data.signedUrl);
+      }
+    } catch (error) {
+      console.error('Clariva resource opening error:', error);
+      setLibraryStatus(
+        error.message || 'Unable to open this resource. Please try again.',
+        'error'
+      );
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
+  async function loadResources() {
+    setLibraryStatus('Loading your resource library...');
+
+    try {
+      if (!window.supabase?.createClient) {
+        throw new Error('The resource service is unavailable. Please refresh the page.');
+      }
+
+      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError) throw userError;
+
+      const user = userData?.user;
+      if (!user) {
+        window.location.replace('index.html#step-1');
+        return;
+      }
+
+      const { data: profile, error: profileError } = await client
+        .from('students')
+        .select('Level, Verified, Role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        throw new Error('Your student profile could not be verified. Please sign in again.');
+      }
+
+      const role = String(profile.Role || '').toLowerCase();
+      if (profile.Verified !== true || role !== 'student') {
+        window.location.replace('index.html#step-1');
+        return;
+      }
+
+      const studentLevel = Number.parseInt(profile.Level, 10);
+      if (!Number.isInteger(studentLevel) || studentLevel <= 0) {
+        throw new Error('Your academic level is missing from your profile. Please contact an administrator.');
+      }
+
+      // Department and semester are intentionally not used as filters.
+      // RLS also enforces this same-level rule on the database.
+      const { data, error } = await client
+        .from('Resources')
+        .select('id, title, description, department, level, semester, course_code, course_title, resource_type, file_url, file_name, file_size, featured, created_at')
+        .eq('visibility', true)
+        .eq('level', studentLevel)
+        .order('featured', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      resources = data || [];
+      populateResourceTypeFilter();
+      renderResources();
+
+      setLibraryStatus(
+        resources.length
+          ? `Showing ${resources.length} resource${resources.length === 1 ? '' : 's'} for Level ${studentLevel}. Department and semester do not limit your access.`
+          : `No published resources are available for Level ${studentLevel} yet.`
+      );
+    } catch (error) {
+      console.error('Clariva Resource Library loading error:', error);
+      setLibraryStatus(
+        error.message || 'Unable to load resources. Please refresh the page.',
+        'error'
+      );
+    }
+  }
+
+  function initializeResourceLibrary() {
+    const search = getElement('resource-search');
+    const filter = getElement('resource-type-filter');
+
+    search?.addEventListener('input', renderResources);
+    filter?.addEventListener('change', renderResources);
+
+    loadResources();
+  }
+
+  window.addEventListener('load', initializeResourceLibrary, { once: true });
+})();
