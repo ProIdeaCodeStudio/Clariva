@@ -347,7 +347,6 @@
       <h2>Upload Resource</h2>
       <p class="admin-panel-intro">Enter the resource details and select the document to add to Clariva.</p>
 
-      <!-- Supabase upload handling will be connected in the next implementation stage. -->
       <form id="resource-upload-form">
         <div class="admin-form-grid">
           <div class="admin-field admin-field-full">
@@ -431,7 +430,7 @@
     <section class="admin-panel" id="manage-resources">
       <p class="admin-section-kicker">Library administration</p>
       <h2>Manage Resources</h2>
-      <p class="admin-panel-intro">Find resources and narrow the list by course, level, semester or type.</p>
+      <p class="admin-panel-intro">Find resources, update their details, control student visibility, and choose which materials are featured.</p>
 
       <div class="admin-filter-row">
         <div class="admin-field">
@@ -476,9 +475,9 @@
         </div>
       </div>
 
-      <div id="resource-list" class="admin-placeholder">
-        <strong>Resource list will appear here</strong>
-        Resource loading, filtering and management actions will be connected in the next stages.
+      <div id="resource-list" class="admin-placeholder" aria-live="polite">
+        <strong>Loading resources...</strong>
+        Your resource library will appear here.
       </div>
     </section>
 
