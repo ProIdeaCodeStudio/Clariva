@@ -379,7 +379,13 @@ function isValidPhone(phone) {
 }
 
 function isValidPassword(password) {
-  return password.length >= 6;
+  return (
+    password.length >= 8 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9\s]/.test(password)
+  );
 }
 
 function startButtonLoading(button, loadingText) {
@@ -449,7 +455,7 @@ async function handleFormSubmit(e) {
   }
 
   if (!isValidPassword(password)) {
-    errorEl.textContent = 'Password must be at least 6 characters.';
+    errorEl.textContent = 'Password must be at least 8 characters and include uppercase and lowercase letters, a number, and a special character.';
     errorEl.classList.add('visible');
     return;
   }
@@ -766,9 +772,9 @@ async function initializeResetPasswordPage() {
       return;
     }
 
-    // Check password length
-    if (newPassword.length < 6) {
-      errorElement.textContent = "Password must be at least 6 characters.";
+    // Check password strength
+    if (!isValidPassword(newPassword)) {
+      errorElement.textContent = "Password must be at least 8 characters and include uppercase and lowercase letters, a number, and a special character.";
       errorElement.classList.add("visible");
       return;
     }

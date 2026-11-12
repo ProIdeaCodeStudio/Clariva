@@ -57,7 +57,8 @@
           </div>
           <div>
             <label class="gate-field-label" for="field-password">Password</label>
-            <input class="gate-input" type="password" id="field-password" placeholder="Create a password" required>
+            <input class="gate-input" type="password" id="field-password" placeholder="Create a password" minlength="8" autocomplete="new-password" aria-describedby="registration-password-requirements" required>
+            <p class="gate-note" id="registration-password-requirements" style="margin-top:8px;">Use at least 8 characters, including an uppercase letter, a lowercase letter, a number, and a special character.</p>
           </div>
           <div>
             <label class="gate-field-label" for="field-level">Level</label>
