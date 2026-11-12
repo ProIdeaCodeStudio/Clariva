@@ -364,7 +364,7 @@
     return control;
   }
 
-  function createResourceEditor(resource) {
+  function createResourceEditor(resource, onClose) {
     const panel = document.createElement('div');
     panel.className = 'admin-panel';
     panel.hidden = true;
@@ -417,6 +417,7 @@
     cancelButton.textContent = 'Cancel';
     cancelButton.addEventListener('click', () => {
       panel.hidden = true;
+      if (typeof onClose === 'function') onClose();
     });
 
     actions.append(saveButton, cancelButton);
@@ -535,7 +536,9 @@
       editButton.className = 'admin-button admin-button-secondary';
       editButton.textContent = 'Edit Details';
 
-      const editor = createResourceEditor(resource);
+      const editor = createResourceEditor(resource, () => {
+        editButton.textContent = 'Edit Details';
+      });
       editButton.addEventListener('click', () => {
         editor.hidden = !editor.hidden;
         editButton.textContent = editor.hidden ? 'Edit Details' : 'Close Editor';
