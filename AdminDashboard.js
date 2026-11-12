@@ -41,6 +41,14 @@
     button.textContent = isUploading ? 'Uploading...' : 'Upload Resource';
   }
 
+  function setResourceActionStatus(message, type = 'info') {
+    const status = getElement('resource-action-status');
+    if (!status) return;
+
+    status.textContent = message;
+    status.dataset.state = type;
+  }
+
   function validateFile(file) {
     if (!file) {
       throw new Error('Please select a document to upload.');
@@ -292,6 +300,7 @@
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = busyLabel || 'Saving...';
+    setResourceActionStatus('Saving resource changes...', 'info');
 
     try {
       await getAuthorizedUploader();
@@ -312,8 +321,24 @@
 
       updateStatistics();
       renderResources();
+
+      let successMessage = 'Resource details saved successfully.';
+      if (Object.prototype.hasOwnProperty.call(updates, 'visibility')) {
+        successMessage = updates.visibility
+          ? 'Resource published successfully.'
+          : 'Resource hidden from students successfully.';
+      } else if (Object.prototype.hasOwnProperty.call(updates, 'featured')) {
+        successMessage = updates.featured
+          ? 'Resource featured successfully.'
+          : 'Resource removed from featured resources.';
+      }
+      setResourceActionStatus(successMessage, 'success');
     } catch (error) {
       console.error('Clariva resource update error:', error);
+      setResourceActionStatus(
+        'Unable to update this resource: ' + (error.message || 'Unknown error'),
+        'error'
+      );
       alert('Unable to update this resource: ' + (error.message || 'Unknown error'));
       button.disabled = false;
       button.textContent = originalText;
