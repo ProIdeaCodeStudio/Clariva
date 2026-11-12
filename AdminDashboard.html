@@ -260,6 +260,29 @@
       text-align: center;
     }
 
+    .admin-action-status {
+      margin: var(--space-md) 0;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--ember-text);
+      border-left: 3px solid var(--ember-fog);
+    }
+
+    .admin-action-status:empty {
+      display: none;
+    }
+
+    .admin-action-status[data-state="success"] {
+      border-left-color: var(--amber);
+      color: var(--deep-ink);
+    }
+
+    .admin-action-status[data-state="error"] {
+      border-left-color: #b54736;
+      color: #8f2d20;
+    }
+
     .admin-placeholder strong {
       display: block;
       margin-bottom: var(--space-xs);
@@ -431,6 +454,7 @@
       <p class="admin-section-kicker">Library administration</p>
       <h2>Manage Resources</h2>
       <p class="admin-panel-intro">Find resources, update their details, control student visibility, and choose which materials are featured.</p>
+      <p id="resource-action-status" class="admin-action-status" role="status" aria-live="polite"></p>
 
       <div class="admin-filter-row">
         <div class="admin-field">
