@@ -379,11 +379,13 @@
     setLibraryStatus('Loading your resource library...');
 
     try {
-      if (!window.supabase?.createClient) {
-        throw new Error('The resource service is unavailable. Please refresh the page.');
+      // Reuse the shared client initialized by script.js. Creating another
+      // client with the same auth storage key can trigger GoTrueClient warnings.
+      if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+        throw new Error('The shared authentication service is unavailable. Please refresh the page.');
       }
 
-      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      client = supabaseClient;
 
       const { data: userData, error: userError } = await client.auth.getUser();
       if (userError) throw userError;
