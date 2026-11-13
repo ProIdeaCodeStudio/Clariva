@@ -395,6 +395,60 @@
       }
     }
 
+    .admin-stat-grid-wide {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .admin-overview-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-lg);
+      margin-top: var(--space-xl);
+    }
+    .admin-overview-subtitle {
+      margin-bottom: var(--space-sm);
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+      font-size: var(--text-h3);
+    }
+    .admin-breakdown {
+      display: grid;
+      gap: var(--space-sm);
+    }
+    .admin-breakdown-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding: 10px 12px;
+      border: var(--border-thin);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+    }
+    .admin-breakdown-label {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--deep-ink);
+    }
+    .admin-breakdown-value {
+      flex: 0 0 auto;
+      color: var(--ember-text);
+      font-family: var(--font-label);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .admin-latest-activity {
+      margin-bottom: var(--space-md);
+      color: var(--deep-ink);
+    }
+    #admin-overview-refresh {
+      margin-top: var(--space-sm);
+    }
+    @media (max-width: 700px) {
+      .admin-overview-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
   <meta name="robots" content="noindex, nofollow">
 </head>
@@ -619,23 +673,52 @@
       </div>
     </section>
 
-    <section class="admin-panel" id="user-overview">
+    <section class="admin-panel" id="user-overview" aria-labelledby="user-overview-title">
       <p class="admin-section-kicker">Accounts</p>
-      <h2>User Overview</h2>
-      <p class="admin-panel-intro">A future overview of registered users and verification status.</p>
-      <div class="admin-placeholder">
-        <strong>User overview is not connected yet</strong>
-        This section is reserved for a later dashboard enhancement.
+      <h2 id="user-overview-title">User Overview</h2>
+      <p class="admin-panel-intro">A live, privacy-conscious summary of Clariva accounts. Personal contact details are not displayed here.</p>
+      <p id="admin-user-overview-status" class="admin-action-status" role="status" aria-live="polite">Loading account statistics...</p>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
+        <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="admin-verified-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Pending verification</span><span class="admin-stat-value" id="admin-pending-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">New accounts · 7 days</span><span class="admin-stat-value" id="admin-new-users">—</span></div>
+      </div>
+      <div class="admin-overview-columns">
+        <div>
+          <h3 class="admin-overview-subtitle">Accounts by role</h3>
+          <div class="admin-breakdown" id="admin-role-breakdown"><p class="admin-muted">Loading role distribution...</p></div>
+        </div>
+        <div>
+          <h3 class="admin-overview-subtitle">Accounts by academic level</h3>
+          <div class="admin-breakdown" id="admin-level-breakdown"><p class="admin-muted">Loading level distribution...</p></div>
+        </div>
       </div>
     </section>
 
-    <section class="admin-panel" id="platform-overview">
+    <section class="admin-panel" id="platform-overview" aria-labelledby="platform-overview-title">
       <p class="admin-section-kicker">Platform activity</p>
-      <h2>Platform Overview</h2>
-      <p class="admin-panel-intro">A future summary of resource activity and platform information.</p>
-      <div class="admin-placeholder">
-        <strong>Platform statistics are not connected yet</strong>
-        Resource and download metrics will be populated after the resource workflow is implemented.
+      <h2 id="platform-overview-title">Platform Overview</h2>
+      <p class="admin-panel-intro">A live summary of the learning library and recent platform activity.</p>
+      <p id="admin-platform-overview-status" class="admin-action-status" role="status" aria-live="polite">Loading platform statistics...</p>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
+        <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Featured resources</span><span class="admin-stat-value" id="admin-featured-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Recorded downloads</span><span class="admin-stat-value" id="admin-total-downloads">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Added · 7 days</span><span class="admin-stat-value" id="admin-new-resources">—</span></div>
+      </div>
+      <div class="admin-overview-columns">
+        <div>
+          <h3 class="admin-overview-subtitle">Resources by type</h3>
+          <div class="admin-breakdown" id="admin-resource-type-breakdown"><p class="admin-muted">Loading resource types...</p></div>
+        </div>
+        <div>
+          <h3 class="admin-overview-subtitle">Latest library update</h3>
+          <p class="admin-latest-activity" id="admin-latest-resource">—</p>
+          <button class="admin-button admin-button-secondary" type="button" id="admin-overview-refresh">Refresh overview</button>
+        </div>
       </div>
     </section>
   </main>
