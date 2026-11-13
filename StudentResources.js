@@ -405,23 +405,27 @@
       }
 
       const role = String(profile.Role || '').toLowerCase();
-      if (profile.Verified !== true || role !== 'student') {
+      const isPrivileged = ['admin', 'owner'].includes(role);
+      if (profile.Verified !== true || (role !== 'student' && !isPrivileged)) {
         window.location.replace('index.html#step-1');
         return;
       }
 
       const studentLevel = Number.parseInt(profile.Level, 10);
-      if (!Number.isInteger(studentLevel) || studentLevel <= 0) {
+      if (!isPrivileged && (!Number.isInteger(studentLevel) || studentLevel <= 0)) {
         throw new Error('Your academic level is missing from your profile. Please contact an administrator.');
       }
 
-      // Department and semester are intentionally not used as filters.
-      // RLS also enforces this same-level rule on the database.
-      const { data, error } = await client
+      // Students are limited to their academic level. Verified administrators
+      // can inspect all published resources from the student-facing library.
+      let resourceQuery = client
         .from('Resources')
         .select('id, title, description, department, level, semester, course_code, course_title, resource_type, file_url, file_name, file_size, featured, created_at')
-        .eq('visibility', true)
-        .eq('level', studentLevel)
+        .eq('visibility', true);
+
+      if (!isPrivileged) resourceQuery = resourceQuery.eq('level', studentLevel);
+
+      const { data, error } = await resourceQuery
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -432,9 +436,13 @@
       renderResources();
 
       setLibraryStatus(
-        resources.length
-          ? `Showing ${resources.length} resource${resources.length === 1 ? '' : 's'} for Level ${studentLevel}. Department and semester do not limit your access.`
-          : `No published resources are available for Level ${studentLevel} yet.`
+        isPrivileged
+          ? (resources.length
+              ? `Administrator view: showing all ${resources.length} published resources.`
+              : 'No published resources are available yet.')
+          : (resources.length
+              ? `Showing ${resources.length} resource${resources.length === 1 ? '' : 's'} for Level ${studentLevel}. Department and semester do not limit your access.`
+              : `No published resources are available for Level ${studentLevel} yet.`)
       );
     } catch (error) {
       console.error('Clariva Resource Library loading error:', error);

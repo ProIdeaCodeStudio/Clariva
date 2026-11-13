@@ -223,12 +223,8 @@ if (emailConfirmationLoginBtn) {
           dashboard.hidden = false;
         }
       } else {
-        if (['admin', 'owner'].includes(role)) {
-          window.location.replace('AdminDashboard.html');
-          return;
-        }
-
-        if (role !== 'student') {
+        // Verified students and privileged administrators may use the Student Resource Library.
+        if (role !== 'student' && !['admin', 'owner'].includes(role)) {
           window.location.replace('index.html#step-1');
           return;
         }
@@ -238,6 +234,12 @@ if (emailConfirmationLoginBtn) {
       window.location.replace('index.html#step-1');
       return;
     }
+  }
+
+  // Initialize the shared account menu on both protected dashboards.
+  if ((isUndergraduatesPage || isAdminDashboard) &&
+      typeof window.initializeClarivaProfileMenu === 'function') {
+    window.initializeClarivaProfileMenu();
   }
 
   // Initialize EmailJS only if it's loaded and you left the public key defined

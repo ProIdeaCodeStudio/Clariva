@@ -20,10 +20,156 @@
   };
 
   let resources = [];
+  let activePdf = null;
+  let activePdfPage = 1;
+  let pdfScale = 1;
+  let pdfRenderTask = null;
 
   function getElement(id) {
     return document.getElementById(id);
   }
+
+  function updateAdminPdfControls() {
+    const pageCount = activePdf?.numPages || 0;
+    const count = getElement('admin-pdf-page-count');
+    const previous = getElement('admin-pdf-prev');
+    const next = getElement('admin-pdf-next');
+    if (count) count.textContent = pageCount ? 'Page ' + activePdfPage + ' / ' + pageCount : 'Page — / —';
+    if (previous) previous.disabled = !pageCount || activePdfPage <= 1;
+    if (next) next.disabled = !pageCount || activePdfPage >= pageCount;
+  }
+
+  async function renderAdminPdfPage() {
+    if (!activePdf) return;
+    const canvas = getElement('admin-pdf-canvas');
+    const message = getElement('admin-pdf-message');
+    const viewport = getElement('admin-pdf-viewport');
+    const context = canvas.getContext('2d');
+
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
+    }
+
+    try {
+      const page = await activePdf.getPage(activePdfPage);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const availableWidth = Math.max(280, viewport.clientWidth - 40);
+      const fitScale = Math.min(1.5, availableWidth / baseViewport.width);
+      const pageViewport = page.getViewport({ scale: fitScale * pdfScale });
+      const outputScale = window.devicePixelRatio || 1;
+
+      canvas.width = Math.floor(pageViewport.width * outputScale);
+      canvas.height = Math.floor(pageViewport.height * outputScale);
+      canvas.style.width = Math.floor(pageViewport.width) + 'px';
+      canvas.style.height = Math.floor(pageViewport.height) + 'px';
+      message.hidden = true;
+      canvas.hidden = false;
+
+      pdfRenderTask = page.render({
+        canvasContext: context,
+        viewport: pageViewport,
+        transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null
+      });
+      await pdfRenderTask.promise;
+      pdfRenderTask = null;
+      updateAdminPdfControls();
+    } catch (error) {
+      if (error?.name !== 'RenderingCancelledException') {
+        console.error('Admin PDF rendering error:', error);
+        message.textContent = 'This page could not be displayed. Close the viewer and try again.';
+        message.hidden = false;
+        canvas.hidden = true;
+      }
+    }
+  }
+
+  async function showAdminPdfReader(signedUrl, title) {
+    const reader = getElement('admin-pdf-reader');
+    const message = getElement('admin-pdf-message');
+    const canvas = getElement('admin-pdf-canvas');
+    if (!window.pdfjsLib) {
+      throw new Error('The PDF viewer could not be loaded. Refresh the page and try again.');
+    }
+
+    reader.hidden = false;
+    document.body.classList.add('admin-pdf-open');
+    getElement('admin-pdf-title').textContent = title || 'Resource document';
+    message.textContent = 'Loading document…';
+    message.hidden = false;
+    canvas.hidden = true;
+    activePdf = null;
+    activePdfPage = 1;
+    pdfScale = 1;
+    updateAdminPdfControls();
+
+    try {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      activePdf = await window.pdfjsLib.getDocument({
+        url: signedUrl,
+        disableAutoFetch: true
+      }).promise;
+      await renderAdminPdfPage();
+    } catch (error) {
+      closeAdminPdfReader();
+      throw new Error('This PDF could not be displayed in Clariva. Please try again later.');
+    }
+  }
+
+  function closeAdminPdfReader() {
+    const reader = getElement('admin-pdf-reader');
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
+    }
+    if (activePdf) {
+      activePdf.destroy();
+      activePdf = null;
+    }
+    if (reader) reader.hidden = true;
+    document.body.classList.remove('admin-pdf-open');
+  }
+
+  function initializeAdminPdfReaderControls() {
+    getElement('admin-pdf-close')?.addEventListener('click', closeAdminPdfReader);
+    getElement('admin-pdf-prev')?.addEventListener('click', async () => {
+      if (activePdf && activePdfPage > 1) {
+        activePdfPage -= 1;
+        await renderAdminPdfPage();
+      }
+    });
+    getElement('admin-pdf-next')?.addEventListener('click', async () => {
+      if (activePdf && activePdfPage < activePdf.numPages) {
+        activePdfPage += 1;
+        await renderAdminPdfPage();
+      }
+    });
+    getElement('admin-pdf-zoom-out')?.addEventListener('click', async () => {
+      pdfScale = Math.max(0.6, pdfScale - 0.15);
+      await renderAdminPdfPage();
+    });
+    getElement('admin-pdf-zoom-in')?.addEventListener('click', async () => {
+      pdfScale = Math.min(2, pdfScale + 0.15);
+      await renderAdminPdfPage();
+    });
+    document.addEventListener('keydown', event => {
+      if (getElement('admin-pdf-reader')?.hidden) return;
+      if (event.key === 'Escape') closeAdminPdfReader();
+      if (event.key === 'ArrowLeft' && activePdfPage > 1) {
+        activePdfPage -= 1;
+        renderAdminPdfPage();
+      }
+      if (event.key === 'ArrowRight' && activePdf && activePdfPage < activePdf.numPages) {
+        activePdfPage += 1;
+        renderAdminPdfPage();
+      }
+    });
+    window.addEventListener('resize', () => {
+      if (!getElement('admin-pdf-reader')?.hidden && activePdf) renderAdminPdfPage();
+    });
+  }
+
 
   function setStatus(message, type = 'info') {
     const status = getElement('resource-upload-status');
@@ -39,6 +185,14 @@
 
     button.disabled = isUploading;
     button.textContent = isUploading ? 'Uploading...' : 'Upload Resource';
+  }
+
+  function setResourceActionStatus(message, type = 'info') {
+    const status = getElement('resource-action-status');
+    if (!status) return;
+
+    status.textContent = message;
+    status.dataset.state = type;
   }
 
   function validateFile(file) {
@@ -288,13 +442,191 @@
     });
   }
 
+  async function updateResourceRecord(resource, updates, button, busyLabel) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = busyLabel || 'Saving...';
+    setResourceActionStatus('Saving resource changes...', 'info');
+
+    try {
+      await getAuthorizedUploader();
+
+      const { data, error } = await supabaseClient
+        .from('Resources')
+        .update(updates)
+        .eq('id', resource.id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('The resource update was not confirmed.');
+
+      resources = resources.map(item =>
+        item.id === resource.id ? { ...item, ...data } : item
+      );
+
+      updateStatistics();
+      renderResources();
+
+      let successMessage = 'Resource details saved successfully.';
+      if (Object.prototype.hasOwnProperty.call(updates, 'visibility')) {
+        successMessage = updates.visibility
+          ? 'Resource published successfully.'
+          : 'Resource hidden from students successfully.';
+      } else if (Object.prototype.hasOwnProperty.call(updates, 'featured')) {
+        successMessage = updates.featured
+          ? 'Resource featured successfully.'
+          : 'Resource removed from featured resources.';
+      }
+      setResourceActionStatus(successMessage, 'success');
+    } catch (error) {
+      console.error('Clariva resource update error:', error);
+      setResourceActionStatus(
+        'Unable to update this resource: ' + (error.message || 'Unknown error'),
+        'error'
+      );
+      alert('Unable to update this resource: ' + (error.message || 'Unknown error'));
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
+  function appendEditorField(form, resource, labelText, name, value, type, options) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'admin-field';
+    if (name === 'description' || name === 'course_title') {
+      wrapper.classList.add('admin-field-full');
+    }
+
+    const label = document.createElement('label');
+    const inputId = 'resource-edit-' + resource.id + '-' + name;
+    label.htmlFor = inputId;
+    label.textContent = labelText;
+
+    let control;
+    if (type === 'textarea') {
+      control = document.createElement('textarea');
+      control.maxLength = name === 'description' ? 1000 : 160;
+      control.value = value || '';
+    } else if (type === 'select') {
+      control = document.createElement('select');
+      (options || []).forEach(option => {
+        const item = document.createElement('option');
+        item.value = option.value;
+        item.textContent = option.label;
+        control.appendChild(item);
+      });
+      control.value = String(value ?? '');
+    } else {
+      control = document.createElement('input');
+      control.type = 'text';
+      control.maxLength = name === 'course_code' ? 30 : 160;
+      control.value = value || '';
+    }
+
+    control.id = inputId;
+    control.name = name;
+    if (['title', 'level', 'semester', 'resource_type'].includes(name)) {
+      control.required = true;
+    }
+
+    wrapper.append(label, control);
+    form.appendChild(wrapper);
+    return control;
+  }
+
+  function createResourceEditor(resource, onClose) {
+    const panel = document.createElement('div');
+    panel.className = 'admin-panel';
+    panel.hidden = true;
+    panel.style.marginTop = '16px';
+    panel.style.padding = '20px';
+
+    const heading = createTextElement('h4', '', 'Edit resource details');
+    heading.style.marginBottom = '12px';
+    panel.appendChild(heading);
+
+    const form = document.createElement('form');
+    form.className = 'admin-form-grid';
+
+    appendEditorField(form, resource, 'Resource title', 'title', resource.title, 'text');
+    appendEditorField(form, resource, 'Description', 'description', resource.description, 'textarea');
+    appendEditorField(form, resource, 'Department', 'department', resource.department, 'text');
+    appendEditorField(form, resource, 'Level', 'level', resource.level, 'select', [
+      { value: '100', label: '100 Level' },
+      { value: '200', label: '200 Level' },
+      { value: '300', label: '300 Level' },
+      { value: '400', label: '400 Level' },
+      { value: '500', label: '500 Level' }
+    ]);
+    appendEditorField(form, resource, 'Semester', 'semester', resource.semester, 'select', [
+      { value: '1', label: 'First semester' },
+      { value: '2', label: 'Second semester' }
+    ]);
+    appendEditorField(form, resource, 'Course code', 'course_code', resource.course_code, 'text');
+    appendEditorField(form, resource, 'Course title', 'course_title', resource.course_title, 'text');
+    appendEditorField(form, resource, 'Resource type', 'resource_type', resource.resource_type, 'select', [
+      { value: 'Lecture Note', label: 'Lecture note' },
+      { value: 'Handout', label: 'Handout' },
+      { value: 'Past Questions', label: 'Past questions' },
+      { value: 'Assignment', label: 'Assignment' },
+      { value: 'Textbook', label: 'Textbook' },
+      { value: 'Other', label: 'Other' }
+    ]);
+
+    const actions = document.createElement('div');
+    actions.className = 'admin-actions admin-field-full';
+
+    const saveButton = document.createElement('button');
+    saveButton.type = 'submit';
+    saveButton.className = 'admin-button';
+    saveButton.textContent = 'Save Changes';
+
+    const cancelButton = document.createElement('button');
+    cancelButton.type = 'button';
+    cancelButton.className = 'admin-button admin-button-secondary';
+    cancelButton.textContent = 'Cancel';
+    cancelButton.addEventListener('click', () => {
+      panel.hidden = true;
+      if (typeof onClose === 'function') onClose();
+    });
+
+    actions.append(saveButton, cancelButton);
+    form.appendChild(actions);
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const values = new FormData(form);
+      const updates = {
+        title: String(values.get('title') || '').trim(),
+        description: String(values.get('description') || '').trim() || null,
+        department: String(values.get('department') || '').trim() || null,
+        level: Number(values.get('level')),
+        semester: Number(values.get('semester')),
+        course_code: String(values.get('course_code') || '').trim() || null,
+        course_title: String(values.get('course_title') || '').trim() || null,
+        resource_type: String(values.get('resource_type') || '')
+      };
+
+      if (!updates.title || !updates.level || !updates.semester || !updates.resource_type) {
+        alert('Please complete all required resource details.');
+        return;
+      }
+
+      updateResourceRecord(resource, updates, saveButton, 'Saving...');
+    });
+
+    panel.appendChild(form);
+    return panel;
+  }
+
   function renderResources() {
     const list = getElement('resource-list');
-
     if (!list) return;
 
     const filteredResources = getFilteredResources();
-
     list.replaceChildren();
 
     if (filteredResources.length === 0) {
@@ -310,99 +642,56 @@
       list.appendChild(message);
 
       if (resources.length > 0) {
-        list.appendChild(
-          document.createTextNode(
-            'Try changing your search or filter selections.'
-          )
-        );
+        list.appendChild(document.createTextNode(
+          'Try changing your search or filter selections.'
+        ));
       }
-
       return;
     }
 
     list.className = 'admin-resource-list';
-
-    const resultCount = createTextElement(
+    list.appendChild(createTextElement(
       'p',
       'admin-muted',
-      `Showing ${filteredResources.length} of ${resources.length} resources`
-    );
-
-    list.appendChild(resultCount);
+      'Showing ' + filteredResources.length + ' of ' + resources.length + ' resources'
+    ));
 
     filteredResources.forEach(resource => {
       const card = document.createElement('article');
-
       card.className = 'admin-panel';
       card.style.marginBottom = '16px';
       card.style.padding = '20px';
 
-      const title = createTextElement(
-        'h3',
-        '',
-        resource.title || 'Untitled resource'
-      );
-
+      const title = createTextElement('h3', '', resource.title || 'Untitled resource');
       title.style.color = 'var(--deep-ink)';
       title.style.marginBottom = '8px';
-
       card.appendChild(title);
 
-      const course = [
-        resource.course_code,
-        resource.course_title
-      ].filter(Boolean).join(' — ');
-
-      if (course) {
-        card.appendChild(
-          createTextElement('p', 'admin-muted', course)
-        );
-      }
+      const course = [resource.course_code, resource.course_title]
+        .filter(Boolean).join(' — ');
+      if (course) card.appendChild(createTextElement('p', 'admin-muted', course));
 
       if (resource.description) {
-        card.appendChild(
-          createTextElement('p', 'admin-muted', resource.description)
-        );
+        card.appendChild(createTextElement('p', 'admin-muted', resource.description));
       }
 
       const details = [
         resource.department,
-        resource.level ? `${resource.level} Level` : null,
-        resource.semester
-          ? `Semester ${resource.semester}`
-          : null,
+        resource.level ? resource.level + ' Level' : null,
+        resource.semester ? 'Semester ' + resource.semester : null,
         resource.resource_type,
         resource.file_name,
         formatFileSize(resource.file_size),
-        `Downloads: ${Number(resource.download_count || 0)}`,
-        `Uploaded: ${formatDate(resource.created_at)}`
+        'Downloads: ' + Number(resource.download_count || 0),
+        'Uploaded: ' + formatDate(resource.created_at)
       ].filter(Boolean);
 
-      const metadata = createTextElement(
-        'p',
-        'admin-muted',
-        details.join(' • ')
-      );
+      card.appendChild(createTextElement('p', 'admin-muted', details.join(' • ')));
 
-      card.appendChild(metadata);
-
-      const statusDetails = [];
-
-      statusDetails.push(
-        resource.visibility === false ? 'Hidden' : 'Visible'
-      );
-
-      if (resource.featured) {
-        statusDetails.push('Featured');
-      }
-
-      card.appendChild(
-        createTextElement(
-          'p',
-          'admin-muted',
-          statusDetails.join(' • ')
-        )
-      );
+      const isVisible = resource.visibility !== false;
+      const statusDetails = [isVisible ? 'Visible to students' : 'Hidden from students'];
+      if (resource.featured) statusDetails.push('Featured');
+      card.appendChild(createTextElement('p', 'admin-muted', statusDetails.join(' • ')));
 
       const actions = document.createElement('div');
       actions.className = 'admin-actions';
@@ -411,13 +700,55 @@
       openButton.type = 'button';
       openButton.className = 'admin-button';
       openButton.textContent = 'Open File';
+      openButton.addEventListener('click', () => openResourceFile(resource, openButton));
 
-      openButton.addEventListener('click', () => {
-        openResourceFile(resource, openButton);
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.className = 'admin-button admin-button-secondary';
+      editButton.textContent = 'Edit Details';
+
+      const editor = createResourceEditor(resource, () => {
+        editButton.textContent = 'Edit Details';
+      });
+      editButton.addEventListener('click', () => {
+        editor.hidden = !editor.hidden;
+        editButton.textContent = editor.hidden ? 'Edit Details' : 'Close Editor';
       });
 
-      actions.appendChild(openButton);
-      card.appendChild(actions);
+      const visibilityButton = document.createElement('button');
+      visibilityButton.type = 'button';
+      visibilityButton.className = 'admin-button admin-button-secondary';
+      visibilityButton.textContent = isVisible ? 'Hide from Students' : 'Publish to Students';
+      visibilityButton.addEventListener('click', () => {
+        const nextVisibility = !isVisible;
+        const confirmation = nextVisibility
+          ? 'Publish this resource so eligible students can access it?'
+          : 'Hide this resource from students?';
+        if (!window.confirm(confirmation)) return;
+        updateResourceRecord(
+          resource,
+          { visibility: nextVisibility },
+          visibilityButton,
+          nextVisibility ? 'Publishing...' : 'Hiding...'
+        );
+      });
+
+      const featuredButton = document.createElement('button');
+      featuredButton.type = 'button';
+      featuredButton.className = 'admin-button admin-button-secondary';
+      featuredButton.textContent = resource.featured ? 'Unfeature' : 'Feature Resource';
+      featuredButton.addEventListener('click', () => {
+        const nextFeatured = !resource.featured;
+        updateResourceRecord(
+          resource,
+          { featured: nextFeatured },
+          featuredButton,
+          nextFeatured ? 'Featuring...' : 'Updating...'
+        );
+      });
+
+      actions.append(openButton, editButton, visibilityButton, featuredButton);
+      card.append(actions, editor);
       list.appendChild(card);
     });
   }
@@ -429,9 +760,12 @@
     }
 
     const originalText = button.textContent;
+    const fileName = resource.file_name || '';
+    const isPdf = fileName.toLowerCase().endsWith('.pdf') ||
+      String(resource.resource_type || '').toLowerCase().includes('pdf');
 
     button.disabled = true;
-    button.textContent = 'Preparing file...';
+    button.textContent = isPdf ? 'Preparing viewer...' : 'Preparing file...';
 
     try {
       const { data, error } = await supabaseClient
@@ -439,24 +773,15 @@
         .from(BUCKET_NAME)
         .createSignedUrl(resource.file_url, 300);
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+      if (!data?.signedUrl) throw new Error('Supabase did not return a file link.');
+
+      if (isPdf) {
+        await showAdminPdfReader(data.signedUrl, resource.title || fileName);
+      } else {
+        const openedWindow = window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+        if (!openedWindow) window.location.href = data.signedUrl;
       }
-
-      if (!data?.signedUrl) {
-        throw new Error('Supabase did not return a file link.');
-      }
-
-      const openedWindow = window.open(
-        data.signedUrl,
-        '_blank',
-        'noopener,noreferrer'
-      );
-
-      if (!openedWindow) {
-        window.location.href = data.signedUrl;
-      }
-
     } catch (error) {
       console.error('Clariva file retrieval error:', error);
       alert(`Unable to open this resource: ${error.message}`);
@@ -597,6 +922,7 @@
      ============================================================ */
 
   function initializeAdminDashboard() {
+    initializeAdminPdfReaderControls();
     const form = getElement('resource-upload-form');
 
     if (form && form.dataset.uploadHandlerAttached !== 'true') {

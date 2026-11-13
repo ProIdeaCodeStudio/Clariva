@@ -1,0 +1,32 @@
+/* Clariva shared account and navigation controls */
+.clariva-header-actions{display:flex;align-items:center;gap:10px;position:relative;margin-left:auto}
+.clariva-header-control{width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ember-fog);border-radius:50%;background:var(--warm-white);color:var(--deep-ink);cursor:pointer;transition:var(--transition)}
+.clariva-header-control:hover,.clariva-header-control:focus-visible{background:var(--amber);border-color:var(--amber);outline:2px solid var(--amber);outline-offset:2px}
+.clariva-header-control svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.clariva-profile-trigger{width:auto;min-width:42px;padding:4px 12px 4px 4px;gap:9px;border-radius:24px;font:500 13px var(--font-body)}
+.clariva-avatar{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;border-radius:50%;font-size:17px;background:#e9dfc9}
+.clariva-avatar[data-avatar="avatar-1"]{background:#e9dfc9}
+.clariva-avatar[data-avatar="avatar-2"]{background:#f4dfbd}
+.clariva-avatar[data-avatar="avatar-3"]{background:#d9e7dc}
+.clariva-avatar[data-avatar="avatar-4"]{background:#dce3f2}
+.clariva-avatar[data-avatar="avatar-5"]{background:#eadcf0}
+.clariva-avatar-option[data-avatar="avatar-1"]{background:#e9dfc9}
+.clariva-avatar-option[data-avatar="avatar-2"]{background:#f4dfbd}
+.clariva-avatar-option[data-avatar="avatar-3"]{background:#d9e7dc}
+.clariva-avatar-option[data-avatar="avatar-4"]{background:#dce3f2}
+.clariva-avatar-option[data-avatar="avatar-5"]{background:#eadcf0}
+.clariva-menu-panel{position:absolute;top:calc(100% + 12px);right:0;z-index:1100;width:min(320px,calc(100vw - 32px));padding:16px;background:var(--warm-white);border:1px solid var(--parchment);border-radius:var(--radius-md);box-shadow:var(--shadow-floating);color:var(--deep-ink)}
+.clariva-menu-panel[hidden]{display:none}
+.clariva-menu-panel nav{display:grid;gap:4px}
+.clariva-menu-panel a,.clariva-menu-panel button.menu-action{display:block;width:100%;padding:10px 12px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--deep-ink);text-align:left;text-decoration:none;font:500 13px var(--font-body);cursor:pointer}
+.clariva-menu-panel a:hover,.clariva-menu-panel button.menu-action:hover{background:var(--parchment-light);color:var(--deep-ink)}
+.clariva-menu-heading{margin:0 0 8px;font:700 15px var(--font-display)}
+.clariva-account-meta{margin:0 0 12px;color:var(--ember-text);font-size:12px;overflow-wrap:anywhere}
+.clariva-menu-divider{height:1px;margin:12px 0;background:var(--parchment)}
+.clariva-avatar-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}
+.clariva-avatar-option{width:100%;aspect-ratio:1;border:2px solid transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+.clariva-avatar-option[aria-pressed="true"]{border-color:var(--deep-ink);box-shadow:0 0 0 2px var(--amber)}
+.clariva-profile-status{min-height:18px;margin:8px 0 0;color:var(--ember-text);font-size:11px}
+.clariva-profile-status[data-state="error"]{color:#9F2D23}
+.clariva-profile-status[data-state="success"]{color:#27623B}
+@media(max-width:520px){.clariva-header-actions{gap:7px}.clariva-profile-trigger-label{display:none}.clariva-profile-trigger{padding-right:4px}.clariva-menu-panel{right:0}}

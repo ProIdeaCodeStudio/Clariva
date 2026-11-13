@@ -10,10 +10,13 @@
   <meta name="author" content="Pro Idea">
   <title>Clariva — Admin Dashboard</title>
   <link rel="stylesheet" href="Stylesheet.css">
+  <link rel="stylesheet" href="ProfileMenu.css">
   <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js" defer></script>
+  <script src="ProfileMenu.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
   <script src="AdminDashboard.js" defer></script>
 
@@ -260,6 +263,29 @@
       text-align: center;
     }
 
+    .admin-action-status {
+      margin: var(--space-md) 0;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--ember-text);
+      border-left: 3px solid var(--ember-fog);
+    }
+
+    .admin-action-status:empty {
+      display: none;
+    }
+
+    .admin-action-status[data-state="success"] {
+      border-left-color: var(--amber);
+      color: var(--deep-ink);
+    }
+
+    .admin-action-status[data-state="error"] {
+      border-left-color: #b54736;
+      color: #8f2d20;
+    }
+
     .admin-placeholder strong {
       display: block;
       margin-bottom: var(--space-xs);
@@ -288,6 +314,87 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Admin PDF reader — visually aligned with the student Resource Library */
+    .admin-pdf-reader[hidden] { display: none; }
+    .admin-pdf-reader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      background: #171717;
+      color: #fff;
+    }
+    .admin-pdf-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: #242424;
+      border-bottom: 1px solid #444;
+    }
+    .admin-pdf-title {
+      flex: 1 1 180px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .admin-pdf-toolbar button {
+      min-width: 38px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #666;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    .admin-pdf-toolbar button:hover:not(:disabled) {
+      background: #444;
+    }
+    .admin-pdf-toolbar button:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+    .admin-pdf-toolbar button:disabled { opacity: .4; cursor: not-allowed; }
+    .admin-pdf-page-count { min-width: 72px; text-align: center; font-size: 14px; }
+    .admin-pdf-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      text-align: center;
+      overscroll-behavior: contain;
+    }
+    #admin-pdf-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(0,0,0,.35);
+    }
+    .admin-pdf-message {
+      padding: 24px;
+      color: #fff;
+      text-align: center;
+    }
+    body.admin-pdf-open { overflow: hidden; }
+
+    @media (max-width: 600px) {
+      .admin-pdf-toolbar {
+        gap: 10px;
+        padding: 12px 16px;
+      }
+      .admin-pdf-title {
+        flex-basis: 100%;
+      }
+    }
+
   </style>
 </head>
 
@@ -302,6 +409,43 @@
           <img src="ClarivaTpWordMark.png" alt="Clariva — From Confusion to Confidence"
             class="clariva-navbar-wordmark">
         </div>
+        <div class="clariva-header-actions">
+          <button id="clariva-menu-toggle" class="clariva-header-control" type="button"
+            aria-label="Open dashboard navigation" aria-controls="clariva-nav-menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden>
+            <a href="#resource-management">Resource overview</a>
+            <a href="#upload-resource">Upload resource</a>
+            <a href="#manage-resources">Manage resources</a>
+            <a href="#user-overview">User overview</a>
+            <a href="#platform-overview">Platform overview</a>
+          </nav>
+          <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger"
+            type="button" aria-label="Open account menu" aria-controls="clariva-profile-menu" aria-expanded="false">
+            <span id="clariva-current-avatar" class="clariva-avatar" data-avatar="avatar-1" aria-hidden="true">🎓</span>
+            <span class="clariva-profile-trigger-label">Account</span>
+          </button>
+          <section id="clariva-profile-menu" class="clariva-menu-panel" aria-label="Account menu" hidden>
+            <h2 class="clariva-menu-heading" id="clariva-profile-name">Your account</h2>
+            <p class="clariva-account-meta" id="clariva-profile-email"></p>
+            <p class="clariva-account-meta"><span id="clariva-profile-role"></span> · <span id="clariva-profile-level"></span></p>
+            <div class="clariva-menu-divider"></div>
+            <p class="clariva-menu-heading">Choose your avatar</p>
+            <div class="clariva-avatar-options" role="group" aria-label="Choose profile avatar">
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-1" data-avatar="avatar-1" aria-label="Scholar avatar" aria-pressed="false">🎓</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-2" data-avatar="avatar-2" aria-label="Books avatar" aria-pressed="false">📚</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-3" data-avatar="avatar-3" aria-label="Ideas avatar" aria-pressed="false">💡</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-4" data-avatar="avatar-4" aria-label="Science avatar" aria-pressed="false">⚛️</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-5" data-avatar="avatar-5" aria-label="Nature avatar" aria-pressed="false">🌿</button>
+            </div>
+            <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p>
+            <div class="clariva-menu-divider"></div>
+            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
+            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
+            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+          </section>
+        </div>
       </div>
     </div>
   </header>
@@ -313,14 +457,6 @@
       <h1 class="admin-title" id="admin-page-title">Admin Dashboard</h1>
       <p class="admin-description">Manage learning resources and monitor the Clariva platform.</p>
     </section>
-
-    <nav class="admin-nav" aria-label="Dashboard sections">
-      <a href="#resource-management">Resources</a>
-      <a href="#upload-resource">Upload</a>
-      <a href="#manage-resources">Manage</a>
-      <a href="#user-overview">Users</a>
-      <a href="#platform-overview">Platform</a>
-    </nav>
 
     <section class="admin-panel" id="resource-management">
       <p class="admin-section-kicker">Learning materials</p>
@@ -347,7 +483,6 @@
       <h2>Upload Resource</h2>
       <p class="admin-panel-intro">Enter the resource details and select the document to add to Clariva.</p>
 
-      <!-- Supabase upload handling will be connected in the next implementation stage. -->
       <form id="resource-upload-form">
         <div class="admin-form-grid">
           <div class="admin-field admin-field-full">
@@ -431,7 +566,8 @@
     <section class="admin-panel" id="manage-resources">
       <p class="admin-section-kicker">Library administration</p>
       <h2>Manage Resources</h2>
-      <p class="admin-panel-intro">Find resources and narrow the list by course, level, semester or type.</p>
+      <p class="admin-panel-intro">Find resources, update their details, control student visibility, and choose which materials are featured.</p>
+      <p id="resource-action-status" class="admin-action-status" role="status" aria-live="polite"></p>
 
       <div class="admin-filter-row">
         <div class="admin-field">
@@ -476,9 +612,9 @@
         </div>
       </div>
 
-      <div id="resource-list" class="admin-placeholder">
-        <strong>Resource list will appear here</strong>
-        Resource loading, filtering and management actions will be connected in the next stages.
+      <div id="resource-list" class="admin-placeholder" aria-live="polite">
+        <strong>Loading resources...</strong>
+        Your resource library will appear here.
       </div>
     </section>
 
@@ -502,6 +638,24 @@
       </div>
     </section>
   </main>
+
+  <section id="admin-pdf-reader" class="admin-pdf-reader" role="dialog"
+    aria-modal="true" aria-label="PDF resource viewer" hidden>
+    <div class="admin-pdf-toolbar">
+      <span id="admin-pdf-title" class="admin-pdf-title">Resource viewer</span>
+      <button id="admin-pdf-prev" type="button" aria-label="Previous page">Previous</button>
+      <span id="admin-pdf-page-count" class="admin-pdf-page-count">Page — / —</span>
+      <button id="admin-pdf-next" type="button" aria-label="Next page">Next</button>
+      <button id="admin-pdf-zoom-out" type="button" aria-label="Zoom out">−</button>
+      <button id="admin-pdf-zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button id="admin-pdf-close" type="button" aria-label="Close resource viewer">Close</button>
+    </div>
+    <div id="admin-pdf-viewport" class="admin-pdf-viewport">
+      <p id="admin-pdf-message" class="admin-pdf-message" role="status">Preparing document…</p>
+      <canvas id="admin-pdf-canvas" hidden></canvas>
+    </div>
+  </section>
+
 </body>
 
 </html>
