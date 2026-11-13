@@ -10,6 +10,7 @@
 
   let client = null;
   let resources = [];
+  let currentUserId = null;
   let activePdf = null;
   let activePdfPage = 1;
   let pdfScale = 1;
@@ -290,6 +291,23 @@
     document.body.classList.remove('pdf-reader-open');
   }
 
+  async function recordResourceView(resourceId) {
+    if (!currentUserId || !resourceId) return;
+
+    try {
+      const { error } = await client.rpc('record_resource_view', {
+        resource_id_input: resourceId
+      });
+
+      if (error) {
+        // View tracking must never prevent a student from reading a resource.
+        console.warn('Clariva resource-view tracking was unavailable:', error);
+      }
+    } catch (error) {
+      console.warn('Clariva resource-view tracking error:', error);
+    }
+  }
+
   async function openResource(resource, button) {
     if (!resource.file_url) {
       setLibraryStatus('This resource does not have an attached file.', 'error');
@@ -322,6 +340,7 @@
       }
 
       await showPdfReader(data.signedUrl, resource.title || fileName);
+      await recordResourceView(resource.id);
     } catch (error) {
       console.error('Clariva resource opening error:', error);
       setLibraryStatus(
@@ -389,6 +408,7 @@
       if (userError) throw userError;
 
       const user = userData?.user;
+      currentUserId = user?.id || null;
       if (!user) {
         window.location.replace('index.html#step-1');
         return;
