@@ -599,6 +599,63 @@
     }
   }
 
+  async function deleteResourceRecord(resource, button) {
+    const resourceTitle = resource.title || 'this resource';
+    const confirmed = window.confirm(
+      'Permanently delete "' + resourceTitle + '" from Clariva? This cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Deleting...';
+    setResourceActionStatus('Removing resource from the library...', 'info');
+
+    try {
+      await getAuthorizedUploader();
+
+      const { data, error } = await supabaseClient
+        .from('Resources')
+        .delete()
+        .eq('id', resource.id)
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error('The resource record was not found or could not be deleted.');
+
+      resources = resources.filter(item => item.id !== resource.id);
+      updateStatistics();
+      renderResources();
+
+      if (resource.file_url) {
+        const { error: storageError } = await supabaseClient
+          .storage
+          .from(BUCKET_NAME)
+          .remove([resource.file_url]);
+
+        if (storageError) {
+          console.error('Clariva resource storage cleanup error:', storageError);
+          setResourceActionStatus(
+            'The resource was removed from the library, but its private storage file could not be deleted. It is no longer listed or available to students; storage cleanup remains outstanding.',
+            'error'
+          );
+          return;
+        }
+      }
+
+      setResourceActionStatus('Resource and stored file deleted successfully.', 'success');
+    } catch (error) {
+      console.error('Clariva resource deletion error:', error);
+      setResourceActionStatus(
+        'Unable to delete this resource: ' + (error.message || 'Unknown error'),
+        'error'
+      );
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
   function appendEditorField(form, resource, labelText, name, value, type, options) {
     const wrapper = document.createElement('div');
     wrapper.className = 'admin-field';
@@ -855,7 +912,16 @@
         );
       });
 
-      actions.append(openButton, editButton, visibilityButton, featuredButton);
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'admin-button admin-button-danger';
+      deleteButton.textContent = 'Delete Resource';
+      deleteButton.setAttribute('aria-label', 'Delete ' + (resource.title || 'resource'));
+      deleteButton.addEventListener('click', () => {
+        deleteResourceRecord(resource, deleteButton);
+      });
+
+      actions.append(openButton, editButton, visibilityButton, featuredButton, deleteButton);
       card.append(actions, editor);
       list.appendChild(card);
     });
