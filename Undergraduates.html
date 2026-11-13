@@ -10,6 +10,7 @@
   <title>Clariva — Undergraduate Resources</title>
   <link rel="stylesheet" href="Stylesheet.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <script src="script.js" defer></script>
   <script src="StudentResources.js" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
@@ -132,6 +133,68 @@
       margin-bottom: var(--space-md);
     }
 
+    .pdf-reader[hidden] { display: none; }
+    .pdf-reader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      background: #171717;
+      color: #fff;
+    }
+    .pdf-reader-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: #242424;
+      border-bottom: 1px solid #444;
+    }
+    .pdf-reader-title {
+      flex: 1 1 180px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .pdf-reader-toolbar button {
+      min-width: 38px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #666;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    .pdf-reader-toolbar button:disabled { opacity: .4; cursor: not-allowed; }
+    .pdf-reader-page-count { min-width: 72px; text-align: center; font-size: 14px; }
+    .pdf-reader-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      text-align: center;
+      overscroll-behavior: contain;
+    }
+    #pdf-reader-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(0,0,0,.35);
+    }
+    .pdf-reader-message {
+      padding: 24px;
+      color: #fff;
+      text-align: center;
+    }
+    body.pdf-reader-open { overflow: hidden; }
+
     @media (max-width: 600px) {
       .student-library-toolbar {
         grid-template-columns: 1fr;
@@ -197,6 +260,23 @@
       </section>
     </section>
   </main>
+
+  <section id="pdf-reader" class="pdf-reader" role="dialog" aria-modal="true"
+    aria-label="PDF resource viewer" hidden>
+    <div class="pdf-reader-toolbar">
+      <span id="pdf-reader-title" class="pdf-reader-title">Resource viewer</span>
+      <button id="pdf-reader-prev" type="button" aria-label="Previous page">Previous</button>
+      <span id="pdf-reader-page-count" class="pdf-reader-page-count">Page — / —</span>
+      <button id="pdf-reader-next" type="button" aria-label="Next page">Next</button>
+      <button id="pdf-reader-zoom-out" type="button" aria-label="Zoom out">−</button>
+      <button id="pdf-reader-zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button id="pdf-reader-close" type="button" aria-label="Close resource viewer">Close</button>
+    </div>
+    <div id="pdf-reader-viewport" class="pdf-reader-viewport">
+      <p id="pdf-reader-message" class="pdf-reader-message" role="status">Preparing resource…</p>
+      <canvas id="pdf-reader-canvas" hidden></canvas>
+    </div>
+  </section>
 
   <footer id="footer">
     <div class="container">
