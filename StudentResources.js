@@ -5,8 +5,6 @@
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
   const BUCKET_NAME = 'clariva-resources';
   const SIGNED_URL_TTL_SECONDS = 300;
 
