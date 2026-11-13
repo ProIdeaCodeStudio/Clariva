@@ -14,6 +14,7 @@
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
   <script src="AdminDashboard.js" defer></script>
 
@@ -311,6 +312,41 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Admin in-page PDF reader */
+    .admin-pdf-reader[hidden] { display: none; }
+    .admin-pdf-reader {
+      position: fixed; inset: 0; z-index: 10000; display: flex;
+      flex-direction: column; background: rgba(17, 16, 8, .97);
+    }
+    .admin-pdf-toolbar {
+      display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+      gap: 8px; padding: 12px; background: var(--deep-ink); color: var(--warm-white);
+    }
+    .admin-pdf-title {
+      flex: 1 1 220px; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; font-family: var(--font-body);
+    }
+    .admin-pdf-toolbar button {
+      padding: 8px 12px; border: 1px solid var(--amber); border-radius: 4px;
+      background: var(--amber); color: var(--deep-ink); cursor: pointer;
+      font-family: var(--font-label);
+    }
+    .admin-pdf-toolbar button:disabled { opacity: .45; cursor: not-allowed; }
+    .admin-pdf-page-count { min-width: 82px; text-align: center; font-size: 14px; }
+    .admin-pdf-viewport {
+      flex: 1; overflow: auto; display: flex; align-items: flex-start;
+      justify-content: center; padding: 20px; background: #292929;
+    }
+    #admin-pdf-canvas { display: block; max-width: none; background: white; }
+    .admin-pdf-message { color: white; text-align: center; padding: 24px; }
+    body.admin-pdf-open { overflow: hidden; }
+    @media (max-width: 600px) {
+      .admin-pdf-toolbar { gap: 6px; padding: 8px; }
+      .admin-pdf-toolbar button { padding: 7px 9px; }
+      .admin-pdf-title { flex-basis: 100%; text-align: center; }
+    }
+
   </style>
 </head>
 
@@ -525,6 +561,24 @@
       </div>
     </section>
   </main>
+
+  <section id="admin-pdf-reader" class="admin-pdf-reader" role="dialog"
+    aria-modal="true" aria-label="PDF resource viewer" hidden>
+    <div class="admin-pdf-toolbar">
+      <span id="admin-pdf-title" class="admin-pdf-title">Resource viewer</span>
+      <button id="admin-pdf-prev" type="button" aria-label="Previous page">Previous</button>
+      <span id="admin-pdf-page-count" class="admin-pdf-page-count">Page — / —</span>
+      <button id="admin-pdf-next" type="button" aria-label="Next page">Next</button>
+      <button id="admin-pdf-zoom-out" type="button" aria-label="Zoom out">−</button>
+      <button id="admin-pdf-zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button id="admin-pdf-close" type="button" aria-label="Close resource viewer">Close</button>
+    </div>
+    <div id="admin-pdf-viewport" class="admin-pdf-viewport">
+      <p id="admin-pdf-message" class="admin-pdf-message" role="status">Preparing document…</p>
+      <canvas id="admin-pdf-canvas" hidden></canvas>
+    </div>
+  </section>
+
 </body>
 
 </html>
