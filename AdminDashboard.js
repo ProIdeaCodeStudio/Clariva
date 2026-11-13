@@ -20,10 +20,156 @@
   };
 
   let resources = [];
+  let activePdf = null;
+  let activePdfPage = 1;
+  let pdfScale = 1;
+  let pdfRenderTask = null;
 
   function getElement(id) {
     return document.getElementById(id);
   }
+
+  function updateAdminPdfControls() {
+    const pageCount = activePdf?.numPages || 0;
+    const count = getElement('admin-pdf-page-count');
+    const previous = getElement('admin-pdf-prev');
+    const next = getElement('admin-pdf-next');
+    if (count) count.textContent = pageCount ? 'Page ' + activePdfPage + ' / ' + pageCount : 'Page — / —';
+    if (previous) previous.disabled = !pageCount || activePdfPage <= 1;
+    if (next) next.disabled = !pageCount || activePdfPage >= pageCount;
+  }
+
+  async function renderAdminPdfPage() {
+    if (!activePdf) return;
+    const canvas = getElement('admin-pdf-canvas');
+    const message = getElement('admin-pdf-message');
+    const viewport = getElement('admin-pdf-viewport');
+    const context = canvas.getContext('2d');
+
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
+    }
+
+    try {
+      const page = await activePdf.getPage(activePdfPage);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const availableWidth = Math.max(280, viewport.clientWidth - 40);
+      const fitScale = Math.min(1.5, availableWidth / baseViewport.width);
+      const pageViewport = page.getViewport({ scale: fitScale * pdfScale });
+      const outputScale = window.devicePixelRatio || 1;
+
+      canvas.width = Math.floor(pageViewport.width * outputScale);
+      canvas.height = Math.floor(pageViewport.height * outputScale);
+      canvas.style.width = Math.floor(pageViewport.width) + 'px';
+      canvas.style.height = Math.floor(pageViewport.height) + 'px';
+      message.hidden = true;
+      canvas.hidden = false;
+
+      pdfRenderTask = page.render({
+        canvasContext: context,
+        viewport: pageViewport,
+        transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null
+      });
+      await pdfRenderTask.promise;
+      pdfRenderTask = null;
+      updateAdminPdfControls();
+    } catch (error) {
+      if (error?.name !== 'RenderingCancelledException') {
+        console.error('Admin PDF rendering error:', error);
+        message.textContent = 'This page could not be displayed. Close the viewer and try again.';
+        message.hidden = false;
+        canvas.hidden = true;
+      }
+    }
+  }
+
+  async function showAdminPdfReader(signedUrl, title) {
+    const reader = getElement('admin-pdf-reader');
+    const message = getElement('admin-pdf-message');
+    const canvas = getElement('admin-pdf-canvas');
+    if (!window.pdfjsLib) {
+      throw new Error('The PDF viewer could not be loaded. Refresh the page and try again.');
+    }
+
+    reader.hidden = false;
+    document.body.classList.add('admin-pdf-open');
+    getElement('admin-pdf-title').textContent = title || 'Resource document';
+    message.textContent = 'Loading document…';
+    message.hidden = false;
+    canvas.hidden = true;
+    activePdf = null;
+    activePdfPage = 1;
+    pdfScale = 1;
+    updateAdminPdfControls();
+
+    try {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      activePdf = await window.pdfjsLib.getDocument({
+        url: signedUrl,
+        disableAutoFetch: true
+      }).promise;
+      await renderAdminPdfPage();
+    } catch (error) {
+      closeAdminPdfReader();
+      throw new Error('This PDF could not be displayed in Clariva. Please try again later.');
+    }
+  }
+
+  function closeAdminPdfReader() {
+    const reader = getElement('admin-pdf-reader');
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
+    }
+    if (activePdf) {
+      activePdf.destroy();
+      activePdf = null;
+    }
+    if (reader) reader.hidden = true;
+    document.body.classList.remove('admin-pdf-open');
+  }
+
+  function initializeAdminPdfReaderControls() {
+    getElement('admin-pdf-close')?.addEventListener('click', closeAdminPdfReader);
+    getElement('admin-pdf-prev')?.addEventListener('click', async () => {
+      if (activePdf && activePdfPage > 1) {
+        activePdfPage -= 1;
+        await renderAdminPdfPage();
+      }
+    });
+    getElement('admin-pdf-next')?.addEventListener('click', async () => {
+      if (activePdf && activePdfPage < activePdf.numPages) {
+        activePdfPage += 1;
+        await renderAdminPdfPage();
+      }
+    });
+    getElement('admin-pdf-zoom-out')?.addEventListener('click', async () => {
+      pdfScale = Math.max(0.6, pdfScale - 0.15);
+      await renderAdminPdfPage();
+    });
+    getElement('admin-pdf-zoom-in')?.addEventListener('click', async () => {
+      pdfScale = Math.min(2, pdfScale + 0.15);
+      await renderAdminPdfPage();
+    });
+    document.addEventListener('keydown', event => {
+      if (getElement('admin-pdf-reader')?.hidden) return;
+      if (event.key === 'Escape') closeAdminPdfReader();
+      if (event.key === 'ArrowLeft' && activePdfPage > 1) {
+        activePdfPage -= 1;
+        renderAdminPdfPage();
+      }
+      if (event.key === 'ArrowRight' && activePdf && activePdfPage < activePdf.numPages) {
+        activePdfPage += 1;
+        renderAdminPdfPage();
+      }
+    });
+    window.addEventListener('resize', () => {
+      if (!getElement('admin-pdf-reader')?.hidden && activePdf) renderAdminPdfPage();
+    });
+  }
+
 
   function setStatus(message, type = 'info') {
     const status = getElement('resource-upload-status');
@@ -614,9 +760,12 @@
     }
 
     const originalText = button.textContent;
+    const fileName = resource.file_name || '';
+    const isPdf = fileName.toLowerCase().endsWith('.pdf') ||
+      String(resource.resource_type || '').toLowerCase().includes('pdf');
 
     button.disabled = true;
-    button.textContent = 'Preparing file...';
+    button.textContent = isPdf ? 'Preparing viewer...' : 'Preparing file...';
 
     try {
       const { data, error } = await supabaseClient
@@ -624,24 +773,15 @@
         .from(BUCKET_NAME)
         .createSignedUrl(resource.file_url, 300);
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+      if (!data?.signedUrl) throw new Error('Supabase did not return a file link.');
+
+      if (isPdf) {
+        await showAdminPdfReader(data.signedUrl, resource.title || fileName);
+      } else {
+        const openedWindow = window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+        if (!openedWindow) window.location.href = data.signedUrl;
       }
-
-      if (!data?.signedUrl) {
-        throw new Error('Supabase did not return a file link.');
-      }
-
-      const openedWindow = window.open(
-        data.signedUrl,
-        '_blank',
-        'noopener,noreferrer'
-      );
-
-      if (!openedWindow) {
-        window.location.href = data.signedUrl;
-      }
-
     } catch (error) {
       console.error('Clariva file retrieval error:', error);
       alert(`Unable to open this resource: ${error.message}`);
@@ -782,6 +922,7 @@
      ============================================================ */
 
   function initializeAdminDashboard() {
+    initializeAdminPdfReaderControls();
     const form = getElement('resource-upload-form');
 
     if (form && form.dataset.uploadHandlerAttached !== 'true') {
