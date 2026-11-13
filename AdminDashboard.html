@@ -313,38 +313,84 @@
       }
     }
 
-    /* Admin in-page PDF reader */
+    /* Admin PDF reader — visually aligned with the student Resource Library */
     .admin-pdf-reader[hidden] { display: none; }
     .admin-pdf-reader {
-      position: fixed; inset: 0; z-index: 10000; display: flex;
-      flex-direction: column; background: rgba(17, 16, 8, .97);
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      background: #171717;
+      color: #fff;
     }
     .admin-pdf-toolbar {
-      display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
-      gap: 8px; padding: 12px; background: var(--deep-ink); color: var(--warm-white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: #242424;
+      border-bottom: 1px solid #444;
     }
     .admin-pdf-title {
-      flex: 1 1 220px; min-width: 0; overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; font-family: var(--font-body);
+      flex: 1 1 180px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
     }
     .admin-pdf-toolbar button {
-      padding: 8px 12px; border: 1px solid var(--amber); border-radius: 4px;
-      background: var(--amber); color: var(--deep-ink); cursor: pointer;
-      font-family: var(--font-label);
+      min-width: 38px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #666;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
     }
-    .admin-pdf-toolbar button:disabled { opacity: .45; cursor: not-allowed; }
-    .admin-pdf-page-count { min-width: 82px; text-align: center; font-size: 14px; }
+    .admin-pdf-toolbar button:hover:not(:disabled) {
+      background: #444;
+    }
+    .admin-pdf-toolbar button:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+    .admin-pdf-toolbar button:disabled { opacity: .4; cursor: not-allowed; }
+    .admin-pdf-page-count { min-width: 72px; text-align: center; font-size: 14px; }
     .admin-pdf-viewport {
-      flex: 1; overflow: auto; display: flex; align-items: flex-start;
-      justify-content: center; padding: 20px; background: #292929;
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      text-align: center;
+      overscroll-behavior: contain;
     }
-    #admin-pdf-canvas { display: block; max-width: none; background: white; }
-    .admin-pdf-message { color: white; text-align: center; padding: 24px; }
+    #admin-pdf-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(0,0,0,.35);
+    }
+    .admin-pdf-message {
+      padding: 24px;
+      color: #fff;
+      text-align: center;
+    }
     body.admin-pdf-open { overflow: hidden; }
+
     @media (max-width: 600px) {
-      .admin-pdf-toolbar { gap: 6px; padding: 8px; }
-      .admin-pdf-toolbar button { padding: 7px 9px; }
-      .admin-pdf-title { flex-basis: 100%; text-align: center; }
+      .admin-pdf-toolbar {
+        gap: 10px;
+        padding: 12px 16px;
+      }
+      .admin-pdf-title {
+        flex-basis: 100%;
+      }
     }
 
   </style>
