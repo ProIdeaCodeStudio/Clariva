@@ -10,6 +10,11 @@
 .clariva-avatar[data-avatar="avatar-3"]{background:#d9e7dc}
 .clariva-avatar[data-avatar="avatar-4"]{background:#dce3f2}
 .clariva-avatar[data-avatar="avatar-5"]{background:#eadcf0}
+.clariva-avatar-option[data-avatar="avatar-1"]{background:#e9dfc9}
+.clariva-avatar-option[data-avatar="avatar-2"]{background:#f4dfbd}
+.clariva-avatar-option[data-avatar="avatar-3"]{background:#d9e7dc}
+.clariva-avatar-option[data-avatar="avatar-4"]{background:#dce3f2}
+.clariva-avatar-option[data-avatar="avatar-5"]{background:#eadcf0}
 .clariva-menu-panel{position:absolute;top:calc(100% + 12px);right:0;z-index:1100;width:min(320px,calc(100vw - 32px));padding:16px;background:var(--warm-white);border:1px solid var(--parchment);border-radius:var(--radius-md);box-shadow:var(--shadow-floating);color:var(--deep-ink)}
 .clariva-menu-panel[hidden]{display:none}
 .clariva-menu-panel nav{display:grid;gap:4px}
