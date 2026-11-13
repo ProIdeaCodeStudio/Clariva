@@ -12,6 +12,10 @@
 
   let client = null;
   let resources = [];
+  let activePdf = null;
+  let activePdfPage = 1;
+  let pdfScale = 1;
+  let pdfRenderTask = null;
 
   const getElement = id => document.getElementById(id);
 
@@ -181,15 +185,131 @@
     filter.value = types.includes(selectedValue) ? selectedValue : '';
   }
 
+  function updatePdfControls() {
+    const count = activePdf?.numPages || 0;
+    const pageCount = getElement('pdf-reader-page-count');
+    const previous = getElement('pdf-reader-prev');
+    const next = getElement('pdf-reader-next');
+
+    if (pageCount) pageCount.textContent = count ? `Page ${activePdfPage} / ${count}` : 'Page — / —';
+    if (previous) previous.disabled = !count || activePdfPage <= 1;
+    if (next) next.disabled = !count || activePdfPage >= count;
+  }
+
+  async function renderPdfPage() {
+    if (!activePdf) return;
+
+    const canvas = getElement('pdf-reader-canvas');
+    const message = getElement('pdf-reader-message');
+    const viewport = getElement('pdf-reader-viewport');
+    const context = canvas.getContext('2d');
+
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
+    }
+
+    try {
+      const page = await activePdf.getPage(activePdfPage);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const availableWidth = Math.max(280, viewport.clientWidth - 40);
+      const fitScale = Math.min(1.5, availableWidth / baseViewport.width);
+      const renderScale = fitScale * pdfScale;
+      const pageViewport = page.getViewport({ scale: renderScale });
+      const outputScale = window.devicePixelRatio || 1;
+
+      canvas.width = Math.floor(pageViewport.width * outputScale);
+      canvas.height = Math.floor(pageViewport.height * outputScale);
+      canvas.style.width = `${Math.floor(pageViewport.width)}px`;
+      canvas.style.height = `${Math.floor(pageViewport.height)}px`;
+
+      message.hidden = true;
+      canvas.hidden = false;
+
+      pdfRenderTask = page.render({
+        canvasContext: context,
+        viewport: pageViewport,
+        transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null
+      });
+      await pdfRenderTask.promise;
+      pdfRenderTask = null;
+      updatePdfControls();
+    } catch (error) {
+      if (error?.name !== 'RenderingCancelledException') {
+        console.error('PDF page rendering error:', error);
+        message.textContent = 'This page could not be displayed. Please close the viewer and try again.';
+        message.hidden = false;
+        canvas.hidden = true;
+      }
+    }
+  }
+
+  async function showPdfReader(signedUrl, title) {
+    const reader = getElement('pdf-reader');
+    const message = getElement('pdf-reader-message');
+    const canvas = getElement('pdf-reader-canvas');
+
+    if (!window.pdfjsLib) {
+      throw new Error('The document viewer could not be loaded. Please refresh and try again.');
+    }
+
+    reader.hidden = false;
+    document.body.classList.add('pdf-reader-open');
+    getElement('pdf-reader-title').textContent = title || 'Learning resource';
+    message.textContent = 'Loading document…';
+    message.hidden = false;
+    canvas.hidden = true;
+    activePdf = null;
+    activePdfPage = 1;
+    pdfScale = 1;
+    updatePdfControls();
+
+    try {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      activePdf = await window.pdfjsLib.getDocument({
+        url: signedUrl,
+        disableAutoFetch: true
+      }).promise;
+      await renderPdfPage();
+    } catch (error) {
+      closePdfReader();
+      throw new Error('This PDF could not be displayed in Clariva. Please try again later.');
+    }
+  }
+
+  function closePdfReader() {
+    const reader = getElement('pdf-reader');
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
+    }
+    if (activePdf) {
+      activePdf.destroy();
+      activePdf = null;
+    }
+    reader.hidden = true;
+    document.body.classList.remove('pdf-reader-open');
+  }
+
   async function openResource(resource, button) {
     if (!resource.file_url) {
       setLibraryStatus('This resource does not have an attached file.', 'error');
       return;
     }
 
+    const fileName = resource.file_name || '';
+    const isPdf = fileName.toLowerCase().endsWith('.pdf') ||
+      String(resource.resource_type || '').toLowerCase().includes('pdf');
+
+    if (!isPdf) {
+      setLibraryStatus('This resource format is not yet supported by the in-page viewer.', 'error');
+      return;
+    }
+
     const originalText = button.textContent;
     button.disabled = true;
-    button.textContent = 'Preparing file...';
+    button.textContent = 'Preparing viewer…';
 
     try {
       // Storage RLS independently verifies the signed-in student's level.
@@ -203,10 +323,7 @@
         throw new Error('Supabase did not return a secure file link.');
       }
 
-      const openedWindow = window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-      if (!openedWindow) {
-        window.location.assign(data.signedUrl);
-      }
+      await showPdfReader(data.signedUrl, resource.title || fileName);
     } catch (error) {
       console.error('Clariva resource opening error:', error);
       setLibraryStatus(
@@ -217,6 +334,45 @@
       button.disabled = false;
       button.textContent = originalText;
     }
+  }
+
+  function initializePdfReaderControls() {
+    getElement('pdf-reader-close')?.addEventListener('click', closePdfReader);
+    getElement('pdf-reader-prev')?.addEventListener('click', async () => {
+      if (activePdf && activePdfPage > 1) {
+        activePdfPage -= 1;
+        await renderPdfPage();
+      }
+    });
+    getElement('pdf-reader-next')?.addEventListener('click', async () => {
+      if (activePdf && activePdfPage < activePdf.numPages) {
+        activePdfPage += 1;
+        await renderPdfPage();
+      }
+    });
+    getElement('pdf-reader-zoom-in')?.addEventListener('click', async () => {
+      pdfScale = Math.min(2, pdfScale + 0.15);
+      await renderPdfPage();
+    });
+    getElement('pdf-reader-zoom-out')?.addEventListener('click', async () => {
+      pdfScale = Math.max(0.6, pdfScale - 0.15);
+      await renderPdfPage();
+    });
+    document.addEventListener('keydown', event => {
+      if (getElement('pdf-reader').hidden) return;
+      if (event.key === 'Escape') closePdfReader();
+      if (event.key === 'ArrowLeft' && activePdfPage > 1) {
+        activePdfPage -= 1;
+        renderPdfPage();
+      }
+      if (event.key === 'ArrowRight' && activePdf && activePdfPage < activePdf.numPages) {
+        activePdfPage += 1;
+        renderPdfPage();
+      }
+    });
+    window.addEventListener('resize', () => {
+      if (!getElement('pdf-reader').hidden && activePdf) renderPdfPage();
+    });
   }
 
   async function loadResources() {
@@ -295,6 +451,7 @@
 
     search?.addEventListener('input', renderResources);
     filter?.addEventListener('change', renderResources);
+    initializePdfReaderControls();
 
     loadResources();
   }
