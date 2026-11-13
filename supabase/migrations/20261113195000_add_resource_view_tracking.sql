@@ -14,6 +14,13 @@ CREATE TABLE IF NOT EXISTS private.resource_views (
 
 ALTER TABLE private.resource_views ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE private.resource_views FROM PUBLIC, anon, authenticated;
+DROP POLICY IF EXISTS "No direct access to resource view events" ON private.resource_views;
+CREATE POLICY "No direct access to resource view events"
+  ON private.resource_views
+  FOR ALL
+  TO PUBLIC
+  USING (false)
+  WITH CHECK (false);
 
 CREATE INDEX IF NOT EXISTS resource_views_resource_viewed_idx
   ON private.resource_views (resource_id, viewed_at DESC);
