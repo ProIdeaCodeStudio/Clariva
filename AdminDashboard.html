@@ -10,10 +10,12 @@
   <meta name="author" content="Pro Idea">
   <title>Clariva — Admin Dashboard</title>
   <link rel="stylesheet" href="Stylesheet.css">
+  <link rel="stylesheet" href="ProfileMenu.css">
   <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js" defer></script>
+  <script src="ProfileMenu.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
   <script src="AdminDashboard.js" defer></script>
@@ -406,6 +408,39 @@
         <div class="clariva-navbar-brand" aria-label="Clariva">
           <img src="ClarivaTpWordMark.png" alt="Clariva — From Confusion to Confidence"
             class="clariva-navbar-wordmark">
+        </div>
+        <div class="clariva-header-actions">
+          <button id="clariva-menu-toggle" class="clariva-header-control" type="button"
+            aria-label="Open dashboard navigation" aria-controls="clariva-nav-menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden>
+            ADMIN_NAV
+          </nav>
+          <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger"
+            type="button" aria-label="Open account menu" aria-controls="clariva-profile-menu" aria-expanded="false">
+            <span id="clariva-current-avatar" class="clariva-avatar" data-avatar="avatar-1" aria-hidden="true">🎓</span>
+            <span class="clariva-profile-trigger-label">Account</span>
+          </button>
+          <section id="clariva-profile-menu" class="clariva-menu-panel" aria-label="Account menu" hidden>
+            <h2 class="clariva-menu-heading" id="clariva-profile-name">Your account</h2>
+            <p class="clariva-account-meta" id="clariva-profile-email"></p>
+            <p class="clariva-account-meta"><span id="clariva-profile-role"></span> · <span id="clariva-profile-level"></span></p>
+            <div class="clariva-menu-divider"></div>
+            <p class="clariva-menu-heading">Choose your avatar</p>
+            <div class="clariva-avatar-options" role="group" aria-label="Choose profile avatar">
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-1" data-avatar="avatar-1" aria-label="Scholar avatar" aria-pressed="false">🎓</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-2" data-avatar="avatar-2" aria-label="Books avatar" aria-pressed="false">📚</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-3" data-avatar="avatar-3" aria-label="Ideas avatar" aria-pressed="false">💡</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-4" data-avatar="avatar-4" aria-label="Science avatar" aria-pressed="false">⚛️</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-5" data-avatar="avatar-5" aria-label="Nature avatar" aria-pressed="false">🌿</button>
+            </div>
+            <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p>
+            <div class="clariva-menu-divider"></div>
+            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
+            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
+            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+          </section>
         </div>
       </div>
     </div>
