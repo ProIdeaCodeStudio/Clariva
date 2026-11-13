@@ -296,7 +296,8 @@
 
     try {
       const { error } = await client.rpc('record_resource_view', {
-        resource_id_input: resourceId
+        resource_id_input: resourceId,
+        source_page_input: 'undergraduates'
       });
 
       if (error) {
