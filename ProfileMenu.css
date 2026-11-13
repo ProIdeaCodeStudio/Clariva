@@ -30,3 +30,20 @@
 .clariva-profile-status[data-state="error"]{color:#9F2D23}
 .clariva-profile-status[data-state="success"]{color:#27623B}
 @media(max-width:520px){.clariva-header-actions{gap:7px}.clariva-profile-trigger-label{display:none}.clariva-profile-trigger{padding-right:4px}.clariva-menu-panel{right:0}}
+
+
+/* Persistent Clariva dashboard header */
+.clariva-dashboard-page #header {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  isolation: isolate;
+}
+.clariva-dashboard-page main [id] {
+  scroll-margin-top: 92px;
+}
+@media (max-width: 600px) {
+  .clariva-dashboard-page main [id] {
+    scroll-margin-top: 82px;
+  }
+}
