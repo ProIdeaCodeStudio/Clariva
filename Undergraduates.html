@@ -5,27 +5,204 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Clariva — From Confusion to Confidence">
-  <meta name="keywords"
-    content="education, students, University, 100 level, 200 level, Clariva, materials, PDF, notes, past questions, answers, solutions">
+  <meta name="keywords" content="education, students, university, resources, lecture notes, past questions">
   <meta name="author" content="Pro Idea">
   <title>Clariva — Undergraduate Resources</title>
   <link rel="stylesheet" href="Stylesheet.css">
-  <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
+  <link rel="stylesheet" href="ProfileMenu.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
   <script src="script.js" defer></script>
+  <script src="ProfileMenu.js" defer></script>
+  <script src="StudentResources.js" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
 
   <style>
-    /* Page-specific styles */
-    .feature-card a {
+    .student-library-section {
+      padding: var(--space-xl) 0;
+    }
+
+    .student-library-intro {
+      margin: -8px 0 var(--space-lg);
+      color: var(--ember-text);
+      max-width: 680px;
+    }
+
+    .student-library-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .student-library-control {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid var(--parchment);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+      color: var(--deep-ink);
+      font: inherit;
+    }
+
+    .student-library-control:focus {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .student-library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .student-resource-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 210px;
+      padding: var(--space-lg);
+      border: 1px solid var(--parchment);
+      border-radius: var(--radius-md);
+      background: var(--cream);
+    }
+
+    .student-resource-card h3 {
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+      font-size: var(--text-h3);
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .student-resource-meta {
+      color: var(--ember-text);
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .student-resource-description {
+      color: var(--deep-ink);
+      font-size: var(--text-sm);
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .student-resource-open {
+      align-self: flex-start;
+      margin-top: auto;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: var(--radius-xs);
+      background: var(--amber);
+      color: var(--deep-ink);
+      font: inherit;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .student-resource-open:hover {
+      background: var(--burnt-ember);
+      color: var(--warm-white);
+    }
+
+    .student-resource-open:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    .student-library-status {
+      padding: var(--space-md);
+      color: var(--ember-text);
+      background: var(--amber-05);
+      border-radius: var(--radius-sm);
+    }
+
+    .student-library-status[data-state="error"] {
+      color: #9F2D23;
+      background: #FCE5E2;
+    }
+
+    .student-library-status[hidden] {
+      display: none;
+    }
+
+    .student-library-heading {
+      margin-bottom: var(--space-md);
+    }
+
+    .pdf-reader[hidden] { display: none; }
+    .pdf-reader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      background: #171717;
+      color: #fff;
+    }
+    .pdf-reader-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: #242424;
+      border-bottom: 1px solid #444;
+    }
+    .pdf-reader-title {
+      flex: 1 1 180px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .pdf-reader-toolbar button {
+      min-width: 38px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #666;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    .pdf-reader-toolbar button:disabled { opacity: .4; cursor: not-allowed; }
+    .pdf-reader-page-count { min-width: 72px; text-align: center; font-size: 14px; }
+    .pdf-reader-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      text-align: center;
+      overscroll-behavior: contain;
+    }
+    #pdf-reader-canvas {
       display: block;
-      text-decoration: none;
-      color: inherit;
-      height: 100%;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(0,0,0,.35);
+    }
+    .pdf-reader-message {
+      padding: 24px;
+      color: #fff;
+      text-align: center;
+    }
+    body.pdf-reader-open { overflow: hidden; }
+
+    @media (max-width: 600px) {
+      .student-library-toolbar {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
-
 </head>
 
 <body>
@@ -33,7 +210,6 @@
     <img src="ClarivaTpLetterMark.png" alt="" class="clariva-loader-mark">
   </div>
 
-    <!-- ── HEADER ─────────────────────────────────────────── -->
   <header id="header">
     <div class="container">
       <div class="header-inner">
@@ -41,85 +217,90 @@
           <img src="ClarivaTpWordMark.png" alt="Clariva — From Confusion to Confidence"
             class="clariva-navbar-wordmark">
         </div>
+        <div class="clariva-header-actions">
+          <button id="clariva-menu-toggle" class="clariva-header-control" type="button" aria-label="Open dashboard navigation" aria-controls="clariva-nav-menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+          <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden><a href="#featured-title">Featured resources</a><a href="#all-resources-title">All resources</a><a href="#footer">About Clariva</a></nav>
+          <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger" type="button" aria-label="Open account menu" aria-controls="clariva-profile-menu" aria-expanded="false"><span id="clariva-current-avatar" class="clariva-avatar" data-avatar="avatar-1" aria-hidden="true">🎓</span><span class="clariva-profile-trigger-label">Account</span></button>
+          <section id="clariva-profile-menu" class="clariva-menu-panel" aria-label="Account menu" hidden>
+            <h2 class="clariva-menu-heading" id="clariva-profile-name">Your account</h2><p class="clariva-account-meta" id="clariva-profile-email"></p>
+            <p class="clariva-account-meta"><span id="clariva-profile-role"></span> · <span id="clariva-profile-level"></span></p>
+            <div class="clariva-menu-divider"></div><p class="clariva-menu-heading">Choose your avatar</p>
+            <div class="clariva-avatar-options" role="group" aria-label="Choose profile avatar">
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-1" aria-label="Scholar avatar" aria-pressed="false">🎓</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-2" aria-label="Books avatar" aria-pressed="false">📚</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-3" aria-label="Ideas avatar" aria-pressed="false">💡</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-4" aria-label="Science avatar" aria-pressed="false">⚛️</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-5" aria-label="Nature avatar" aria-pressed="false">🌿</button>
+            </div>
+            <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p><div class="clariva-menu-divider"></div>
+            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
+            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
+            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+          </section>
+        </div>
       </div>
     </div>
   </header>
 
+  <main class="container">
+    <section class="student-library-section" aria-labelledby="library-title">
+      <p class="features-label">Educational Resources</p>
+      <h1 class="features-title" id="library-title">Resource Library</h1>
+      <p class="student-library-intro">
+        Explore learning materials shared across departments and semesters.
+        Your access is based on your current academic level.
+      </p>
 
-  <!-- ── RESOURCES ─────────────────────────────────────── -->
-  <section class="resources-section container">
-    <p class="features-label">Educational Resources</p>
-    <h2 class="features-title">100 Level Resources</h2>
-    <div class="features-grid">
-
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12UotRidfTnhLCMQEDvTIy7reN2YK4jJr/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 102</p>
-          <h3 class="feature-text" style="font-weight: bold;">Complete Handout</h3>
-        </a>
+      <div id="student-library-status" class="student-library-status" role="status" aria-live="polite">
+        Loading your resource library...
       </div>
 
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12WjPEAOzOS1PzfSXlwyOoX-pJjNlXtEG/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 104</p>
-          <h3 class="feature-text">Vectors — Geometry 1</h3>
-        </a>
-      </div>
+      <section aria-labelledby="featured-title">
+        <p class="features-label">Handpicked Materials</p>
+        <h2 class="features-title student-library-heading" id="featured-title">Featured Resources</h2>
+        <div id="featured-resources" class="student-library-grid"></div>
+      </section>
 
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12o26O_UGZsqzoXegWx5tX930X38n3IIQ/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 104</p>
-          <h3 class="feature-text">Vector Questions</h3>
-        </a>
-      </div>
+      <section aria-labelledby="all-resources-title" style="margin-top: var(--space-2xl);">
+        <p class="features-label">Explore the Collection</p>
+        <h2 class="features-title student-library-heading" id="all-resources-title">All Resources</h2>
 
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12epJ-_uvKGgymZH7_X6hmT_jkT6ETUt9/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 104</p>
-          <h3 class="feature-text">MTS 104</h3>
-        </a>
-      </div>
+        <div class="student-library-toolbar">
+          <label>
+            <span class="features-label">Search resources</span>
+            <input id="resource-search" class="student-library-control" type="search"
+              placeholder="Search title, course, department..." autocomplete="off">
+          </label>
+          <label>
+            <span class="features-label">Resource type</span>
+            <select id="resource-type-filter" class="student-library-control">
+              <option value="">All resource types</option>
+            </select>
+          </label>
+        </div>
 
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12Ph-IIvxO_LrV75DGnlHtd6YYuiQZt51/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 102</p>
-          <h3 class="feature-text">Limit and Continuity</h3>
-        </a>
-      </div>
+        <div id="all-resources" class="student-library-grid"></div>
+      </section>
+    </section>
+  </main>
 
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12TZ1jLUxK6BcYwhNZYtI2GfddLDJHOVC/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 102</p>
-          <h3 class="feature-text">Lecture Note</h3>
-        </a>
-      </div>
-
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12jl-nx1PCmDcMEDfNo3-cW0R1piHoEVE/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 104</p>
-          <h3 class="feature-text">Coordinate Geometry</h3>
-        </a>
-      </div>
-
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12emsslJ-SF-uVjL3J6Blw-zoOeV12ITU/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 104</p>
-          <h3 class="feature-text">Conic Sections</h3>
-        </a>
-      </div>
-
-      <div class="feature-card">
-        <a href="https://drive.google.com/file/d/12PIsnoKDiwdvxediSOpZGrR6bC-LsHdk/view?usp=drivesdk" target="_blank">
-          <p class="feature-number">MTS 102</p>
-          <h3 class="feature-text">Techniques of Differentiation with Application</h3>
-        </a>
-      </div>
-
+  <section id="pdf-reader" class="pdf-reader" role="dialog" aria-modal="true"
+    aria-label="PDF resource viewer" hidden>
+    <div class="pdf-reader-toolbar">
+      <span id="pdf-reader-title" class="pdf-reader-title">Resource viewer</span>
+      <button id="pdf-reader-prev" type="button" aria-label="Previous page">Previous</button>
+      <span id="pdf-reader-page-count" class="pdf-reader-page-count">Page — / —</span>
+      <button id="pdf-reader-next" type="button" aria-label="Next page">Next</button>
+      <button id="pdf-reader-zoom-out" type="button" aria-label="Zoom out">−</button>
+      <button id="pdf-reader-zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button id="pdf-reader-close" type="button" aria-label="Close resource viewer">Close</button>
+    </div>
+    <div id="pdf-reader-viewport" class="pdf-reader-viewport">
+      <p id="pdf-reader-message" class="pdf-reader-message" role="status">Preparing resource…</p>
+      <canvas id="pdf-reader-canvas" hidden></canvas>
     </div>
   </section>
 
-
-  <!-- ── FOOTER ─────────────────────────────────────────── -->
   <footer id="footer">
     <div class="container">
       <div class="footer-inner">
@@ -129,7 +310,7 @@
         </div>
         <div class="footer-powered">
           POWERED BY<br>
-          <a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank">PRO IDEA →</a>
+          <a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank" rel="noopener noreferrer">PRO IDEA →</a>
         </div>
       </div>
       <div class="footer-meta">
@@ -137,7 +318,6 @@
       </div>
     </div>
   </footer>
-
 </body>
 
 </html>
