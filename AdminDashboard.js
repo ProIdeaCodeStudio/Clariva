@@ -297,6 +297,7 @@
           visibility,
           featured,
           download_count,
+          view_count,
           created_at
         `)
         .order('created_at', { ascending: false })
@@ -411,6 +412,7 @@
       setOverviewValue('admin-published-resources', data.published_resources);
       setOverviewValue('admin-featured-resources', data.featured_resources);
       setOverviewValue('admin-total-downloads', data.total_downloads);
+      setOverviewValue('admin-total-views', data.total_views);
       setOverviewValue('admin-new-resources', data.resources_added_7d);
       renderOverviewBreakdown('admin-resource-type-breakdown', data.resources_by_type, 'No resource types to display.');
 
@@ -847,6 +849,7 @@
         resource.resource_type,
         resource.file_name,
         formatFileSize(resource.file_size),
+        'Views: ' + Number(resource.view_count || 0),
         'Downloads: ' + Number(resource.download_count || 0),
         'Uploaded: ' + formatDate(resource.created_at)
       ].filter(Boolean);
