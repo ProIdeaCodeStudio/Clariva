@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-
-# Account-only application pages should not appear in search results.
-# Their HTML documents carry noindex directives for crawlers that can access them.
-
-Sitemap: https://proideacodestudio.github.io/Clariva/sitemap.xml
