@@ -388,9 +388,7 @@
       }
 
       const { data, error } = await supabaseClient
-        .from('admin_dashboard_stats')
-        .select('*')
-        .maybeSingle();
+        .rpc('get_admin_dashboard_stats');
 
       if (error) throw error;
       if (!data) {
