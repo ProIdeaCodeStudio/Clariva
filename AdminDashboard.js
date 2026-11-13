@@ -319,6 +319,116 @@
     }
   }
 
+  /* ============================================================
+     ADMIN USER AND PLATFORM OVERVIEW
+     Reads one aggregate-only view. No student contact details
+     or individual profile rows are returned to the browser.
+     ============================================================ */
+
+  function setOverviewStatus(id, message, type = 'info') {
+    const element = getElement(id);
+    if (!element) return;
+    element.textContent = message;
+    element.dataset.state = type;
+  }
+
+  function setOverviewValue(id, value) {
+    const element = getElement(id);
+    if (element) element.textContent = Number(value || 0).toLocaleString();
+  }
+
+  function renderOverviewBreakdown(id, values, emptyLabel) {
+    const container = getElement(id);
+    if (!container) return;
+    container.replaceChildren();
+
+    const entries = Object.entries(values || {})
+      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
+
+    if (!entries.length) {
+      const empty = createTextElement('p', 'admin-muted', emptyLabel);
+      container.appendChild(empty);
+      return;
+    }
+
+    entries.forEach(([label, count]) => {
+      const row = document.createElement('div');
+      row.className = 'admin-breakdown-row';
+      const name = createTextElement('span', 'admin-breakdown-label', label);
+      const value = createTextElement('span', 'admin-breakdown-value', Number(count || 0).toLocaleString());
+      row.append(name, value);
+      container.appendChild(row);
+    });
+  }
+
+  function formatOverviewDate(value) {
+    if (!value) return 'No resources have been added yet.';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Latest update date unavailable.';
+    return 'Most recent resource added ' + date.toLocaleString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+
+  async function loadAdminOverview() {
+    const userStatus = getElement('admin-user-overview-status');
+    const platformStatus = getElement('admin-platform-overview-status');
+    if (!userStatus || !platformStatus) return;
+
+    setOverviewStatus('admin-user-overview-status', 'Loading account statistics...');
+    setOverviewStatus('admin-platform-overview-status', 'Loading platform statistics...');
+
+    try {
+      if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+        throw new Error('Supabase is not ready. Refresh the page and try again.');
+      }
+
+      const { data, error } = await supabaseClient
+        .from('admin_dashboard_stats')
+        .select('*')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        throw new Error('The account could not access administrator statistics. Check that your verified admin or owner role is active.');
+      }
+
+      setOverviewValue('admin-total-users', data.total_users);
+      setOverviewValue('admin-total-students', data.total_students);
+      setOverviewValue('admin-verified-users', data.verified_users);
+      setOverviewValue('admin-pending-users', data.pending_verification);
+      setOverviewValue('admin-new-users', data.new_users_7d);
+      renderOverviewBreakdown('admin-role-breakdown', {
+        Students: data.total_students,
+        Administrators: data.admin_users,
+        Owners: data.owner_users
+      }, 'No account roles to display.');
+      renderOverviewBreakdown('admin-level-breakdown', data.users_by_level, 'No academic levels assigned.');
+
+      setOverviewValue('admin-total-resources', data.total_resources);
+      setOverviewValue('admin-published-resources', data.published_resources);
+      setOverviewValue('admin-featured-resources', data.featured_resources);
+      setOverviewValue('admin-total-downloads', data.total_downloads);
+      setOverviewValue('admin-new-resources', data.resources_added_7d);
+      renderOverviewBreakdown('admin-resource-type-breakdown', data.resources_by_type, 'No resource types to display.');
+
+      const latest = getElement('admin-latest-resource');
+      if (latest) latest.textContent = formatOverviewDate(data.latest_resource_at);
+
+      setOverviewStatus('admin-user-overview-status', 'Account statistics updated.', 'success');
+      setOverviewStatus('admin-platform-overview-status', 'Platform statistics updated.', 'success');
+    } catch (error) {
+      console.error('Clariva admin overview error:', error);
+      const message = error?.message || 'Unknown error';
+      setOverviewStatus('admin-user-overview-status', 'Unable to load account statistics: ' + message, 'error');
+      setOverviewStatus('admin-platform-overview-status', 'Unable to load platform statistics: ' + message, 'error');
+    }
+  }
+
   function updateStatistics() {
     const total = resources.length;
 
@@ -960,6 +1070,13 @@
     });
 
     loadResources();
+    loadAdminOverview();
+
+    const overviewRefresh = getElement('admin-overview-refresh');
+    if (overviewRefresh && overviewRefresh.dataset.handlerAttached !== 'true') {
+      overviewRefresh.addEventListener('click', loadAdminOverview);
+      overviewRefresh.dataset.handlerAttached = 'true';
+    }
   }
 
   window.addEventListener(
