@@ -211,6 +211,12 @@
       button.textContent = isUploading ? 'Uploading queue...' : 'Upload Resources';
     }
     if (picker) picker.disabled = isUploading;
+    const form = getElement('resource-upload-form');
+    if (form) {
+      form.querySelectorAll('input, select, textarea, button[type="reset"]').forEach(control => {
+        control.disabled = isUploading;
+      });
+    }
     uploadQueueBusy = isUploading;
   }
 
@@ -1316,6 +1322,7 @@
 
   async function uploadResource(event) {
     event.preventDefault();
+    if (uploadQueueBusy) return;
 
     const form = getElement('resource-upload-form');
     if (!form || !form.reportValidity()) return;
