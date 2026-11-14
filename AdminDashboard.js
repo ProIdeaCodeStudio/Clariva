@@ -1414,6 +1414,14 @@
 
     if (form && form.dataset.uploadHandlerAttached !== 'true') {
       form.addEventListener('submit', uploadResource);
+      form.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          renderSelectedFiles();
+          const queue = getElement('resource-upload-queue');
+          if (queue) queue.replaceChildren();
+          setNetworkWarning('');
+        }, 0);
+      });
       form.dataset.uploadHandlerAttached = 'true';
     }
     const fileInput = getElement('resource-file');
