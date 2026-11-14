@@ -464,6 +464,47 @@
       }
     }
 
+      .admin-upload-queue {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .admin-upload-queue-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px 12px;
+      padding: 12px;
+      border: 1px solid var(--parchment);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+    }
+    .admin-upload-queue-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--deep-ink);
+      font-size: var(--text-sm);
+    }
+    .admin-upload-queue-state {
+      color: var(--ember-text);
+      font-size: var(--text-label);
+      white-space: nowrap;
+    }
+    .admin-upload-queue-item progress {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 8px;
+      accent-color: var(--amber);
+    }
+    .admin-network-warning {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #d8a34b;
+      border-radius: var(--radius-sm);
+      background: #fff4d8;
+      color: #65420c;
+      font-size: var(--text-sm);
+    }
+    .admin-network-warning[hidden] { display: none; }
   </style>
   <meta name="robots" content="noindex, nofollow">
 </head>
