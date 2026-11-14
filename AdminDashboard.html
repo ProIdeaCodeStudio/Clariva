@@ -187,6 +187,16 @@
     .admin-muted {
       font-size: var(--text-sm);
     }
+    .admin-upload-guidance {
+      display: block;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+    .admin-upload-guidance strong {
+      color: var(--deep-ink);
+      font-weight: 700;
+    }
+    #google-drive-status:empty { display: none; }
 
     #resource-file {
       position: absolute;
@@ -664,13 +674,13 @@
     <section class="admin-intro" aria-labelledby="admin-page-title">
       <p class="admin-kicker">Administration</p>
       <h1 class="admin-title" id="admin-page-title">Admin Dashboard</h1>
-      <p class="admin-description">Manage learning resources and monitor the Clariva platform.</p>
+      <p class="admin-description">Manage resources and monitor Clariva.</p>
     </section>
 
     <section class="admin-panel" id="resource-management">
       <p class="admin-section-kicker">Learning materials</p>
       <h2>Resource Management</h2>
-      <p class="admin-panel-intro">Add course materials and maintain the resources available to verified students.</p>
+      <p class="admin-panel-intro">Manage the student learning library.</p>
       <div class="admin-stat-grid" aria-label="Resource summary">
         <div class="admin-stat">
           <span class="admin-stat-label">Total resources</span>
@@ -690,7 +700,7 @@
     <section class="admin-panel" id="upload-resource">
       <p class="admin-section-kicker">Add to library</p>
       <h2>Upload Resource</h2>
-      <p class="admin-panel-intro">Enter the resource details and select the document to add to Clariva.</p>
+      <p class="admin-panel-intro">Add a resource to the library.</p>
 
       <form id="resource-upload-form">
         <div class="admin-form-grid">
@@ -757,12 +767,12 @@
             </select>
           </div>
 
-          <div class="admin-field admin-field-full">
+          <div class="admin-field">
             <label for="resource-file">Document files</label>
             <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple>
             <button class="admin-button admin-button-secondary" id="resource-source-open" type="button" aria-haspopup="dialog">Choose files</button>
-            <span class="admin-file-note">Choose documents from your device or Google Drive. Multiple PDF, DOC, DOCX, PPT or PPTX files are supported (maximum 50 MB each).</span>
-            <span class="admin-file-note">PDFs larger than 15 MB are optimised before upload using moderate image compression while preserving text and vector content. If optimisation fails or does not reduce the file size, Clariva keeps the original. Other supported document formats are retained unchanged. The final file must not exceed 50 MB.</span>
+            <span class="admin-file-note admin-upload-guidance">PDF · DOC · DOCX · PPT · PPTX <strong>50 MB max each</strong></span>
+            <span class="admin-file-note admin-upload-guidance">PDFs over 15 MB are optimised when possible.</span>
             <dialog id="resource-source-dialog" class="admin-source-dialog" aria-labelledby="resource-source-title">
               <div class="admin-source-dialog-header">
                 <div>
@@ -779,17 +789,17 @@
               </div>
               <section class="admin-source-panel" id="resource-source-panel-device" role="tabpanel"
                 aria-labelledby="resource-source-tab-device" data-resource-source-panel="device">
-                <p>Browse files and folders on this device using your normal file browser.</p>
+                <p>Choose files from your device.</p>
                 <button class="admin-button" id="device-file-picker-button" type="button">Browse device storage</button>
               </section>
               <section class="admin-source-panel" id="resource-source-panel-drive" role="tabpanel"
                 aria-labelledby="resource-source-tab-drive" data-resource-source-panel="drive" hidden>
-                <p>Browse your Google Drive folders and select supported documents to import into Clariva.</p>
+                <p>Choose files from Google Drive.</p>
                 <button class="admin-button" id="google-drive-picker-button" type="button">Browse Google Drive</button>
-                <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite">Google Drive selection requires the Clariva Google Picker credentials to be configured.</p>
+                <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite"></p>
               </section>
             </dialog>
-            <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected.</p>
+            <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected</p>
             <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
             <p id="resource-network-warning" class="admin-network-warning" role="status" aria-live="polite" hidden></p>
           </div>
@@ -806,7 +816,7 @@
     <section class="admin-panel" id="manage-resources">
       <p class="admin-section-kicker">Library administration</p>
       <h2>Manage Resources</h2>
-      <p class="admin-panel-intro">Find resources, update their details, control student visibility, and choose which materials are featured.</p>
+      <p class="admin-panel-intro">Search and manage library resources.</p>
       <p id="resource-action-status" class="admin-action-status" role="status" aria-live="polite"></p>
 
       <div class="admin-filter-row">
@@ -861,7 +871,7 @@
     <section class="admin-panel" id="user-overview" aria-labelledby="user-overview-title">
       <p class="admin-section-kicker">Accounts</p>
       <h2 id="user-overview-title">User Overview</h2>
-      <p class="admin-panel-intro">A live, privacy-conscious summary of Clariva accounts. Personal contact details are not displayed here.</p>
+      <p class="admin-panel-intro">Account totals and role distribution. Contact details are kept private.</p>
       <p id="admin-user-overview-status" class="admin-action-status" role="status" aria-live="polite">Loading account statistics...</p>
       <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
         <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
@@ -885,7 +895,7 @@
     <section class="admin-panel" id="platform-overview" aria-labelledby="platform-overview-title">
       <p class="admin-section-kicker">Platform activity</p>
       <h2 id="platform-overview-title">Platform Overview</h2>
-      <p class="admin-panel-intro">A live summary of the learning library and recent platform activity.</p>
+      <p class="admin-panel-intro">Library totals and recent activity.</p>
       <p id="admin-platform-overview-status" class="admin-action-status" role="status" aria-live="polite">Loading platform statistics...</p>
       <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
         <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
