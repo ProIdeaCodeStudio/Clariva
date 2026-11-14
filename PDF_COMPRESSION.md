@@ -12,6 +12,7 @@
 - PDF files larger than 15 MiB are processed in the browser before the resumable Supabase Storage upload.
 - The compressor recompresses supported embedded raster images in place. It does not rasterise whole pages; text, fonts and vector drawing are intended to remain intact.
 - Clariva validates the original and candidate PDF with PDF.js and checks that the page count is unchanged.
+- PDFs containing common digital-signature markers are retained unchanged because rewriting a signed PDF can invalidate its signature.
 - A candidate is accepted only if it is a valid PDF, smaller than the original, and no larger than 50 MiB.
 - If compression fails, output validation fails, or the result is not smaller, the original is retained when it is no larger than 50 MiB.
 - If the original exceeds 50 MiB and no valid compressed output meets the limit, the upload is rejected.
