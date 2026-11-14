@@ -17,7 +17,7 @@
     clientId: '',
     appId: ''
   };
-  const GOOGLE_DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+  const GOOGLE_DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
   const GOOGLE_MIME_EXPORTS = {
     'application/vnd.google-apps.document': {
       extension: 'docx',
