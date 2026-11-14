@@ -188,6 +188,96 @@
       font-size: var(--text-sm);
     }
 
+    #resource-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .admin-source-dialog {
+      width: min(460px, calc(100% - 32px));
+      max-width: 460px;
+      padding: 22px;
+      border: 1px solid var(--ember-fog);
+      border-radius: var(--radius-md);
+      background: var(--warm-white);
+      color: var(--deep-ink);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .24);
+    }
+    .admin-source-dialog::backdrop {
+      background: rgba(17, 16, 8, .58);
+      backdrop-filter: blur(2px);
+    }
+    .admin-source-dialog[open] {
+      animation: admin-source-dialog-in .16s ease-out;
+    }
+    @keyframes admin-source-dialog-in {
+      from { opacity: 0; transform: translateY(8px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .admin-source-dialog-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .admin-source-dialog-header h3 {
+      margin: 4px 0 0;
+      font-family: var(--font-display);
+      font-size: var(--text-h3);
+    }
+    .admin-source-close {
+      min-width: 38px;
+      padding-inline: 10px;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .admin-source-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 20px 0 0;
+      padding: 5px;
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+    }
+    .admin-source-tab {
+      min-height: 44px;
+      padding: 9px 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--ember-text);
+      font: inherit;
+      cursor: pointer;
+    }
+    .admin-source-tab[aria-selected="true"] {
+      border-color: var(--ember-fog);
+      background: var(--warm-white);
+      color: var(--deep-ink);
+      font-weight: 700;
+    }
+    .admin-source-panel {
+      padding-top: 18px;
+    }
+    .admin-source-panel p {
+      margin: 0 0 14px;
+      color: var(--ember-text);
+      font-size: var(--text-sm);
+      line-height: 1.55;
+    }
+    .admin-source-panel [hidden] { display: none; }
+    @media (max-width: 430px) {
+      .admin-source-dialog { padding: 18px; }
+      .admin-source-tab { padding-inline: 6px; font-size: var(--text-sm); }
+    }
+
     .admin-actions {
       display: flex;
       flex-wrap: wrap;
@@ -669,13 +759,36 @@
 
           <div class="admin-field admin-field-full">
             <label for="resource-file">Document files</label>
-            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple required>
-            <span class="admin-file-note">Select multiple PDF, DOC, DOCX, PPT or PPTX files (maximum 50 MB each).</span>
+            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple>
+            <button class="admin-button admin-button-secondary" id="resource-source-open" type="button" aria-haspopup="dialog">Choose files</button>
+            <span class="admin-file-note">Choose documents from your device or Google Drive. Multiple PDF, DOC, DOCX, PPT or PPTX files are supported (maximum 50 MB each).</span>
             <span class="admin-file-note">PDFs larger than 15 MB are optimised before upload using moderate image compression while preserving text and vector content. If optimisation fails or does not reduce the file size, Clariva keeps the original. Other supported document formats are retained unchanged. The final file must not exceed 50 MB.</span>
-            <div class="admin-actions" style="margin-top:12px;">
-              <button class="admin-button admin-button-secondary" id="google-drive-picker-button" type="button">Choose from Google Drive</button>
-            </div>
-            <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite">Google Drive selection requires the Clariva Google Picker credentials to be configured.</p>
+            <dialog id="resource-source-dialog" class="admin-source-dialog" aria-labelledby="resource-source-title">
+              <div class="admin-source-dialog-header">
+                <div>
+                  <p class="admin-section-kicker">File selection</p>
+                  <h3 id="resource-source-title">Choose a source</h3>
+                </div>
+                <button class="admin-button admin-button-secondary admin-source-close" id="resource-source-close" type="button" aria-label="Close file selection">×</button>
+              </div>
+              <div class="admin-source-tabs" role="tablist" aria-label="File source">
+                <button class="admin-source-tab" type="button" role="tab" id="resource-source-tab-device"
+                  data-resource-source-tab="device" aria-controls="resource-source-panel-device" aria-selected="true">Device storage</button>
+                <button class="admin-source-tab" type="button" role="tab" id="resource-source-tab-drive"
+                  data-resource-source-tab="drive" aria-controls="resource-source-panel-drive" aria-selected="false">Google Drive</button>
+              </div>
+              <section class="admin-source-panel" id="resource-source-panel-device" role="tabpanel"
+                aria-labelledby="resource-source-tab-device" data-resource-source-panel="device">
+                <p>Browse files and folders on this device using your normal file browser.</p>
+                <button class="admin-button" id="device-file-picker-button" type="button">Browse device storage</button>
+              </section>
+              <section class="admin-source-panel" id="resource-source-panel-drive" role="tabpanel"
+                aria-labelledby="resource-source-tab-drive" data-resource-source-panel="drive" hidden>
+                <p>Browse your Google Drive folders and select supported documents to import into Clariva.</p>
+                <button class="admin-button" id="google-drive-picker-button" type="button">Browse Google Drive</button>
+                <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite">Google Drive selection requires the Clariva Google Picker credentials to be configured.</p>
+              </section>
+            </dialog>
             <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected.</p>
             <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
             <p id="resource-network-warning" class="admin-network-warning" role="status" aria-live="polite" hidden></p>

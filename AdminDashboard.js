@@ -210,11 +210,15 @@
   function setUploading(isUploading) {
     const button = getElement('resource-upload-button');
     const picker = getElement('google-drive-picker-button');
+    const sourceOpen = getElement('resource-source-open');
+    const devicePicker = getElement('device-file-picker-button');
     if (button) {
       button.disabled = isUploading;
       button.textContent = isUploading ? 'Uploading queue...' : 'Upload Resources';
     }
     if (picker) picker.disabled = isUploading;
+    if (sourceOpen) sourceOpen.disabled = isUploading;
+    if (devicePicker) devicePicker.disabled = isUploading;
     const form = getElement('resource-upload-form');
     if (form) {
       form.querySelectorAll('input, select, textarea, button[type="reset"]').forEach(control => {
@@ -321,6 +325,51 @@
     if (progress && Number.isFinite(percent)) progress.value = Math.max(0, Math.min(100, percent));
   }
 
+  function initializeResourceSourcePicker() {
+    const dialog = getElement('resource-source-dialog');
+    const openButton = getElement('resource-source-open');
+    const closeButton = getElement('resource-source-close');
+    const deviceButton = getElement('device-file-picker-button');
+    const fileInput = getElement('resource-file');
+    const tabs = Array.from(document.querySelectorAll('[data-resource-source-tab]'));
+    const panels = Array.from(document.querySelectorAll('[data-resource-source-panel]'));
+
+    if (!dialog || !openButton || !fileInput) return;
+
+    openButton.addEventListener('click', () => {
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    });
+
+    closeButton?.addEventListener('click', () => dialog.close());
+
+    function activateTab(name) {
+      tabs.forEach(tab => {
+        const active = tab.dataset.resourceSourceTab === name;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach(panel => {
+        panel.hidden = panel.dataset.resourceSourcePanel !== name;
+      });
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => activateTab(tab.dataset.resourceSourceTab));
+    });
+
+    deviceButton?.addEventListener('click', () => {
+      dialog.close();
+      fileInput.click();
+    });
+
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    activateTab('device');
+  }
+
   function initializeGoogleDrivePicker() {
     const button = getElement('google-drive-picker-button');
     const status = getElement('google-drive-status');
@@ -357,6 +406,8 @@
   }
 
   async function openGoogleDrivePicker() {
+    const sourceDialog = getElement('resource-source-dialog');
+    if (sourceDialog?.open) sourceDialog.close();
     const status = getElement('google-drive-status');
     const button = getElement('google-drive-picker-button');
     if (!window.google?.accounts?.oauth2) {
@@ -401,7 +452,7 @@
         .setOrigin(window.location.origin)
         .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
         .addView(new google.picker.DocsView()
-          .setIncludeFolders(false)
+          .setIncludeFolders(true)
           .setSelectFolderEnabled(false)
           .setMimeTypes([
             'application/pdf',
@@ -1623,6 +1674,7 @@
       fileInput.addEventListener('change', renderSelectedFiles);
       fileInput.dataset.selectionHandlerAttached = 'true';
     }
+    initializeResourceSourcePicker();
     initializeGoogleDrivePicker();
     checkConnectionQuality();
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
