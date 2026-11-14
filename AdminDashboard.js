@@ -9,6 +9,9 @@
 
   const BUCKET_NAME = 'clariva-resources';
   const MAX_FILE_SIZE = 50 * 1024 * 1024;
+  const COMPRESSION_THRESHOLD = 15 * 1024 * 1024;
+  const PDF_COMPRESSION_QUALITY = 80;
+  const PDF_COMPRESSOR_URL = 'https://esm.sh/compress-pdf-lib@1.0.5?bundle';
   const RESOURCE_LIMIT = 1000;
   const SUPABASE_PROJECT_ID = 'euadmjyyjtbbdyjgnoqg';
   const TUS_ENDPOINT = `https://${SUPABASE_PROJECT_ID}.storage.supabase.co/storage/v1/upload/resumable`;
@@ -34,6 +37,7 @@
   let uploadQueueBusy = false;
   let networkSlowByConnection = false;
   let networkWarningTimer = null;
+  let pdfCompressorPromise = null;
 
   const ALLOWED_TYPES = {
     'application/pdf': ['pdf'],
@@ -461,7 +465,7 @@
     status.dataset.state = type;
   }
 
-  function validateFile(file) {
+  function validateFileType(file) {
     if (!file) {
       throw new Error('Please select a document to upload.');
     }
@@ -470,15 +474,167 @@
       throw new Error('The selected file is empty.');
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error('The file exceeds the 50 MB upload limit.');
-    }
-
     const extension = file.name.split('.').pop().toLowerCase();
     const allowedExtensions = ALLOWED_TYPES[file.type];
 
     if (!allowedExtensions || !allowedExtensions.includes(extension)) {
       throw new Error('Unsupported file. Upload a PDF, DOC, DOCX, PPT or PPTX file.');
+    }
+  }
+
+  function validateFile(file) {
+    validateFileType(file);
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('The file exceeds the 50 MB upload limit after compression.');
+    }
+  }
+
+  async function loadPdfCompressor() {
+    if (!pdfCompressorPromise) {
+      pdfCompressorPromise = import(PDF_COMPRESSOR_URL).then(module => {
+        if (typeof module.compressPDF !== 'function') {
+          throw new Error('The PDF compression module did not expose its compressor.');
+        }
+        return module;
+      }).catch(error => {
+        pdfCompressorPromise = null;
+        throw error;
+      });
+    }
+    return pdfCompressorPromise;
+  }
+
+  async function getPdfPageCount(file) {
+    if (!window.pdfjsLib) {
+      throw new Error('PDF validation is unavailable because the PDF reader library did not load.');
+    }
+
+    const header = new TextDecoder().decode(await file.slice(0, 1024).arrayBuffer());
+    if (!header.includes('%PDF-')) {
+      throw new Error('The file does not contain a valid PDF header.');
+    }
+
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const task = window.pdfjsLib.getDocument({
+      data: new Uint8Array(await file.arrayBuffer())
+    });
+
+    let documentProxy = null;
+    try {
+      documentProxy = await task.promise;
+      return documentProxy.numPages;
+    } finally {
+      if (documentProxy) {
+        await documentProxy.destroy();
+      } else {
+        await task.destroy();
+      }
+    }
+  }
+
+  async function hasDigitalSignatureMarker(file) {
+    const markers = ['/ByteRange', '/FT /Sig', '/FT/Sig'];
+    const chunkSize = 2 * 1024 * 1024;
+    let carry = '';
+
+    for (let offset = 0; offset < file.size; offset += chunkSize) {
+      const chunk = await file.slice(offset, Math.min(file.size, offset + chunkSize)).arrayBuffer();
+      const text = carry + new TextDecoder('latin1').decode(chunk);
+      if (markers.some(marker => text.includes(marker))) return true;
+      carry = text.slice(-32);
+    }
+    return false;
+  }
+
+  async function prepareFileForUpload(file, index) {
+    validateFileType(file);
+
+    if (file.size <= COMPRESSION_THRESHOLD) {
+      validateFile(file);
+      return { file, optimized: false, note: 'Compression not required' };
+    }
+
+    if (file.type !== 'application/pdf') {
+      validateFile(file);
+      return {
+        file,
+        optimized: false,
+        note: 'Original retained; safe compression is not configured for this document format'
+      };
+    }
+
+    updateQueueItem(index, 'Checking PDF…', 0);
+
+    try {
+      if (await hasDigitalSignatureMarker(file)) {
+        validateFile(file);
+        return {
+          file,
+          optimized: false,
+          note: 'Original retained because modifying a digitally signed PDF can invalidate its signature'
+        };
+      }
+
+      const originalPages = await getPdfPageCount(file);
+      const { compressPDF } = await loadPdfCompressor();
+      updateQueueItem(index, 'Compressing…', 0);
+
+      const result = await compressPDF(file, {
+        quality: PDF_COMPRESSION_QUALITY,
+        scale: 1,
+        onlyIfSmaller: true,
+        workers: 0
+      });
+
+      const compressed = result?.file;
+      if (!(compressed instanceof Blob) || compressed.size === 0) {
+        throw new Error('The compressor returned an empty or invalid file.');
+      }
+
+      if (compressed.size >= file.size) {
+        validateFile(file);
+        return {
+          file,
+          optimized: false,
+          note: 'Original retained because compression did not reduce the file size'
+        };
+      }
+
+      const candidate = new File(
+        [compressed],
+        file.name,
+        { type: 'application/pdf', lastModified: file.lastModified }
+      );
+
+      const compressedPages = await getPdfPageCount(candidate);
+      if (compressedPages !== originalPages) {
+        throw new Error('The compressed PDF did not preserve the original page count.');
+      }
+
+      if (candidate.size > MAX_FILE_SIZE) {
+        throw new Error('The compressed PDF still exceeds the 50 MB upload limit.');
+      }
+
+      return {
+        file: candidate,
+        optimized: true,
+        note: `Optimized by ${Number(result.stats?.reduction || 0).toFixed(1)}%`
+      };
+    } catch (error) {
+      if (file.size <= MAX_FILE_SIZE) {
+        console.warn(`Clariva kept the original PDF after compression failed for ${file.name}:`, error);
+        return {
+          file,
+          optimized: false,
+          note: 'Original retained because compression or PDF validation failed'
+        };
+      }
+
+      throw new Error(
+        `Compression could not produce a valid PDF within the 50 MB limit. Original retained locally; upload rejected. ${error.message || ''}`.trim()
+      );
     }
   }
 
@@ -1351,7 +1507,7 @@
     }
 
     try {
-      files.forEach(validateFile);
+      files.forEach(validateFileType);
     } catch (error) {
       setStatus(error.message, 'error');
       return;
@@ -1363,6 +1519,29 @@
     setStatus(`Preparing ${files.length} document${files.length === 1 ? '' : 's'} (${formatFileSize(totalSize)} total)…`);
 
     try {
+      const preparedFiles = new Array(files.length);
+      const preparationFailures = new Map();
+
+      for (let index = 0; index < files.length; index += 1) {
+        const originalFile = files[index];
+        setStatus(`Preparing ${index + 1} of ${files.length}: ${originalFile.name}`);
+        try {
+          const prepared = await prepareFileForUpload(originalFile, index);
+          preparedFiles[index] = prepared.file;
+          updateQueueItem(
+            index,
+            prepared.optimized ? 'Optimized' : 'Ready',
+            prepared.optimized ? 100 : 0
+          );
+          if (prepared.note) {
+            console.info(`Clariva upload preparation — ${originalFile.name}: ${prepared.note}`);
+          }
+        } catch (error) {
+          preparationFailures.set(index, error);
+          updateQueueItem(index, 'Rejected', 0);
+        }
+      }
+
       const user = await getAuthorizedUploader();
       const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
       if (sessionError || !sessionData?.session?.access_token) {
@@ -1373,7 +1552,15 @@
       const failures = [];
       const failedFiles = [];
       for (let index = 0; index < files.length; index += 1) {
-        const file = files[index];
+        const originalFile = files[index];
+        const preparationError = preparationFailures.get(index);
+        if (preparationError) {
+          failures.push(`${originalFile.name}: ${preparationError.message || 'File preparation failed'}`);
+          failedFiles.push(originalFile);
+          continue;
+        }
+
+        const file = preparedFiles[index];
         setStatus(`Uploading ${index + 1} of ${files.length}: ${file.name}`);
         try {
           await uploadOneFile(file, index, metadata, user, sessionData.session);
@@ -1381,8 +1568,8 @@
         } catch (error) {
           console.error(`Upload failed for ${file.name}:`, error);
           updateQueueItem(index, 'Failed', 0);
-          failures.push(`${file.name}: ${error.message || 'Upload failed'}`);
-          failedFiles.push(file);
+          failures.push(`${originalFile.name}: ${error.message || 'Upload failed'}`);
+          failedFiles.push(originalFile);
         }
       }
 

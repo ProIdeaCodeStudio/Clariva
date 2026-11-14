@@ -671,6 +671,7 @@
             <label for="resource-file">Document files</label>
             <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple required>
             <span class="admin-file-note">Select multiple PDF, DOC, DOCX, PPT or PPTX files (maximum 50 MB each).</span>
+            <span class="admin-file-note">PDFs larger than 15 MB are optimised before upload using moderate image compression while preserving text and vector content. If optimisation fails or does not reduce the file size, Clariva keeps the original. Other supported document formats are retained unchanged. The final file must not exceed 50 MB.</span>
             <div class="admin-actions" style="margin-top:12px;">
               <button class="admin-button admin-button-secondary" id="google-drive-picker-button" type="button">Choose from Google Drive</button>
             </div>
