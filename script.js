@@ -457,7 +457,7 @@ async function handleFormSubmit(e) {
   }
 
   if (!isValidPassword(password)) {
-    errorEl.textContent = 'Password doesn't meet the requirements.';
+    errorEl.textContent = "Password doesn't meet the requirements.";
     errorEl.classList.add('visible');
     return;
   }
