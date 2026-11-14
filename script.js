@@ -457,7 +457,7 @@ async function handleFormSubmit(e) {
   }
 
   if (!isValidPassword(password)) {
-    errorEl.textContent = 'Password must be at least 8 characters and include uppercase and lowercase letters, a number, and a special character.';
+    errorEl.textContent = 'Password doesn't meet the requirements.';
     errorEl.classList.add('visible');
     return;
   }

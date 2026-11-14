@@ -411,7 +411,7 @@
     const status = getElement('google-drive-status');
     const button = getElement('google-drive-picker-button');
     if (!window.google?.accounts?.oauth2) {
-      if (status) status.textContent = 'Google sign-in could not load. Check your connection and refresh.';
+      if (status) status.textContent = 'Google sign-in unavailable. Refresh and try again.';
       return;
     }
     button.disabled = true;
@@ -422,7 +422,7 @@
         scope: GOOGLE_DRIVE_SCOPES,
         callback: async response => {
           if (response.error) {
-            if (status) status.textContent = 'Google Drive authorization was not completed.';
+            if (status) status.textContent = 'Google Drive access was not authorised.';
             button.disabled = false;
             return;
           }
@@ -452,6 +452,7 @@
         .setOrigin(window.location.origin)
         .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
         .addView(new google.picker.DocsView()
+          .setMode(google.picker.DocsViewMode.LIST)
           .setIncludeFolders(true)
           .setSelectFolderEnabled(false)
           .setMimeTypes([
@@ -470,7 +471,7 @@
             const files = await Promise.all(data.docs.map(downloadGoogleDriveFile));
             addFilesToPicker(files);
             const status = getElement('google-drive-status');
-            if (status) status.textContent = `${files.length} file${files.length === 1 ? '' : 's'} added from Google Drive. Complete the resource details and upload the queue.`;
+            if (status) status.textContent = `${files.length} file${files.length === 1 ? '' : 's'} selected from Drive.`;
             resolve();
           } catch (error) {
             reject(error);
