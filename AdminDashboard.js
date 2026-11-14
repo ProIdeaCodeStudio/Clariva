@@ -1364,6 +1364,7 @@
 
       let completed = 0;
       const failures = [];
+      const failedFiles = [];
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
         setStatus(`Uploading ${index + 1} of ${files.length}: ${file.name}`);
@@ -1374,6 +1375,7 @@
           console.error(`Upload failed for ${file.name}:`, error);
           updateQueueItem(index, 'Failed', 0);
           failures.push(`${file.name}: ${error.message || 'Upload failed'}`);
+          failedFiles.push(file);
         }
       }
 
@@ -1383,7 +1385,12 @@
       }
 
       if (failures.length) {
-        setStatus(`${completed} of ${files.length} files uploaded. Failed: ${failures.join(' | ')}`, 'error');
+        const retrySelection = new DataTransfer();
+        failedFiles.forEach(file => retrySelection.items.add(file));
+        const fileInput = getElement('resource-file');
+        if (fileInput) fileInput.files = retrySelection.files;
+        renderSelectedFiles();
+        setStatus(`${completed} of ${files.length} files uploaded. Only failed files remain selected for retry: ${failures.join(' | ')}`, 'error');
       } else {
         setStatus(`All ${completed} resource${completed === 1 ? '' : 's'} uploaded successfully.`, 'success');
         form.reset();
