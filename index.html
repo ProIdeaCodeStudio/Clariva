@@ -50,7 +50,7 @@
       <!-- STEP 1: Register -->
       <div class="gate-step active" id="step-1">
         <div class="gate-title" id="gate-title-step-1">Create Account</div>
-        <div class="gate-subtitle">Join the Clariva community to access free educational resources.</div>
+        <div class="gate-subtitle">Create an account to access Clariva resources.</div>
         <br>
         <form class="gate-form" id="access-form">
           <div>
@@ -68,7 +68,7 @@
           <div>
             <label class="gate-field-label" for="field-password">Password</label>
             <input class="gate-input" type="password" id="field-password" placeholder="Create a password" minlength="8" autocomplete="new-password" aria-describedby="registration-password-requirements" required>
-            <p class="gate-note" id="registration-password-requirements" style="margin-top:8px;">Use at least 8 characters, including an uppercase letter, a lowercase letter, a number, and a special character.</p>
+            <div class="password-requirements" id="registration-password-requirements" aria-label="Password requirements"><span>8+ characters</span><span>Uppercase</span><span>Lowercase</span><span>Number</span><span>Symbol</span></div>
           </div>
           <div>
             <label class="gate-field-label" for="field-level">Level</label>
@@ -95,14 +95,13 @@
       <div class="gate-step" id="step-2">
         <div class="gate-title">Confirm Your Email</div>
         <div class="gate-subtitle">
-          Your account has been created. Confirm your email address to activate your Clariva access.
+          Confirm your email to activate your account.
         </div>
         <br>
 
         <div class="whatsapp-box">
           <p>
-            Open the confirmation link sent to the email address you registered with.
-            After confirming your email, return to Clariva and sign in.
+            Confirm your email, then return here to sign in.
           </p>
         </div>
 
@@ -111,11 +110,10 @@
         </p>
 
         <p class="gate-note">
-          Want to connect with other students?
+          Connect with other students (optional):
           <a class="whatsapp-link" id="join-whatsapp-group"
             href="https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t"
             target="_blank" rel="noopener noreferrer">Join the optional WhatsApp community</a>.
-          Joining is not required for verification.
         </p>
         <button type="button" class="gate-btn gate-btn-outline"
   id="email-confirmation-login-button">
@@ -159,8 +157,7 @@
         <div class="gate-title">Reset Password</div>
 
         <div class="gate-subtitle">
-          Enter the email address associated with your Clariva account.
-          We'll send you a password reset link.
+          Enter your account email to receive a reset link.
         </div>
 
         <br>
