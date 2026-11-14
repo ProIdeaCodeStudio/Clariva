@@ -509,8 +509,8 @@
       throw new Error('PDF validation is unavailable because the PDF reader library did not load.');
     }
 
-    const header = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
-    if (header !== '%PDF-') {
+    const header = new TextDecoder().decode(await file.slice(0, 1024).arrayBuffer());
+    if (!header.includes('%PDF-')) {
       throw new Error('The file does not contain a valid PDF header.');
     }
 
@@ -534,6 +534,20 @@
     }
   }
 
+  async function hasDigitalSignatureMarker(file) {
+    const markers = ['/ByteRange', '/FT /Sig', '/FT/Sig'];
+    const chunkSize = 2 * 1024 * 1024;
+    let carry = '';
+
+    for (let offset = 0; offset < file.size; offset += chunkSize) {
+      const chunk = await file.slice(offset, Math.min(file.size, offset + chunkSize)).arrayBuffer();
+      const text = carry + new TextDecoder('latin1').decode(chunk);
+      if (markers.some(marker => text.includes(marker))) return true;
+      carry = text.slice(-32);
+    }
+    return false;
+  }
+
   async function prepareFileForUpload(file, index) {
     validateFileType(file);
 
@@ -554,6 +568,15 @@
     updateQueueItem(index, 'Checking PDF…', 0);
 
     try {
+      if (await hasDigitalSignatureMarker(file)) {
+        validateFile(file);
+        return {
+          file,
+          optimized: false,
+          note: 'Original retained because modifying a digitally signed PDF can invalidate its signature'
+        };
+      }
+
       const originalPages = await getPdfPageCount(file);
       const { compressPDF } = await loadPdfCompressor();
       updateQueueItem(index, 'Compressing…', 0);
