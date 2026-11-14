@@ -17,6 +17,9 @@
   <script src="script.js" defer></script>
   <script src="ProfileMenu.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" defer></script>
+  <script src="https://apis.google.com/js/api.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
   <script src="AdminDashboard.js" defer></script>
 
@@ -615,10 +618,17 @@
             </select>
           </div>
 
-          <div class="admin-field">
-            <label for="resource-file">Document file</label>
-            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
-            <span class="admin-file-note">PDF, DOC, DOCX, PPT or PPTX. Maximum 50 MB.</span>
+          <div class="admin-field admin-field-full">
+            <label for="resource-file">Document files</label>
+            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple required>
+            <span class="admin-file-note">Select multiple PDF, DOC, DOCX, PPT or PPTX files (maximum 50 MB each).</span>
+            <div class="admin-actions" style="margin-top:12px;">
+              <button class="admin-button admin-button-secondary" id="google-drive-picker-button" type="button">Choose from Google Drive</button>
+            </div>
+            <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite">Google Drive selection requires the Clariva Google Picker credentials to be configured.</p>
+            <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected.</p>
+            <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
+            <p id="resource-network-warning" class="admin-network-warning" role="status" aria-live="polite" hidden></p>
           </div>
         </div>
 
