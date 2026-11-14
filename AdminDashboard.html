@@ -17,7 +17,18 @@
   <script src="script.js" defer></script>
   <script src="ProfileMenu.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" defer></script>
+  <script src="https://apis.google.com/js/api.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
+  <!-- Fill these three public Google Picker settings after configuring the Google Cloud project. -->
+  <script>
+    window.CLARIVA_GOOGLE_DRIVE_CONFIG = {
+      apiKey: 'AIzaSyD4nV8sc8SeWxn_bPiZQIBqCQf6tJMLRE8',
+      clientId: '579040774646-ig0qsm5hf88pnlb2tc3heiclp8jj0bog.apps.googleusercontent.com',
+      appId: '579040774646'
+    };
+  </script>
   <script src="AdminDashboard.js" defer></script>
 
   <style>
@@ -461,6 +472,47 @@
       }
     }
 
+      .admin-upload-queue {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .admin-upload-queue-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px 12px;
+      padding: 12px;
+      border: 1px solid var(--parchment);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+    }
+    .admin-upload-queue-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--deep-ink);
+      font-size: var(--text-sm);
+    }
+    .admin-upload-queue-state {
+      color: var(--ember-text);
+      font-size: var(--text-label);
+      white-space: nowrap;
+    }
+    .admin-upload-queue-item progress {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 8px;
+      accent-color: var(--amber);
+    }
+    .admin-network-warning {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #d8a34b;
+      border-radius: var(--radius-sm);
+      background: #fff4d8;
+      color: #65420c;
+      font-size: var(--text-sm);
+    }
+    .admin-network-warning[hidden] { display: none; }
   </style>
   <meta name="robots" content="noindex, nofollow">
 </head>
@@ -615,10 +667,17 @@
             </select>
           </div>
 
-          <div class="admin-field">
-            <label for="resource-file">Document file</label>
-            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
-            <span class="admin-file-note">PDF, DOC, DOCX, PPT or PPTX. Maximum 50 MB.</span>
+          <div class="admin-field admin-field-full">
+            <label for="resource-file">Document files</label>
+            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple required>
+            <span class="admin-file-note">Select multiple PDF, DOC, DOCX, PPT or PPTX files (maximum 50 MB each).</span>
+            <div class="admin-actions" style="margin-top:12px;">
+              <button class="admin-button admin-button-secondary" id="google-drive-picker-button" type="button">Choose from Google Drive</button>
+            </div>
+            <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite">Google Drive selection requires the Clariva Google Picker credentials to be configured.</p>
+            <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected.</p>
+            <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
+            <p id="resource-network-warning" class="admin-network-warning" role="status" aria-live="polite" hidden></p>
           </div>
         </div>
 

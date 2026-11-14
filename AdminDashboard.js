@@ -10,6 +10,30 @@
   const BUCKET_NAME = 'clariva-resources';
   const MAX_FILE_SIZE = 50 * 1024 * 1024;
   const RESOURCE_LIMIT = 1000;
+  const SUPABASE_PROJECT_ID = 'euadmjyyjtbbdyjgnoqg';
+  const TUS_ENDPOINT = `https://${SUPABASE_PROJECT_ID}.storage.supabase.co/storage/v1/upload/resumable`;
+  const GOOGLE_DRIVE_CONFIG = window.CLARIVA_GOOGLE_DRIVE_CONFIG || {
+    apiKey: '',
+    clientId: '',
+    appId: ''
+  };
+  const GOOGLE_DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+  const GOOGLE_MIME_EXPORTS = {
+    'application/vnd.google-apps.document': {
+      extension: 'docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    },
+    'application/vnd.google-apps.presentation': {
+      extension: 'pptx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    }
+  };
+  let googleTokenClient = null;
+  let googleAccessToken = null;
+  let googlePickerReady = false;
+  let uploadQueueBusy = false;
+  let networkSlowByConnection = false;
+  let networkWarningTimer = null;
 
   const ALLOWED_TYPES = {
     'application/pdf': ['pdf'],
@@ -181,10 +205,252 @@
 
   function setUploading(isUploading) {
     const button = getElement('resource-upload-button');
+    const picker = getElement('google-drive-picker-button');
+    if (button) {
+      button.disabled = isUploading;
+      button.textContent = isUploading ? 'Uploading queue...' : 'Upload Resources';
+    }
+    if (picker) picker.disabled = isUploading;
+    const form = getElement('resource-upload-form');
+    if (form) {
+      form.querySelectorAll('input, select, textarea, button[type="reset"]').forEach(control => {
+        control.disabled = isUploading;
+      });
+    }
+    uploadQueueBusy = isUploading;
+  }
+
+  function setNetworkWarning(message) {
+    const warning = getElement('resource-network-warning');
+    if (!warning) return;
+    warning.textContent = message || '';
+    warning.hidden = !message;
+  }
+
+  function checkConnectionQuality() {
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const type = String(connection?.effectiveType || '').toLowerCase();
+    const downlink = Number(connection?.downlink);
+    const slowType = ['slow-2g', '2g'].includes(type);
+    const lowDownlink = Number.isFinite(downlink) && downlink > 0 && downlink < 1;
+    networkSlowByConnection = slowType || lowDownlink;
+    if (networkSlowByConnection) {
+      setNetworkWarning('Your connection appears slow. Uploads may take longer. Keep this page open while files are uploading.');
+    } else if (!getElement('resource-network-warning')?.dataset.measuredSlow) {
+      setNetworkWarning('');
+    }
+  }
+
+  function updateMeasuredUploadSpeed(bytes, elapsedMs) {
+    if (!elapsedMs || elapsedMs < 1) return;
+    const bytesPerSecond = bytes / (elapsedMs / 1000);
+    const warning = getElement('resource-network-warning');
+    if (bytesPerSecond < 150 * 1024) {
+      if (!networkWarningTimer) {
+        networkWarningTimer = window.setTimeout(() => {
+          if (warning) warning.dataset.measuredSlow = 'true';
+          setNetworkWarning('Your upload speed is currently slow. The upload may take longer; please keep this page open.');
+          networkWarningTimer = null;
+        }, 4500);
+      }
+    } else {
+      if (networkWarningTimer) {
+        clearTimeout(networkWarningTimer);
+        networkWarningTimer = null;
+      }
+      if (warning) delete warning.dataset.measuredSlow;
+      if (!networkSlowByConnection) setNetworkWarning('');
+    }
+  }
+
+  function getSelectedFiles() {
+    return Array.from(getElement('resource-file')?.files || []);
+  }
+
+  function renderSelectedFiles() {
+    const files = getSelectedFiles();
+    const label = getElement('resource-file-selection');
+    if (label) {
+      label.textContent = files.length
+        ? `${files.length} file${files.length === 1 ? '' : 's'} selected · ${formatFileSize(files.reduce((sum, file) => sum + file.size, 0))} total`
+        : 'No files selected.';
+    }
+  }
+
+  function addFilesToPicker(files) {
+    const input = getElement('resource-file');
+    if (!input || !files.length) return;
+    const transfer = new DataTransfer();
+    [...getSelectedFiles(), ...files].forEach(file => transfer.items.add(file));
+    input.files = transfer.files;
+    renderSelectedFiles();
+  }
+
+  function renderUploadQueue(files) {
+    const queue = getElement('resource-upload-queue');
+    if (!queue) return;
+    queue.replaceChildren();
+    files.forEach((file, index) => {
+      const row = document.createElement('div');
+      row.className = 'admin-upload-queue-item';
+      row.id = `upload-queue-${index}`;
+      const name = document.createElement('span');
+      name.className = 'admin-upload-queue-name';
+      name.textContent = file.name;
+      const state = document.createElement('span');
+      state.className = 'admin-upload-queue-state';
+      state.textContent = 'Waiting';
+      state.id = `upload-queue-state-${index}`;
+      const progress = document.createElement('progress');
+      progress.max = 100;
+      progress.value = 0;
+      progress.id = `upload-queue-progress-${index}`;
+      row.append(name, state, progress);
+      queue.appendChild(row);
+    });
+  }
+
+  function updateQueueItem(index, state, percent) {
+    const stateElement = getElement(`upload-queue-state-${index}`);
+    const progress = getElement(`upload-queue-progress-${index}`);
+    if (stateElement) stateElement.textContent = state;
+    if (progress && Number.isFinite(percent)) progress.value = Math.max(0, Math.min(100, percent));
+  }
+
+  function initializeGoogleDrivePicker() {
+    const button = getElement('google-drive-picker-button');
+    const status = getElement('google-drive-status');
     if (!button) return;
 
-    button.disabled = isUploading;
-    button.textContent = isUploading ? 'Uploading...' : 'Upload Resource';
+    const configured = Boolean(
+      GOOGLE_DRIVE_CONFIG.apiKey &&
+      GOOGLE_DRIVE_CONFIG.clientId &&
+      GOOGLE_DRIVE_CONFIG.appId
+    );
+    if (!configured) {
+      button.disabled = true;
+      if (status) status.textContent = 'Google Drive picker is ready to configure. Add the Google API key, OAuth client ID and project app ID to CLARIVA_GOOGLE_DRIVE_CONFIG after configuring the Google Cloud project.';
+      return;
+    }
+
+    button.disabled = false;
+    if (status) status.textContent = 'Connect your Google account to select one or more supported documents.';
+    button.addEventListener('click', openGoogleDrivePicker);
+  }
+
+  function loadGooglePickerApi() {
+    return new Promise((resolve, reject) => {
+      if (googlePickerReady && window.google?.picker) return resolve();
+      if (!window.gapi) return reject(new Error('Google Picker library did not load. Refresh the page and try again.'));
+      window.gapi.load('picker', {
+        callback: () => {
+          googlePickerReady = true;
+          resolve();
+        },
+        onerror: () => reject(new Error('Google Picker could not be loaded.'))
+      });
+    });
+  }
+
+  async function openGoogleDrivePicker() {
+    const status = getElement('google-drive-status');
+    const button = getElement('google-drive-picker-button');
+    if (!window.google?.accounts?.oauth2) {
+      if (status) status.textContent = 'Google sign-in could not load. Check your connection and refresh.';
+      return;
+    }
+    button.disabled = true;
+    try {
+      await loadGooglePickerApi();
+      googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_DRIVE_CONFIG.clientId,
+        scope: GOOGLE_DRIVE_SCOPES,
+        callback: async response => {
+          if (response.error) {
+            if (status) status.textContent = 'Google Drive authorization was not completed.';
+            button.disabled = false;
+            return;
+          }
+          googleAccessToken = response.access_token;
+          try {
+            await showGooglePicker();
+          } catch (error) {
+            if (status) status.textContent = error.message || 'Unable to open Google Drive picker.';
+          } finally {
+            button.disabled = false;
+          }
+        }
+      });
+      googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? '' : 'consent' });
+    } catch (error) {
+      if (status) status.textContent = error.message || 'Google Drive picker could not be started.';
+      button.disabled = false;
+    }
+  }
+
+  function showGooglePicker() {
+    return new Promise((resolve, reject) => {
+      const picker = new google.picker.PickerBuilder()
+        .setAppId(GOOGLE_DRIVE_CONFIG.appId)
+        .setDeveloperKey(GOOGLE_DRIVE_CONFIG.apiKey)
+        .setOAuthToken(googleAccessToken)
+        .setOrigin(window.location.origin)
+        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+        .addView(new google.picker.DocsView()
+          .setIncludeFolders(false)
+          .setSelectFolderEnabled(false)
+          .setMimeTypes([
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.google-apps.document',
+            'application/vnd.google-apps.presentation'
+          ].join(',')))
+        .setCallback(async data => {
+          if (data.action === google.picker.Action.CANCEL) return resolve();
+          if (data.action !== google.picker.Action.PICKED) return;
+          try {
+            const files = await Promise.all(data.docs.map(downloadGoogleDriveFile));
+            addFilesToPicker(files);
+            const status = getElement('google-drive-status');
+            if (status) status.textContent = `${files.length} file${files.length === 1 ? '' : 's'} added from Google Drive. Complete the resource details and upload the queue.`;
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        })
+        .build();
+      picker.setVisible(true);
+    });
+  }
+
+  async function downloadGoogleDriveFile(documentInfo) {
+    const nativeExport = GOOGLE_MIME_EXPORTS[documentInfo.mimeType];
+    const extension = nativeExport?.extension ||
+      String(documentInfo.name || '').split('.').pop().toLowerCase();
+    const allowed = ['pdf', 'doc', 'docx', 'ppt', 'pptx'];
+    if (!allowed.includes(extension)) {
+      throw new Error(`“${documentInfo.name}” is not a supported document type.`);
+    }
+
+    const url = nativeExport
+      ? `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(documentInfo.id)}/export?mimeType=${encodeURIComponent(nativeExport.mimeType)}`
+      : `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(documentInfo.id)}?alt=media`;
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${googleAccessToken}` }
+    });
+    if (!response.ok) {
+      throw new Error(`Could not import “${documentInfo.name}” from Google Drive (${response.status}).`);
+    }
+
+    const blob = await response.blob();
+    const mime = nativeExport?.mimeType || documentInfo.mimeType || blob.type || 'application/octet-stream';
+    const name = nativeExport
+      ? `${documentInfo.name.replace(/\.[^.]+$/, '')}.${extension}`
+      : documentInfo.name;
+    return new File([blob], name, { type: mime, lastModified: Date.now() });
   }
 
   function setResourceActionStatus(message, type = 'info') {
@@ -972,128 +1238,179 @@
      RESOURCE UPLOAD
      ============================================================ */
 
-  async function uploadResource(event) {
-    event.preventDefault();
+  async function uploadOneFile(file, index, metadata, user, session) {
+    validateFile(file);
+    const safeName = sanitizeFileName(file.name);
+    const uniqueName = `${crypto.randomUUID()}-${safeName}`;
+    const storagePath = `resources/${metadata.level}/${metadata.semester}/${uniqueName}`;
+    updateQueueItem(index, 'Uploading…', 0);
 
-    const form = getElement('resource-upload-form');
-
-    if (!form) return;
-    if (!form.reportValidity()) return;
-
-    const fileInput = getElement('resource-file');
-    const file = fileInput?.files?.[0];
-
-    let uploadedPath = null;
-
-    setUploading(true);
-    setStatus('Checking your account and validating the document...');
-
-    try {
-      validateFile(file);
-
-      const user = await getAuthorizedUploader();
-
-      const title = getElement('resource-title').value.trim();
-      const description = getElement('resource-description').value.trim();
-      const department = getElement('resource-department').value.trim();
-      const level = Number(getElement('resource-level').value);
-      const semester = Number(getElement('resource-semester').value);
-      const courseCode = getElement('resource-course-code').value.trim();
-      const courseTitle = getElement('resource-course-title').value.trim();
-      const resourceType = getElement('resource-type').value;
-
-      if (!title || !level || !semester || !resourceType) {
-        throw new Error('Please complete all required resource details.');
+    let lastProgressAt = performance.now();
+    let lastBytesUploaded = 0;
+    await new Promise((resolve, reject) => {
+      if (!window.tus?.Upload) {
+        reject(new Error('The resumable upload library did not load. Refresh the page and try again.'));
+        return;
       }
 
-      const safeName = sanitizeFileName(file.name);
-      const uniqueName = `${crypto.randomUUID()}-${safeName}`;
-      const storagePath = `resources/${level}/${semester}/${uniqueName}`;
+      const upload = new window.tus.Upload(file, {
+        endpoint: TUS_ENDPOINT,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          apikey: SUPABASE_KEY
+        },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        chunkSize: 6 * 1024 * 1024,
+        metadata: {
+          bucketName: BUCKET_NAME,
+          objectName: storagePath,
+          contentType: file.type || 'application/octet-stream',
+          cacheControl: '3600'
+        },
+        onError: error => reject(error),
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const now = performance.now();
+          const deltaBytes = Math.max(0, bytesUploaded - lastBytesUploaded);
+          updateMeasuredUploadSpeed(deltaBytes, now - lastProgressAt);
+          lastProgressAt = now;
+          lastBytesUploaded = bytesUploaded;
+          updateQueueItem(index, `Uploading ${Math.round(bytesUploaded / bytesTotal * 100)}%`, bytesUploaded / bytesTotal * 100);
+        },
+        onSuccess: resolve
+      });
 
-      setStatus('Uploading document to secure storage...');
+      upload.findPreviousUploads().then(previousUploads => {
+        if (previousUploads.length) upload.resumeFromPreviousUpload(previousUploads[0]);
+        upload.start();
+      }).catch(reject);
+    });
 
-      const { error: uploadError } = await supabaseClient
-        .storage
-        .from(BUCKET_NAME)
-        .upload(storagePath, file, {
-          cacheControl: '3600',
-          contentType: file.type,
-          upsert: false
-        });
+    updateQueueItem(index, 'Saving details…', 100);
+    const title = metadata.filesCount > 1
+      ? `${metadata.title} — ${file.name.replace(/\.[^.]+$/, '')}`
+      : metadata.title;
 
-      if (uploadError) {
-        throw new Error(`Storage upload failed: ${uploadError.message}`);
-      }
-
-      uploadedPath = storagePath;
-
-      setStatus('Document uploaded. Saving resource details...');
-
-      const resourceRecord = {
+    const { error: insertError } = await supabaseClient
+      .from('Resources')
+      .insert({
         title,
-        description: description || null,
-        department: department || null,
-        level,
-        semester,
-        course_code: courseCode || null,
-        course_title: courseTitle || null,
-        resource_type: resourceType,
+        description: metadata.description || null,
+        department: metadata.department || null,
+        level: metadata.level,
+        semester: metadata.semester,
+        course_code: metadata.courseCode || null,
+        course_title: metadata.courseTitle || null,
+        resource_type: metadata.resourceType,
         file_url: storagePath,
         file_name: file.name,
         file_size: file.size,
         uploaded_by: user.id,
         visibility: true,
         featured: false
-      };
+      });
 
-      const { error: insertError } = await supabaseClient
-        .from('Resources')
-        .insert(resourceRecord);
+    if (insertError) {
+      const { error: cleanupError } = await supabaseClient.storage.from(BUCKET_NAME).remove([storagePath]);
+      if (cleanupError) console.error('Failed to remove unregistered upload:', cleanupError);
+      throw new Error(`Could not save details for ${file.name}: ${insertError.message}`);
+    }
 
-      if (insertError) {
-        throw new Error(
-          `Resource details could not be saved: ${insertError.message}`
-        );
+    updateQueueItem(index, 'Uploaded', 100);
+  }
+
+  async function uploadResource(event) {
+    event.preventDefault();
+    if (uploadQueueBusy) return;
+
+    const form = getElement('resource-upload-form');
+    if (!form || !form.reportValidity()) return;
+
+    const files = getSelectedFiles();
+    if (!files.length) {
+      setStatus('Select at least one document to upload.', 'error');
+      return;
+    }
+
+    const metadata = {
+      title: getElement('resource-title').value.trim(),
+      description: getElement('resource-description').value.trim(),
+      department: getElement('resource-department').value.trim(),
+      level: Number(getElement('resource-level').value),
+      semester: Number(getElement('resource-semester').value),
+      courseCode: getElement('resource-course-code').value.trim(),
+      courseTitle: getElement('resource-course-title').value.trim(),
+      resourceType: getElement('resource-type').value,
+      filesCount: files.length
+    };
+
+    if (!metadata.title || !metadata.level || !metadata.semester || !metadata.resourceType) {
+      setStatus('Please complete all required resource details.', 'error');
+      return;
+    }
+
+    try {
+      files.forEach(validateFile);
+    } catch (error) {
+      setStatus(error.message, 'error');
+      return;
+    }
+
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    renderUploadQueue(files);
+    setUploading(true);
+    setStatus(`Preparing ${files.length} document${files.length === 1 ? '' : 's'} (${formatFileSize(totalSize)} total)…`);
+
+    try {
+      const user = await getAuthorizedUploader();
+      const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) {
+        throw new Error('Your upload session has expired. Please sign in again.');
       }
 
-      uploadedPath = null;
-
-      form.reset();
-
-      setStatus('Resource uploaded successfully. Refreshing the resource list...', 'success');
-
-      await loadResources();
-
-      setStatus('Resource uploaded successfully.', 'success');
-
-      document.dispatchEvent(
-        new CustomEvent('clariva:resource-uploaded')
-      );
-
-    } catch (error) {
-      console.error('Clariva resource upload error:', error);
-
-      if (uploadedPath) {
-        const { error: cleanupError } = await supabaseClient
-          .storage
-          .from(BUCKET_NAME)
-          .remove([uploadedPath]);
-
-        if (cleanupError) {
-          console.error('Uploaded file cleanup failed:', cleanupError);
+      let completed = 0;
+      const failures = [];
+      const failedFiles = [];
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        setStatus(`Uploading ${index + 1} of ${files.length}: ${file.name}`);
+        try {
+          await uploadOneFile(file, index, metadata, user, sessionData.session);
+          completed += 1;
+        } catch (error) {
+          console.error(`Upload failed for ${file.name}:`, error);
+          updateQueueItem(index, 'Failed', 0);
+          failures.push(`${file.name}: ${error.message || 'Upload failed'}`);
+          failedFiles.push(file);
         }
       }
 
-      setStatus(
-        error.message || 'An unexpected upload error occurred.',
-        'error'
-      );
+      if (completed) {
+        await loadResources();
+        document.dispatchEvent(new CustomEvent('clariva:resource-uploaded'));
+      }
 
+      if (failures.length) {
+        const retrySelection = new DataTransfer();
+        failedFiles.forEach(file => retrySelection.items.add(file));
+        const fileInput = getElement('resource-file');
+        if (fileInput) fileInput.files = retrySelection.files;
+        renderSelectedFiles();
+        setStatus(`${completed} of ${files.length} files uploaded. Only failed files remain selected for retry: ${failures.join(' | ')}`, 'error');
+      } else {
+        setStatus(`All ${completed} resource${completed === 1 ? '' : 's'} uploaded successfully.`, 'success');
+        form.reset();
+        renderSelectedFiles();
+      }
+    } catch (error) {
+      console.error('Clariva resource upload queue error:', error);
+      setStatus(error.message || 'An unexpected upload error occurred.', 'error');
     } finally {
       setUploading(false);
+      checkConnectionQuality();
     }
   }
-
   /* ============================================================
      DASHBOARD INITIALIZATION
      ============================================================ */
@@ -1104,8 +1421,25 @@
 
     if (form && form.dataset.uploadHandlerAttached !== 'true') {
       form.addEventListener('submit', uploadResource);
+      form.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          renderSelectedFiles();
+          const queue = getElement('resource-upload-queue');
+          if (queue) queue.replaceChildren();
+          setNetworkWarning('');
+        }, 0);
+      });
       form.dataset.uploadHandlerAttached = 'true';
     }
+    const fileInput = getElement('resource-file');
+    if (fileInput && fileInput.dataset.selectionHandlerAttached !== 'true') {
+      fileInput.addEventListener('change', renderSelectedFiles);
+      fileInput.dataset.selectionHandlerAttached = 'true';
+    }
+    initializeGoogleDrivePicker();
+    checkConnectionQuality();
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    connection?.addEventListener?.('change', checkConnectionQuality);
 
     const search = getElement('resource-search');
     const searchButton = getElement('resource-search-button');

@@ -433,18 +433,17 @@
       }
 
       const studentLevel = Number.parseInt(profile.Level, 10);
-      if (!isPrivileged && (!Number.isInteger(studentLevel) || studentLevel <= 0)) {
+      if (!Number.isInteger(studentLevel) || studentLevel <= 0) {
         throw new Error('Your academic level is missing from your profile. Please contact an administrator.');
       }
 
-      // Students are limited to their academic level. Verified administrators
-      // can inspect all published resources from the student-facing library.
+      // The Undergraduates page is level-scoped for every role. Privileged
+      // cross-level access remains available only in the Admin/Owner dashboards.
       let resourceQuery = client
         .from('Resources')
         .select('id, title, description, department, level, semester, course_code, course_title, resource_type, file_url, file_name, file_size, featured, created_at')
-        .eq('visibility', true);
-
-      if (!isPrivileged) resourceQuery = resourceQuery.eq('level', studentLevel);
+        .eq('visibility', true)
+        .eq('level', studentLevel);
 
       const { data, error } = await resourceQuery
         .order('featured', { ascending: false })
