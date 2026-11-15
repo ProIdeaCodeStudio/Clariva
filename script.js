@@ -823,24 +823,28 @@ async function initializeResetPasswordPage() {
 
   // Subscribe before reading the existing session so a recovery event cannot
   // be missed while the page is initializing.
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
-      try {
-        const recoveryIsValid = await hasVerifiedRecoveryClaim(session.user.id);
-        if (recoveryIsValid) {
-          saveRecoveryMarker(session.user.id);
-          showRecoveryForm();
-        } else {
+      // Run follow-up Auth calls after the auth-state callback returns.
+      // Awaiting Supabase calls inside this callback can deadlock the client.
+      setTimeout(async () => {
+        try {
+          const recoveryIsValid = await hasVerifiedRecoveryClaim(session.user.id);
+          if (recoveryIsValid) {
+            saveRecoveryMarker(session.user.id);
+            showRecoveryForm();
+          } else {
+            showMandatoryResetPanel(
+              "This recovery session could not be verified. Please request a new reset link."
+            );
+          }
+        } catch (validationError) {
+          console.error("Recovery session validation failed:", validationError);
           showMandatoryResetPanel(
-            "This recovery session could not be verified. Please request a new reset link."
+            "We couldn't verify the recovery session. Please refresh and try again."
           );
         }
-      } catch (validationError) {
-        console.error("Recovery session validation failed:", validationError);
-        showMandatoryResetPanel(
-          "We couldn't verify the recovery session. Please refresh and try again."
-        );
-      }
+      }, 0);
     } else if (event === "SIGNED_OUT") {
       sessionStorage.removeItem(recoveryMarkerKey);
       sessionStorage.removeItem(pendingCompletionKey);
