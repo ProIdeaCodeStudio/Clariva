@@ -509,6 +509,24 @@
     return new File([blob], name, { type: mime, lastModified: Date.now() });
   }
 
+  function showResourceUpdateSuccess(message) {
+    const dialog = getElement('resource-update-success-dialog');
+    const messageElement = getElement('resource-update-success-message');
+    const okButton = getElement('resource-update-success-ok');
+    if (!dialog || !okButton) {
+      alert(message);
+      return;
+    }
+
+    if (messageElement) messageElement.textContent = message;
+    okButton.onclick = () => dialog.close();
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    } else {
+      alert(message);
+    }
+  }
+
   function setResourceActionStatus(message, type = 'info') {
     const status = getElement('resource-action-status');
     if (!status) return;
@@ -800,13 +818,6 @@
      or individual profile rows are returned to the browser.
      ============================================================ */
 
-  function setOverviewStatus(id, message, type = 'info') {
-    const element = getElement(id);
-    if (!element) return;
-    element.textContent = message;
-    element.dataset.state = type;
-  }
-
   function setOverviewValue(id, value) {
     const element = getElement(id);
     if (element) element.textContent = Number(value || 0).toLocaleString();
@@ -850,13 +861,6 @@
   }
 
   async function loadAdminOverview() {
-    const userStatus = getElement('admin-user-overview-status');
-    const platformStatus = getElement('admin-platform-overview-status');
-    if (!userStatus || !platformStatus) return;
-
-    setOverviewStatus('admin-user-overview-status', 'Loading account statistics...');
-    setOverviewStatus('admin-platform-overview-status', 'Loading platform statistics...');
-
     try {
       if (typeof supabaseClient === 'undefined' || !supabaseClient) {
         throw new Error('Supabase is not ready. Refresh the page and try again.');
@@ -893,13 +897,8 @@
       const latest = getElement('admin-latest-resource');
       if (latest) latest.textContent = formatOverviewDate(data.latest_resource_at);
 
-      setOverviewStatus('admin-user-overview-status', 'Account statistics updated.', 'success');
-      setOverviewStatus('admin-platform-overview-status', 'Platform statistics updated.', 'success');
     } catch (error) {
       console.error('Clariva admin overview error:', error);
-      const message = error?.message || 'Unknown error';
-      setOverviewStatus('admin-user-overview-status', 'Unable to load account statistics: ' + message, 'error');
-      setOverviewStatus('admin-platform-overview-status', 'Unable to load platform statistics: ' + message, 'error');
     }
   }
 
@@ -1030,8 +1029,6 @@
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = busyLabel || 'Saving...';
-    setResourceActionStatus('Saving resource changes...', 'info');
-
     try {
       await getAuthorizedUploader();
 
@@ -1062,7 +1059,7 @@
           ? 'Resource featured successfully.'
           : 'Resource removed from featured resources.';
       }
-      setResourceActionStatus(successMessage, 'success');
+      showResourceUpdateSuccess(successMessage);
     } catch (error) {
       console.error('Clariva resource update error:', error);
       setResourceActionStatus(
@@ -1383,7 +1380,9 @@
         const nextFeatured = !resource.featured;
         updateResourceRecord(
           resource,
-          { featured: nextFeatured },
+          nextFeatured
+            ? { featured: true, featured_permanent: true, featured_until: null }
+            : { featured: false, featured_permanent: false, featured_until: null },
           featuredButton,
           nextFeatured ? 'Featuring...' : 'Updating...'
         );
@@ -1568,7 +1567,9 @@
         file_size: file.size,
         uploaded_by: user.id,
         visibility: true,
-        featured: false
+        featured: true,
+        featured_until: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        featured_permanent: false
       });
 
     if (insertError) {
