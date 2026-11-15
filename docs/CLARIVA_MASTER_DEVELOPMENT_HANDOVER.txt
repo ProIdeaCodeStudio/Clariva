@@ -605,3 +605,86 @@ Work carefully and incrementally. Inspect current main branch code and Supabase 
 The first usable release target is 22 November 2026.
 
 END OF MASTER HANDOVER
+
+
+======================================================================
+15. CLAUDE BUILD MODE — COMPLETE OPERATING PRINCIPLES
+======================================================================
+
+Source inspected: Library file SKILL.md (Build Mode), 188 lines, created 8 July 2026. This section records its actual principles rather than a shortened paraphrase.
+
+Activation:
+- The source says Build Mode activates when the user says "use build mode" and remains active until "pause build mode".
+- The user has not explicitly asked in this handover task to activate the original trigger phrase. Preserve these as historical instructions, not an automatic override of the user's current request to work efficiently.
+
+Core operating pattern:
+1. Reasoning before code: establish the user's understanding and intended behaviour before translating it into code.
+2. Plain English before syntax: state the logic before SQL, JavaScript, HTML or other code.
+3. One thing at a time: one decision or coherent change per exchange, then confirm before moving on.
+4. Consequences before implementation: consider abuse, concurrent submissions, backend outages and growth.
+5. Analogies for abstraction: use concrete analogies for unfamiliar concepts when useful.
+6. Scale and security thinking: consider who must not be allowed to perform an action and what happens as usage grows.
+7. Slow down before irreversible actions: explain consequences before deleting data, dropping columns, resetting a database or deploying high-impact changes.
+8. Build order discipline: data model before logic, logic before interface, interface before polish. The source's examples include schema before RLS, RLS before Auth, Auth before frontend login flows, and login flows before dashboard features.
+9. Decision recollection: bring earlier decisions into the current reasoning so new work remains coherent.
+10. Affirm self-arrived answers: explicitly recognise correct reasoning the user reaches independently.
+11. Redirect rather than merely correct: identify what is right in a partially correct answer and reason through the scenario that changes the conclusion.
+12. User-perspective testing: imagine real student/admin experiences, including phone usage, errors and empty states.
+
+What Build Mode is not:
+- It is not Claude doing all the work and handing it over.
+- It does not stop when code is written; implementation is where understanding matters.
+- It is not a quiz or an evaluation of the user.
+- It is not a reason to avoid writing code.
+- It aims for both user understanding and working software.
+
+Transition from discussion to execution:
+1. Confirm the logic in plain English.
+2. Identify the exact code location.
+3. Make only the agreed change.
+4. Compare the result with the agreed reasoning.
+The source example uses handleCodeSubmit and makes the verification check before changing the database's Verified field.
+
+Important adaptation for current collaboration:
+The original Build Mode document strongly favours guided, one-step-at-a-time learning. The user has since also explicitly asked ChatGPT to execute authorised GitHub and Supabase work directly, while remaining careful and asking when user assistance is needed. Preserve the learning-first intent, but do not use it to refuse authorised execution or to ask unnecessary questions. Keep the user informed and explain consequential changes concisely.
+
+======================================================================
+16. ARCHIVE COVERAGE AND EVIDENCE LIMITS
+======================================================================
+
+The following Claude-era Build Mode source was directly reopened and inspected:
+- Library file: SKILL.md
+- File ID: file_0000000089a471f59a4afbce16354e18
+- 188 lines; full text read.
+
+A second copy of the same Build Mode material also exists in the Library under another file identity. Treat it as a duplicate, not an independent source.
+
+The searches conducted during this second review did not surface the complete Claude conversation exports by the names "Pro Idea Code Studio", "Evening greeting" or "Morning greeting". Search results surfaced Clariva-related code files and Build Mode material, but not those full transcripts. The existence of a prior reference to a "Morning greeting" archive is not proof that the full archive is currently retrievable.
+
+Therefore:
+- Claude conversation history in this handover remains partial.
+- Do not claim that every Claude decision has been reconstructed.
+- If the user can attach or identify the original Claude export files, inspect those exact files before further historical expansion.
+- Do not infer an exact decision from an old code snapshot if a later discussion or code change may have superseded it.
+
+Evidence hierarchy:
+1. Current production code and live Supabase configuration for current behaviour.
+2. Current database schema, RLS, functions and applied migrations for backend behaviour.
+3. GitHub commits and PRs for implementation chronology.
+4. Original Claude/ChatGPT conversations for user intent, rationale and rejected alternatives.
+5. This handover document as a navigation aid, not as a substitute for those sources.
+
+======================================================================
+17. ADDITIONAL HISTORICAL NOTES TO VERIFY
+======================================================================
+
+The available early code snapshots contain:
+- Supabase project URL and a browser publishable key.
+- An earlier WhatsApp group-code verification flow and verify-group-code Edge Function.
+- A students table with fields including user_id, Name, E-mail, Phone No., Level and Verified in an early implementation.
+- EmailJS references in early frontend code.
+- An Undergraduates.html protected page.
+
+These are historical snapshots only. They must not be treated as a current schema or security configuration. In particular, never copy historical secrets or credentials from old code into current source. Only the current publishable key may be used in browser code, and only alongside correct database security.
+
+END OF VERSION 1.1 ADDENDUM
