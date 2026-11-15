@@ -211,8 +211,13 @@
     }
 
     .admin-source-dialog {
+      position: fixed;
+      inset: 0;
+      margin: auto;
       width: min(460px, calc(100% - 32px));
       max-width: 460px;
+      max-height: calc(100% - 32px);
+      overflow-y: auto;
       padding: 22px;
       border: 1px solid var(--ember-fog);
       border-radius: var(--radius-md);
@@ -230,6 +235,26 @@
     @keyframes admin-source-dialog-in {
       from { opacity: 0; transform: translateY(8px) scale(.985); }
       to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .admin-batch-confirm-dialog {
+      width: min(520px, calc(100% - 32px));
+    }
+    .admin-batch-confirm-dialog > p {
+      margin: 18px 0 12px;
+      line-height: 1.55;
+    }
+    .admin-batch-confirm-details {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+    }
+    .admin-batch-confirm-details p {
+      margin: 5px 0;
+      color: var(--ember-text);
+      overflow-wrap: anywhere;
+    }
+    .admin-batch-confirm-details strong {
+      color: var(--deep-ink);
     }
     .admin-source-dialog-header {
       display: flex;
@@ -705,12 +730,6 @@
       <form id="resource-upload-form">
         <div class="admin-form-grid">
           <div class="admin-field admin-field-full">
-            <label for="resource-title">Resource title</label>
-            <input id="resource-title" name="title" type="text" maxlength="160"
-              placeholder="e.g. Complete Lecture Handout" required>
-          </div>
-
-          <div class="admin-field admin-field-full">
             <label for="resource-description">Description</label>
             <textarea id="resource-description" name="description" maxlength="1000"
               placeholder="Briefly describe this resource"></textarea>
@@ -798,6 +817,29 @@
                 <button class="admin-button" id="google-drive-picker-button" type="button">Browse Google Drive</button>
                 <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite"></p>
               </section>
+            </dialog>
+            <dialog id="resource-batch-confirm-dialog" class="admin-source-dialog admin-batch-confirm-dialog"
+              aria-labelledby="resource-batch-confirm-title" aria-describedby="resource-batch-confirm-description">
+              <div class="admin-source-dialog-header">
+                <div>
+                  <p class="admin-section-kicker">Before upload</p>
+                  <h3 id="resource-batch-confirm-title">Confirm batch details</h3>
+                </div>
+              </div>
+              <p id="resource-batch-confirm-description" class="admin-muted">
+                You selected multiple files. Every file in this batch will be saved with the same semester,
+                course code, level and resource type. Make sure these details apply to all selected files.
+              </p>
+              <div class="admin-batch-confirm-details">
+                <p><strong>Level:</strong> <span id="batch-confirm-level"></span></p>
+                <p><strong>Semester:</strong> <span id="batch-confirm-semester"></span></p>
+                <p><strong>Course code:</strong> <span id="batch-confirm-course-code"></span></p>
+                <p><strong>Resource type:</strong> <span id="batch-confirm-resource-type"></span></p>
+              </div>
+              <div class="admin-actions">
+                <button class="admin-button" id="resource-batch-confirm" type="button">Continue upload</button>
+                <button class="admin-button admin-button-secondary" id="resource-batch-cancel" type="button">Cancel</button>
+              </div>
             </dialog>
             <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected</p>
             <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
