@@ -841,25 +841,36 @@ async function initializeResetPasswordPage() {
     return;
   }
 
-  const { error } = await supabaseClient.auth.updateUser({
-    password: newPassword
-  });
+  const pendingCompletionKey = 'clariva-forced-reset-password-updated';
+  const passwordAlreadyUpdated = mandatoryPasswordReset &&
+    sessionStorage.getItem(pendingCompletionKey) === session.user.id;
 
-  if (error) {
-    if (buttonLoading) buttonLoading.restore();
-    errorElement.textContent = error.message;
-    errorElement.classList.add("visible");
-    return;
+  if (!passwordAlreadyUpdated) {
+    const { error } = await supabaseClient.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      if (buttonLoading) buttonLoading.restore();
+      errorElement.textContent = error.message;
+      errorElement.classList.add("visible");
+      return;
+    }
+
+    if (mandatoryPasswordReset) {
+      sessionStorage.setItem(pendingCompletionKey, session.user.id);
+    }
   }
 
   if (mandatoryPasswordReset) {
     const { error: completionError } = await supabaseClient.rpc('complete_required_password_reset');
     if (completionError) {
       if (buttonLoading) buttonLoading.restore();
-      errorElement.textContent = 'Your password was changed, but Clariva could not finish the account update. Please try submitting again or contact an administrator. ' + completionError.message;
+      errorElement.textContent = 'Your password has been changed. Clariva could not finish the account update yet. Submit again to retry the final step. ' + completionError.message;
       errorElement.classList.add('visible');
       return;
     }
+    sessionStorage.removeItem(pendingCompletionKey);
   }
 
     sessionStorage.removeItem(recoveryMarkerKey);
