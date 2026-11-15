@@ -1,0 +1,607 @@
+CLARIVA — MASTER DEVELOPMENT HANDOVER
+Version: 1.0
+Prepared: 15 November 2026
+Owner / Product studio: Pro Idea
+Repository: https://github.com/ProIdeaCodeStudio/Clariva
+Live site: https://proideacodestudio.github.io/Clariva/
+Supabase project reference: euadmjyyjtbbdyjgnoqg
+Status: Active development; first usable release target: 22 November 2026
+
+======================================================================
+0. PURPOSE, SCOPE AND HOW TO READ THIS DOCUMENT
+======================================================================
+
+This document is the working handover for continuing Clariva development in a new ChatGPT conversation. It consolidates:
+- Claude-era discussions found in the available exported conversation archives.
+- ChatGPT-era decisions and implementation history available in this project context.
+- Current GitHub repository structure, README, migrations, commit history and deployment workflow status.
+- Relevant Supabase work and troubleshooting history described in the development conversation.
+
+It is deliberately not a claim that every message ever exchanged in Claude or ChatGPT has been recovered. The available Claude archive exports inspected include conversations titled "Pro Idea Code Studio" and "Evening greeting"; the "Pro Idea Code Studio" conversation contains the transition from Pro Idea's original web presence to the separate Clariva educational platform. The Build Mode guidance file was also located. Other archives may exist and should be checked if a truly exhaustive historical record is required.
+
+STATUS LABELS
+[VERIFIED] Supported by current repository files, GitHub metadata, a successful deployment run, an inspected archive, or a confirmed user test.
+[IMPLEMENTED - TEST PENDING] Code or database implementation exists, but complete real-user/browser verification is not recorded.
+[PLANNED] A decision or roadmap item, not yet confirmed as implemented.
+[HISTORICAL] Describes an earlier approach that may since have changed.
+[CHECK CURRENT STATE] Requires inspection of current code/database before further work.
+
+Do not silently convert a planned feature into a completed feature. Do not assume that a successful GitHub Pages build proves that every application feature works.
+
+======================================================================
+1. PRODUCT IDENTITY AND PURPOSE
+======================================================================
+
+Name: Clariva
+Tagline: "From Confused to Confident."
+Developer / parent studio: Pro Idea
+Live URL: https://proideacodestudio.github.io/Clariva/
+Repository: ProIdeaCodeStudio/Clariva
+
+Clariva began as the educational-services portion of Pro Idea's broader website. The original Pro Idea site was intended to combine a graphic-design portfolio/gallery with educational services. During discussion in Claude, it was decided to separate the two:
+- Pro Idea's main site remains focused on the design/creative portfolio.
+- A separate educational platform would handle student accounts, learning resources and later learning tools.
+
+The user wanted the educational platform to have its own identity rather than remain visibly tied to the Pro Idea brand name. The name Clariva was selected because it sounded academic, professional and capable of standing independently. Pro Idea remains its developer/owner connection.
+
+Audience and positioning:
+- Nigerian students and learners.
+- Clariva is NOT exclusively for undergraduates, even though the first student-resource implementation and its current page naming are undergraduate-oriented.
+- The long-term direction includes learning resources, CBT practice, AI-assisted learning and a student community/support layer.
+- Avoid presenting future features as already available.
+
+Current README describes Clariva as an educational platform by Pro Idea that provides curated learning resources and study support in one place.
+
+======================================================================
+2. HISTORICAL DEVELOPMENT: CLAUDE-ERA FOUNDATION
+======================================================================
+
+2.1 Pro Idea website and the initial educational idea
+
+The earlier website work began as a Pro Idea website with a homepage and links to two different service areas: graphic design and educational materials. The user explained that these were contrasting areas and should be separated into distinct websites. This became the architectural/product decision that produced Clariva.
+
+2.2 Initial technical learning and backend decision
+
+The original site began with HTML and CSS, with JavaScript added for interactions and access gating. It became clear that user registration, stored form submissions, access control and email flows could not be securely delivered with static HTML/CSS alone.
+
+Supabase was selected as the backend platform because it provides hosted PostgreSQL, authentication, APIs, storage and server-side functions without requiring the project to run its own always-on server. GitHub Pages remained the static frontend host.
+
+Historical initial backend work included:
+- Creating a Supabase project in the West EU (Ireland) region.
+- Creating an initial table called "Form Submissions" with identity/contact fields and created_at.
+- Connecting the frontend to Supabase using the project URL and a browser-safe publishable key.
+- Adding a verification/access process and database-backed records.
+- Learning JavaScript through implementation rather than treating the project as a detached tutorial.
+
+Important security correction from the early process: never expose or commit Supabase service-role/secret keys. A Supabase publishable key is intended for browser use but does not secure data by itself. RLS, storage policies, grants and server-side checks are the actual access boundary.
+
+2.3 Early access flow (historical)
+
+The early prototype used a multi-step gate/registration process and a WhatsApp group code verification step. There was a server-side Edge Function named verify-group-code in the early code. The flow also included email notifications, localStorage handling and a database Verified field.
+
+This is historical. Later development moved toward Supabase email confirmation and standard authentication flows, and the WhatsApp-code verification logic was removed/refactored around 7 November 2026. Do not reintroduce the old WhatsApp verification flow without an explicit new decision.
+
+2.4 Branding and naming decisions
+
+- Product name changed from ProIdea EDU to Clariva.
+- Tagline selected: "From Confused to Confident."
+- The platform should have a distinct academic identity.
+- The user requested naming conventions and code structure that remain understandable and consistent with the earlier Pro Idea website conventions.
+- The stylesheet name StyleSheet.css was selected for consistency with Pro Idea's existing naming.
+- A book-related favicon was preferred over using the Pro Idea logo.
+- Clariva's visual personality was described in the naming discussion as warm, academic and empowering.
+
+2.5 Early product roadmap
+
+A May 2026 Claude-era roadmap recorded:
+COMPLETED AT THAT HISTORICAL CHECKPOINT:
+- Registration with validation.
+- Supabase database connection.
+- Email notifications.
+- localStorage fallback/retry behaviour.
+- Duplicate email prevention.
+- WhatsApp group-code verification (subsequently replaced/removed).
+- Verified status in database.
+- Login for returning users.
+- Access guard on the Undergraduates page.
+- Landing page with an Ember-inspired visual design.
+
+REMAINING AT THAT HISTORICAL CHECKPOINT:
+- Admin Dashboard for viewing submissions without logging into Supabase.
+- CBT system fetching questions from past papers.
+- Payment integration (Paystack) for a later secondary-school tier.
+
+This is a historical checkpoint, not the current completion list. The admin dashboard and resource library have since been implemented in the repository. CBT and payments must still be checked against current implementation before being marked complete.
+
+======================================================================
+3. CHATGPT-ERA DEVELOPMENT DIRECTION AND WORKING ROADMAP
+======================================================================
+
+The later ChatGPT development work concentrated on making Clariva a reliable, usable platform rather than adding features without validating the foundations.
+
+A roadmap recorded in early November 2026 was:
+1. Icon review.
+2. Resource Management.
+3. Profile/avatar improvements.
+4. Admin/student experience.
+5. Hamburger menu.
+6. Polish and testing.
+
+The icon review found emoji/Unicode icons and some SVG elements. The direction was to preserve Clariva's existing identity and retain meaningful feature symbols, while reviewing close (X) and arrow icons. No forced redesign or arbitrary accessibility/branding change was agreed at that checkpoint.
+
+A first usable release target was set for 22 November 2026. A later planning checkpoint also recorded a planned completion target of 29 November and an emergency buffer through 30 November. The immediate user-stated priority remains a usable first version by 22 November.
+
+The user prefers careful, consistent, incremental implementation. Make one coherent change at a time, inspect its dependencies, test it, then proceed. The user has often worked from a phone; instructions and testing steps must be mobile-friendly. Ask for the user's help only where a real manual action or observation is required.
+
+======================================================================
+4. CURRENT REPOSITORY ARCHITECTURE
+======================================================================
+
+Repository: ProIdeaCodeStudio/Clariva
+Hosting: GitHub Pages from main
+Live URL: https://proideacodestudio.github.io/Clariva/
+
+Current repository files observed on 15 November 2026:
+
+PUBLIC / APPLICATION PAGES
+- index.html — public landing page and account entry.
+- Undergraduates.html — student resource library page.
+- AdminDashboard.html — administrative interface.
+- reset-password.html — password reset interface.
+- privacy.html — privacy page.
+- terms.html — terms page.
+
+JAVASCRIPT
+- script.js — shared application and authentication logic.
+- StudentResources.js — student resource-library behaviour.
+- AdminDashboard.js — administrative dashboard behaviour.
+- ProfileMenu.js — shared account/profile menu.
+
+STYLES
+- Stylesheet.css — main site styles.
+- ProfileMenu.css — shared account menu styles.
+
+BRAND ASSETS
+- Clariva-loader-mark.webp
+- ClarivaCombinationMark.png
+- ClarivaLettermark.jpg
+- ClarivaTpCombinationMark.png
+- ClarivaTpLetterMark.png
+- ClarivaTpWordMark.png
+- ClarivaWordmark.jpg
+
+OTHER
+- README.md
+- SECURITY.md
+- LICENSE
+- THIRD_PARTY_NOTICES.md
+- PDF_COMPRESSION.md
+- sitemap.xml
+- .gitignore
+- supabase/migrations/
+
+Architecture:
+- Browser frontend: HTML, CSS and JavaScript.
+- Hosting: GitHub Pages (static hosting).
+- Authentication/database/storage: Supabase.
+- PDF viewing: PDF.js / embedded browser PDF reader (confirm exact implementation and version in current source before changing).
+- Resource administration: Admin Dashboard JavaScript and Supabase.
+- Student resource display: StudentResources.js and shared Supabase client.
+- Profile navigation: ProfileMenu.js and ProfileMenu.css.
+
+The current README says changes should be developed on a feature branch, reviewed through a pull request, and merged only after verification. Avoid direct unreviewed commits to main.
+
+======================================================================
+5. FEATURE AND REQUIREMENT REGISTER
+======================================================================
+
+5.1 Landing page and identity
+[VERIFIED IN REPOSITORY]
+- Clariva-branded public landing page.
+- Clariva wordmark/lettermark and associated visual assets.
+- Ember-inspired visual system from the earlier design process.
+- Public product description and feature sections.
+
+[CHECK CURRENT STATE]
+- Exact final copy, responsiveness, navigation and all breakpoints.
+- Whether every brand asset is in active use or some are historical alternatives.
+
+5.2 Authentication and student access
+[VERIFIED IN REPOSITORY / COMMIT HISTORY]
+- Supabase email/password authentication.
+- Registration and login logic.
+- Email confirmation flow was revised in November.
+- Student records associated with Supabase auth user IDs.
+- Student access guard.
+- Password strength validation work.
+- Password recovery page and notification interface.
+
+Historical change: WhatsApp group-code verification was removed/refactored around 7 November. Email confirmation became the intended registration verification approach.
+
+[CHECK CURRENT STATE]
+- Full new-user registration test.
+- Email confirmation link round-trip.
+- Login for verified and unverified users.
+- Sign-out and session persistence.
+- Student profile creation and missing-profile handling.
+
+5.3 Student resource library
+[VERIFIED IN REPOSITORY / COMMIT HISTORY]
+- Student Resource Library interface integrated.
+- Resource loading filtered by student level.
+- Embedded/view-only PDF reader added.
+- Shared Supabase client reused rather than creating a redundant client in the resource module.
+- Resource views tracked separately and attributed to the Undergraduates page.
+
+[CHECK CURRENT STATE]
+- Semester/course/type filters and their combinations.
+- Empty states and loading states.
+- Large PDF behaviour on mobile.
+- Storage permissions and signed/public URL behaviour.
+- Whether every intended audience level can be supported despite the current page name Undergraduates.html.
+
+5.4 Admin dashboard and resource management
+[VERIFIED IN REPOSITORY / COMMIT HISTORY]
+- Admin dashboard user and platform overview.
+- Aggregate statistics function added.
+- Admin dashboard statistics access hardened.
+- Safe resource deletion added.
+- Resource management integrated with account navigation.
+- Dashboard headers made persistent.
+- Role-based navigation verification work recorded.
+- Resource view tracking added.
+
+[CHECK CURRENT STATE]
+- Admin authorization and every RLS/policy path.
+- Create/edit/delete resource end-to-end.
+- User overview and platform overview correctness.
+- Pagination/scaling behaviour as resources grow.
+- Mobile layout and navigation.
+
+5.5 Resource upload and file handling requirements
+User-approved requirements from 14–15 November:
+- Batch upload must not use one manually entered resource title for every selected file.
+- Each resource title should be generated from the individual uploaded filename/resource name.
+- Before upload, show a clear confirmation asking the admin to ensure all selected files share the same semester, course code, level and resource type.
+- The source picker (device storage versus Google Drive) should be centred in the viewport, not positioned at the top-right.
+- File extensions should not be displayed as part of the resource name.
+- Google Drive import and batch uploads were added in the 14 November work.
+- Automatic PDF compression was added.
+- Resource filename/title normalization and metadata behaviour must be checked in the actual migration and current UI before further edits.
+
+5.6 Featured resources
+User-approved requirements:
+- A newly uploaded resource should automatically be featured for three days.
+- The uploaded_at/created_at timestamp should determine whether a resource is within the three-day period.
+- Existing resources uploaded within the three-day window at rollout should also qualify automatically.
+- After three days, the resource should cease being featured unless an admin explicitly keeps it featured.
+- The featured section should not repeat full resource cards. It should show resource names as clickable text links, styled with visible CSS padding/background so they look interactive.
+- Clicking a featured item should scroll/jump to the corresponding resource in the main list.
+- The platform overview's seven-day upload statistic is separate from the three-day featured-resource window.
+
+The 15 November migration filename indicates this area was implemented in:
+20261115090000_password_reset_resource_titles_and_featured_expiry.sql
+Related commits include "Allow admins to keep temporary featured resources", "Render featured resources as links to library entries" and "Style featured resources as jump links".
+
+[CHECK CURRENT STATE]
+- Verify the exact timestamp logic and time zone.
+- Verify whether manual admin featuring overrides expiry indefinitely or uses a different override.
+- Test existing resources uploaded within three days.
+- Test expiry after three days and jump-link targets.
+
+5.7 Admin update notifications
+User-approved requirements:
+- Resource edit success should appear only after a successful edit.
+- Do not leave a persistent "updated successfully" message under a heading when no update has occurred.
+- Resource-edit confirmation should be a small, visible, centred modal/pop-up with an OK button.
+- Platform overview should not show an unnecessary "updated" status.
+- User overview should not show an unnecessary "updated" status.
+- Upload success feedback may remain associated with the upload action.
+
+[CHECK CURRENT STATE] Confirm the implementation in AdminDashboard.js and the actual admin HTML.
+
+5.8 Profile, avatar and navigation
+[VERIFIED IN REPOSITORY / COMMIT HISTORY]
+- Student avatar-choice migration added on 13 November.
+- Shared ProfileMenu.js and ProfileMenu.css exist.
+
+[PLANNED / CHECK CURRENT STATE]
+- Complete profile/avatar improvements.
+- Finish hamburger menu and account navigation review.
+- Test navigation for admin versus student roles.
+- Review icon consistency without discarding Clariva's established identity.
+
+5.9 CBT, AI assistance, community and payments
+[PLANNED / PRODUCT DIRECTION]
+- CBT practice system using questions from past papers.
+- AI-assisted learning.
+- Community/student support.
+- Paystack/payment integration was discussed as a later phase, including a possible secondary-school tier.
+
+Do not claim these are live or complete without inspecting the current source and testing. Confirm business model, eligibility, pricing and payment scope with the user before implementing.
+
+======================================================================
+6. SUPABASE DATABASE AND SECURITY
+======================================================================
+
+Project reference: euadmjyyjtbbdyjgnoqg
+Project URL: https://euadmjyyjtbbdyjgnoqg.supabase.co
+
+Supabase provides authentication, PostgreSQL database, storage and server-side functions. GitHub Pages is static and does not itself run trusted server code.
+
+Current migration files observed in the repository:
+
+20261113150500_add_student_avatar_choice.sql
+20261113182434_create_admin_dashboard_aggregate_stats.sql
+20261113193000_secure_admin_dashboard_stats_function.sql
+20261113194000_harden_admin_dashboard_stats_access.sql
+20261113195000_add_resource_view_tracking.sql
+20261115090000_password_reset_resource_titles_and_featured_expiry.sql
+20261115091500_enforce_required_password_reset_rls.sql
+20261115093000_verify_password_changed_before_reset_completion.sql
+20261115100000_stage_password_reset_enforcement.sql
+20261115114000_require_recovery_session_for_password_reset_completion.sql
+20261115120000_harden_password_reset_rpc_permissions.sql
+20261115231400_validate_supabase_recovery_otp_session.sql
+20261115231600_revoke_anon_recovery_session_validator.sql
+20261115232400_require_password_update_before_reset_completion.sql
+
+This list is based on the repository tree observed on 15 November. Verify migration application state in Supabase before assuming every repository migration is deployed. A migration file in GitHub is not proof that it ran in the live database.
+
+Security principles:
+- RLS must remain enabled where appropriate.
+- Student queries must be constrained to the signed-in user's own permitted records/resources.
+- Admin-only operations must be enforced server-side, not merely hidden in the UI.
+- SECURITY DEFINER functions must use a safe search_path, explicit grants and narrow permissions.
+- Never expose a service-role/secret key in frontend code or GitHub.
+- A publishable key is expected in a browser app but must be backed by RLS and secure server-side logic.
+- Inspect the current policies and function definitions before modifying them.
+- Treat security advisor warnings individually; do not blanket-dismiss warnings without understanding the function and its exposure.
+
+======================================================================
+7. MANDATORY PASSWORD RESET — NOVEMBER 2026 INCIDENT AND CURRENT STATE
+======================================================================
+
+This is the most recent major technical issue and the immediate test priority.
+
+7.1 User requirement
+
+The user requested a password format update and wanted all existing password users to be required to reset their passwords before using the platform. The intended behaviour:
+- The requirement is enforced, not optional.
+- A user cannot bypass the reset and continue into the student library or admin dashboard.
+- The user must follow the normal Supabase password recovery email process.
+- The recovery link should lead to reset-password.html and show a new-password form.
+- The user can enter the same password again if it meets the current password requirements; the platform should not invent a password-history restriction that Supabase does not provide.
+- After successful password update, the mandatory-reset flag is cleared.
+- The explanatory text should be short and understandable, explaining that a security update requires a one-time password reset.
+
+7.2 Reported failure
+
+The user experienced a recovery email link that appeared to return to the quick security page instead of displaying the new-password form. The email link did contain a Supabase verification token. The reset URL allowlist had:
+- Site URL: https://proideacodestudio.github.io/Clariva/
+- Redirect URL: https://proideacodestudio.github.io/Clariva/reset-password.html
+- Redirect URL: https://proideacodestudio.github.io/Clariva
+
+The Reset Password email template used {{ .ConfirmationURL }} as the link. Email provider rate limits were also encountered, preventing repeated rapid tests. Custom SMTP was discussed but Gmail account verification/security settings made it impractical at that time; the normal Supabase email provider was used for subsequent testing.
+
+7.3 Implementation work
+
+Repository commits and migrations show work to:
+- Add mandatory reset email-link step.
+- Require a verified recovery session for reset completion.
+- Harden reset RPC permissions.
+- Enforce mandatory reset through resource access policies.
+- Verify a password change before clearing the reset flag.
+- Stage enforcement until frontend deployment.
+- Recognise Supabase recovery sessions using the actual OTP AMR rather than assuming an AMR method named "recovery".
+- Validate the JWT session ID against auth.sessions and compare it with auth.users.recovery_sent_at.
+- Revoke anonymous execution from the recovery-session validation RPC.
+- Require a password update before the completion function clears password_reset_required.
+
+7.4 Most recent PR and deployment
+
+PR #18: "Fix mandatory password recovery session validation"
+https://github.com/ProIdeaCodeStudio/Clariva/pull/18
+
+[VERIFIED] PR #18 was merged into main on 15 November 2026. The merge commit was observed as ae1005e944b4dd1dc692153a5756fe1fc227274c.
+
+[VERIFIED] The latest GitHub Pages workflow run associated with the merge completed successfully:
+https://github.com/ProIdeaCodeStudio/Clariva/actions/runs/43769157550
+
+[IMPLEMENTED - TEST PENDING] The live browser recovery flow has NOT yet been confirmed end-to-end after this merge. Successful Pages deployment means the static build was published; it does not prove the reset process works.
+
+7.5 Immediate test checklist
+
+On the user's phone, when a new recovery email can be requested:
+1. Open the latest recovery email, not an older link.
+2. Tap the link and confirm it opens the Clariva reset page.
+3. Confirm the new-password form appears.
+4. Submit a password satisfying the current Supabase password requirements.
+5. Confirm the page reports success.
+6. Confirm the user is not still trapped in the mandatory reset gate.
+7. Sign in normally.
+8. Confirm access to the student library.
+9. Confirm admin dashboard access for the admin account.
+10. Verify the password_reset_required flag is false for the tested account.
+11. Test that an ordinary login session cannot call the reset-completion RPC to clear the flag.
+
+If any step fails, capture the exact URL path and visible error text, but do not share full tokens, access tokens, refresh tokens, passwords or secret keys. Avoid repeated email requests because of Supabase email rate limits.
+
+Important technical caution: the recovery validator and completion RPC must be reviewed against current Supabase behaviour. In particular, ensure that an OTP session cannot be confused with another OTP flow, that recovery_sent_at/session timing is correct, and that auth.users.updated_at is a sound indicator of the password update for this implementation. Do not assume this is fully proven until the end-to-end test and relevant negative tests pass.
+
+======================================================================
+8. GITHUB DEVELOPMENT AND DEPLOYMENT HISTORY
+======================================================================
+
+The repository is ProIdeaCodeStudio/Clariva. GitHub Pages serves the main branch.
+
+Recent commit history observed on 15 November includes:
+- Add student avatar choice.
+- Create and secure admin dashboard aggregate statistics.
+- Add resource view tracking.
+- Add resource upload, Drive import and batch upload.
+- Add automatic PDF compression.
+- Unify device and Google Drive resource selection.
+- Integrate Student Resource Library.
+- Add embedded PDF reader.
+- Add safe resource deletion.
+- Add admin dashboard user/platform overview.
+- Add resource title generation and featured-resource expiry.
+- Add mandatory password reset and recovery enforcement.
+- Add featured-resource jump links.
+- Fix mandatory password recovery session validation.
+
+Selected PR history from commit messages:
+- PR #1: consistent password-strength validation.
+- PR #3: student resource library feature.
+- PR #6: repository documentation, proprietary terms and SEO foundations.
+- PR #7: admin dashboard user and platform overview.
+- PR #8: harden admin dashboard statistics access.
+- PR #9: safe resource deletion.
+- PR #10: resource view tracking.
+- PR #13: unify device and Google Drive resource selection.
+- PR #14: polish resource selection and simplify interface guidance.
+- PR #18: mandatory password recovery session validation.
+
+Use commits as evidence of what was changed, but not as a substitute for inspecting code or testing. Some commits may be small iterative fixes or generated migration adjustments.
+
+Preferred workflow:
+1. Inspect the current main branch and relevant files.
+2. Confirm the requirement and intended behaviour with the user.
+3. Create a focused feature branch.
+4. Make a minimal, coherent change.
+5. Check JavaScript syntax and inspect the diff.
+6. Review relevant SQL, RLS, grants and security implications.
+7. Apply migrations deliberately and record which project received them.
+8. Test affected user journeys.
+9. Open a pull request.
+10. Review the final diff and merge only after verification.
+11. Confirm GitHub Pages workflow completion.
+12. Test the live site, preferably on mobile as the user is currently phone-only.
+
+Do not tell the user a feature is deployed until the Pages workflow has completed successfully. Do not tell the user a feature works until its actual user flow has been tested.
+
+======================================================================
+9. DOCUMENTATION AND PROJECT GOVERNANCE
+======================================================================
+
+The user explicitly requested a TXT guide that allows another developer/AI to understand how Clariva was built. This master handover is intended as the starting document. It should eventually be supplemented by focused technical documentation in the repository:
+- Database schema and relationship reference.
+- RLS and authorization matrix.
+- Authentication and recovery flow.
+- Resource upload/storage lifecycle.
+- Admin dashboard architecture.
+- Deployment and rollback procedure.
+- Third-party dependencies and notices.
+
+Do not place secrets, tokens, user exports, passwords, private recovery links or personally identifying student data in documentation.
+
+The existing README, SECURITY.md, LICENSE, THIRD_PARTY_NOTICES.md and PDF_COMPRESSION.md should be maintained rather than duplicated unnecessarily.
+
+======================================================================
+10. DEVELOPMENT PHILOSOPHY — PRESERVE THE CLAUDE BUILD MODE
+======================================================================
+
+A Build Mode guidance file from the Claude archive was located. Its core principles should continue:
+
+- Understand the problem before writing code.
+- Reason through decisions before implementation.
+- Make one change at a time.
+- Consider security, failure scenarios and consequences.
+- Test from the perspective of actual students and administrators.
+- Help the user understand the system rather than merely handing over code.
+- Recollect prior decisions before proposing a new approach.
+- When the user reaches a correct conclusion through reasoning, acknowledge the reasoning.
+- Correct by explaining the scenario and consequences, not by dismissing the user.
+- Before implementing: confirm the logic in plain English, identify the exact code location, make only the agreed change, then compare the result with the agreed reasoning.
+- Build Mode is not a quiz and not a reason to avoid writing code; understanding and working code are both goals.
+
+The user values precision, consistency, careful inspection and direct execution when authorised. The user does not want broad unverified changes. When user assistance is needed, say exactly what action or observation is required.
+
+======================================================================
+11. WORKING CONSTRAINTS AND COMMUNICATION
+======================================================================
+
+- User currently works from an Android phone only. Keep instructions suitable for mobile browser/GitHub/Supabase interfaces.
+- User may not be able to upload more screenshots on a given day. Continue with text-based checks where possible; screenshots are not a prerequisite for all work.
+- User expects live time/date to be fetched and recorded with each response during active time-tracked development. On START, PAUSE, RESUME or END, provide a cumulative session/time summary. Do not invent timestamps or claim a live fetch if one was not made.
+- User has a target first usable release date of 22 November 2026.
+- Keep ordinary progress updates short and understandable unless the user asks for a detailed explanation.
+- Ask only the most important clarifying question when blocked.
+- Be transparent about what has been inspected, what is inferred, what is implemented and what remains untested.
+
+======================================================================
+12. CURRENT STATUS SNAPSHOT — 15 NOVEMBER 2026
+======================================================================
+
+[VERIFIED]
+- Clariva GitHub repository exists and main branch is active.
+- GitHub Pages deployment workflow is configured.
+- Latest Pages workflow following PR #18 completed successfully.
+- Current repository includes landing page, student library, admin dashboard, reset page, shared JS/CSS modules, legal pages and Supabase migrations.
+- Admin dashboard aggregate stats, resource management, deletion and view tracking have implementation commits.
+- Student resource library, level-filtered loading and embedded PDF reader have implementation commits.
+- Drive import, batch upload and PDF compression have implementation commits.
+- Featured resource expiry and jump-link work have implementation commits.
+- Mandatory password recovery/session validation changes have been merged.
+
+[IMPLEMENTED - TEST PENDING]
+- Full mandatory password recovery and forced-reset flow after PR #18.
+- End-to-end resource upload and metadata consistency after latest migration.
+- Three-day featured expiry and admin override.
+- Admin edit confirmation modal behaviour.
+- Complete student/admin navigation and profile/avatar experience.
+
+[PLANNED OR REQUIRES FRESH REVIEW]
+- Finish profile/avatar improvements.
+- Finish hamburger menu and icon review.
+- Full student and admin experience polish.
+- CBT practice system.
+- AI-assisted learning functionality.
+- Community/student support functionality.
+- Payment integration / secondary-school tier.
+- Full documentation of database schema, RLS, storage and all backend functions.
+
+======================================================================
+13. IMMEDIATE NEXT ACTIONS
+======================================================================
+
+PRIORITY 1 — PASSWORD RECOVERY
+Complete the real mobile test described in Section 7.5. This is the current blocker because the mandatory reset mechanism previously blocked both student library and admin dashboard access.
+
+PRIORITY 2 — RESOURCE MANAGEMENT REGRESSION TEST
+Test batch uploads, filename-derived titles, metadata confirmation, file-extension removal, centred source picker, PDF compression, Google Drive import, featured-resource rules and jump links.
+
+PRIORITY 3 — ADMIN EXPERIENCE
+Test admin login, dashboard statistics, resource editing/deletion, user overview, platform overview and success notifications.
+
+PRIORITY 4 — STUDENT EXPERIENCE
+Test registration, email confirmation, login, level-filtered resources, PDF viewing, view tracking, profile menu and sign-out.
+
+PRIORITY 5 — RELEASE READINESS
+Run a full mobile-first functional/security regression. Confirm privacy/terms pages, empty/error/loading states, RLS, storage permissions, admin authorization and deployment. Record known limitations rather than hiding them.
+
+PRIORITY 6 — ROADMAP COMPLETION
+Return to profile/avatar improvements, hamburger menu, icon review and polish. Then decide the scope of CBT/AI/community/payment features for later releases.
+
+======================================================================
+14. INSTRUCTIONS FOR THE NEXT CHATGPT CONVERSATION
+======================================================================
+
+You are continuing development of Clariva, an educational platform by Pro Idea.
+
+Read this entire document before proposing or changing anything. Treat the status labels as binding. Do not assume that a planned feature is implemented or that a deployed build has passed user testing.
+
+The repository is:
+https://github.com/ProIdeaCodeStudio/Clariva
+
+The live site is:
+https://proideacodestudio.github.io/Clariva/
+
+The immediate priority is to finish testing the mandatory password recovery flow after merged PR #18. The GitHub Pages workflow completed successfully, but the user still needs to test the actual recovery link and access restoration on their phone.
+
+Work carefully and incrementally. Inspect current main branch code and Supabase state before changing them. Prefer feature branches and pull requests. Do not make speculative SQL changes. Never expose secret keys or recovery tokens. Tell the user exactly when their assistance is needed.
+
+The first usable release target is 22 November 2026.
+
+END OF MASTER HANDOVER
