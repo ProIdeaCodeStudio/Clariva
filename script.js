@@ -192,13 +192,18 @@ if (emailConfirmationLoginBtn) {
       const { data: profile, error: profileError } =
         await supabaseClient
           .from('students')
-          .select('Verified, Role')
+          .select('Verified, Role, password_reset_required')
           .eq('user_id', user.id)
           .single();
 
       if (profileError || !profile) {
         console.error('Unable to verify account permissions:', profileError);
         window.location.replace('index.html#step-1');
+        return;
+      }
+
+      if (profile.password_reset_required === true) {
+        window.location.replace('reset-password.html');
         return;
       }
 
@@ -626,7 +631,7 @@ if (error) error.classList.remove('visible');
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { data: studentData, error: queryError } = await supabaseClient
     .from('students')
-    .select('Verified')
+    .select('Verified, password_reset_required')
     .eq('user_id', user.id)
     .single();
 
@@ -636,6 +641,12 @@ if (error) error.classList.remove('visible');
       error.classList.add('visible');
     }
     if (buttonLoading) buttonLoading.restore();
+    return;
+  }
+
+  if (studentData.password_reset_required === true) {
+    if (buttonLoading) buttonLoading.restore();
+    window.location.href = 'reset-password.html';
     return;
   }
 
@@ -733,19 +744,41 @@ async function handlePasswordReset() {
 }
 
 async function initializeResetPasswordPage() {
-
-  if (!window.location.pathname.endsWith("reset-password.html")) {
-    return;
-  }
-
-  console.log("Reset password page loaded.");
+  if (!window.location.pathname.endsWith("reset-password.html")) return;
 
   const passwordInput = document.getElementById("new-password");
   const confirmInput = document.getElementById("confirm-password");
   const resetButton = document.getElementById("reset-password-button");
   const errorElement = document.getElementById("reset-error");
-  if (!resetButton) return;
-    const recoveryMarkerKey = "clariva-password-recovery";
+  const resetForm = document.getElementById("reset-password-form");
+  const mandatoryPanel = document.getElementById("mandatory-reset-link-panel");
+  const sendMandatoryLinkButton = document.getElementById("mandatory-reset-link-button");
+  const mandatoryStatus = document.getElementById("mandatory-reset-link-status");
+  if (!resetButton || !resetForm || !mandatoryPanel || !sendMandatoryLinkButton) return;
+
+  const recoveryMarkerKey = "clariva-password-recovery";
+  const pendingCompletionKey = "clariva-forced-reset-password-updated";
+  const redirectTo = "https://proideacodestudio.github.io/Clariva/reset-password.html";
+
+  function readRecoveryMarker() {
+    try {
+      return JSON.parse(sessionStorage.getItem(recoveryMarkerKey) || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function showRecoveryForm() {
+    mandatoryPanel.hidden = true;
+    resetForm.hidden = false;
+    if (errorElement) errorElement.classList.remove("visible");
+  }
+
+  function showMandatoryResetPanel(message = "") {
+    resetForm.hidden = true;
+    mandatoryPanel.hidden = false;
+    if (mandatoryStatus) mandatoryStatus.textContent = message;
+  }
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
@@ -756,8 +789,119 @@ async function initializeResetPasswordPage() {
           createdAt: Date.now()
         })
       );
+      sessionStorage.removeItem(pendingCompletionKey);
+      showRecoveryForm();
     } else if (event === "SIGNED_OUT") {
       sessionStorage.removeItem(recoveryMarkerKey);
+      sessionStorage.removeItem(pendingCompletionKey);
+    }
+  });
+
+  // Decide which part of the page is available. A mandatory reset can only
+  // begin by sending the account's registered email through Supabase recovery.
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const recoveryMarker = readRecoveryMarker();
+    const validRecoverySession =
+      session &&
+      recoveryMarker &&
+      recoveryMarker.userId === session.user.id &&
+      Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
+
+    if (validRecoverySession) {
+      showRecoveryForm();
+    } else if (session?.user?.id) {
+      const { data: profile, error: profileError } = await supabaseClient
+        .from("students")
+        .select("password_reset_required")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (profile?.password_reset_required === true) {
+        showMandatoryResetPanel(
+          "A password reset is required for this account. We'll send a secure reset link to its registered email address."
+        );
+      } else {
+        showMandatoryResetPanel(
+          "To change your password, request a reset link from the Login page."
+        );
+        sendMandatoryLinkButton.hidden = true;
+      }
+    } else {
+      showMandatoryResetPanel(
+        "Open the password reset link sent to your email. If you need a new link, return to Login and choose Forgot Password."
+      );
+      sendMandatoryLinkButton.hidden = true;
+    }
+  } catch (initializationError) {
+    console.error("Unable to initialize password reset:", initializationError);
+    showMandatoryResetPanel(
+      "We couldn't verify this account. Please return to Login and try again."
+    );
+    sendMandatoryLinkButton.hidden = true;
+  }
+
+  sendMandatoryLinkButton.addEventListener("click", async () => {
+    if (!supabaseClient) return;
+
+    const buttonLoading = startButtonLoading(
+      sendMandatoryLinkButton,
+      "Sending Reset Link..."
+    );
+    if (mandatoryStatus) mandatoryStatus.textContent = "";
+
+    try {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user?.email) {
+        throw userError || new Error("We couldn't verify the email address for this account.");
+      }
+
+      const { data: profile, error: profileError } = await supabaseClient
+        .from("students")
+        .select("password_reset_required")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (profile?.password_reset_required !== true) {
+        throw new Error("This account does not have a pending mandatory password reset.");
+      }
+
+      const { error: sendError } = await supabaseClient.auth.resetPasswordForEmail(
+        user.email,
+        { redirectTo }
+      );
+
+      if (sendError) throw sendError;
+
+      if (buttonLoading) buttonLoading.restore();
+      sendMandatoryLinkButton.disabled = true;
+      sendMandatoryLinkButton.textContent = "Reset Link Sent";
+      if (mandatoryStatus) {
+        mandatoryStatus.textContent =
+          "A password reset link has been sent to " + user.email +
+          ". Open that email on this browser and follow the link to continue. Check Spam if it doesn't arrive.";
+      }
+
+      let seconds = 60;
+      const countdown = setInterval(() => {
+        seconds -= 1;
+        if (seconds <= 0) {
+          clearInterval(countdown);
+          sendMandatoryLinkButton.disabled = false;
+          sendMandatoryLinkButton.textContent = "Resend Password Reset Link";
+        } else {
+          sendMandatoryLinkButton.textContent = "Resend link in " + seconds + "s";
+        }
+      }, 1000);
+    } catch (sendError) {
+      if (buttonLoading) buttonLoading.restore();
+      if (mandatoryStatus) {
+        mandatoryStatus.textContent =
+          sendError.message || "Unable to send the reset link. Please try again.";
+      }
     }
   });
 
@@ -767,87 +911,107 @@ async function initializeResetPasswordPage() {
     const newPassword = passwordInput.value.trim();
     const confirmPassword = confirmInput.value.trim();
 
-    // Check empty fields
     if (!newPassword || !confirmPassword) {
       errorElement.textContent = "Please fill in all fields.";
       errorElement.classList.add("visible");
       return;
     }
 
-    // Check password strength
     if (!isValidPassword(newPassword)) {
       errorElement.textContent = "Password must be at least 8 characters and include uppercase and lowercase letters, a number, and a special character.";
       errorElement.classList.add("visible");
       return;
     }
 
-    // Check passwords match
     if (newPassword !== confirmPassword) {
       errorElement.textContent = "Passwords do not match.";
       errorElement.classList.add("visible");
       return;
     }
 
-    // Clear previous error
     errorElement.classList.remove("visible");
     const buttonLoading = startButtonLoading(resetButton, "Updating Password...");
+
     try {
-    const {
-    data: { session }
-  } = await supabaseClient.auth.getSession();
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const recoveryMarker = readRecoveryMarker();
 
-  const recoveryMarker = JSON.parse(
-    sessionStorage.getItem(recoveryMarkerKey) || "null"
-  );
+      const validRecoverySession =
+        session &&
+        recoveryMarker &&
+        recoveryMarker.userId === session.user.id &&
+        Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
 
-  const validRecoverySession =
-    session &&
-    recoveryMarker &&
-    recoveryMarker.userId === session.user.id &&
-    Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
-
-  if (!validRecoverySession) {
-    sessionStorage.removeItem(recoveryMarkerKey);
-
-    if (buttonLoading) buttonLoading.restore();
-
-    errorElement.textContent =
-      "Your password reset session is missing or has expired. Please request a new reset link.";
-
-    errorElement.classList.add("visible");
-    return;
-  }
-
-  const { error } = await supabaseClient.auth.updateUser({
-    password: newPassword
-  });
-
-  if (error) {
-    if (buttonLoading) buttonLoading.restore();
-    errorElement.textContent = error.message;
-    errorElement.classList.add("visible");
-    return;
-  }
-
-    sessionStorage.removeItem(recoveryMarkerKey);
-      
- if (buttonLoading) buttonLoading.restore();
-    showNotification(
-      "Password Updated",
-      "Your password has been updated successfully. You can now sign in with your new password.",
-      "success",
-      "Go to Login",
-      () => {
-        window.location.href = "index.html";
+      if (!validRecoverySession) {
+        sessionStorage.removeItem(recoveryMarkerKey);
+        if (buttonLoading) buttonLoading.restore();
+        errorElement.textContent =
+          "Your secure password reset link is missing or has expired. Please request a new reset link.";
+        errorElement.classList.add("visible");
+        showMandatoryResetPanel();
+        return;
       }
-    );
-      } catch (error) {
-  if (buttonLoading) buttonLoading.restore();
-  errorElement.textContent =
-    error.message || "Unable to update your password. Please try again.";
-  errorElement.classList.add("visible");
-  return;
-}
 
+      const { data: resetProfile, error: resetProfileError } = await supabaseClient
+        .from("students")
+        .select("password_reset_required")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (resetProfileError) throw resetProfileError;
+      const mandatoryPasswordReset =
+        resetProfile?.password_reset_required === true;
+
+      const passwordAlreadyUpdated =
+        mandatoryPasswordReset &&
+        sessionStorage.getItem(pendingCompletionKey) === session.user.id;
+
+      if (!passwordAlreadyUpdated) {
+        const { error: updateError } = await supabaseClient.auth.updateUser({
+          password: newPassword
+        });
+        if (updateError) throw updateError;
+
+        if (mandatoryPasswordReset) {
+          sessionStorage.setItem(pendingCompletionKey, session.user.id);
+        }
+      }
+
+      if (mandatoryPasswordReset) {
+        const { error: completionError } = await supabaseClient.rpc(
+          "complete_required_password_reset"
+        );
+        if (completionError) {
+          if (buttonLoading) buttonLoading.restore();
+          errorElement.textContent =
+            "Your password has been updated, but Clariva couldn't complete the account update yet. Submit again to retry the final step. " +
+            completionError.message;
+          errorElement.classList.add("visible");
+          return;
+        }
+        sessionStorage.removeItem(pendingCompletionKey);
+      }
+
+      sessionStorage.removeItem(recoveryMarkerKey);
+
+      if (buttonLoading) buttonLoading.restore();
+      showNotification(
+        "Password Updated",
+        mandatoryPasswordReset
+          ? "Your password has been updated. Please sign in again using your new password."
+          : "Your password has been updated successfully. You can now sign in with your new password.",
+        "success",
+        "Go to Login",
+        () => {
+          window.location.href = "index.html";
+        }
+      );
+    } catch (resetError) {
+      if (buttonLoading) buttonLoading.restore();
+      errorElement.textContent =
+        resetError.message || "Unable to update your password. Please try again.";
+      errorElement.classList.add("visible");
+    }
   });
 }
+

@@ -68,6 +68,49 @@
       background: var(--cream);
     }
 
+    .student-featured-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--space-sm);
+    }
+
+    .student-featured-link {
+      display: block;
+      padding: 14px 18px;
+      border: 1px solid var(--parchment);
+      border-radius: var(--radius-sm);
+      background: var(--amber-05);
+      color: var(--deep-ink);
+      font-weight: 600;
+      line-height: 1.45;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+      transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .student-featured-link:hover,
+    .student-featured-link:focus-visible {
+      border-color: var(--amber);
+      background: var(--cream);
+      color: var(--deep-ink);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .student-featured-link:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 3px;
+    }
+
+    .student-resource-card {
+      scroll-margin-top: 100px;
+    }
+
+    .student-resource-card:target {
+      outline: 3px solid var(--amber);
+      outline-offset: 4px;
+    }
+
     .student-resource-card h3 {
       color: var(--deep-ink);
       font-family: var(--font-display);
@@ -258,7 +301,7 @@
       <section aria-labelledby="featured-title">
         <p class="features-label">Handpicked Materials</p>
         <h2 class="features-title student-library-heading" id="featured-title">Featured Resources</h2>
-        <div id="featured-resources" class="student-library-grid"></div>
+        <div id="featured-resources" class="student-featured-links"></div>
       </section>
 
       <section aria-labelledby="all-resources-title" style="margin-top: var(--space-2xl);">

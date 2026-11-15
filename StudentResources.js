@@ -62,9 +62,17 @@
     return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
   }
 
+  function getResourceAnchorId(resource) {
+    const safeId = String(resource.id || resource.file_name || resource.title || 'resource')
+      .replace(/[^a-zA-Z0-9_-]/g, '-');
+    return 'student-resource-' + safeId;
+  }
+
   function createResourceCard(resource) {
     const card = document.createElement('article');
     card.className = 'student-resource-card';
+    card.id = getResourceAnchorId(resource);
+    card.tabIndex = -1;
 
     const metaParts = [
       resource.course_code,
@@ -147,11 +155,35 @@
     });
   }
 
+  function renderFeaturedResourceLinks(container, items, emptyMessage) {
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (!items.length) {
+      container.appendChild(makeTextElement(
+        'p',
+        'student-library-status',
+        emptyMessage
+      ));
+      return;
+    }
+
+    items.forEach(resource => {
+      const link = document.createElement('a');
+      link.className = 'student-featured-link';
+      link.href = '#' + getResourceAnchorId(resource);
+      link.textContent = resource.title || resource.file_name || 'Untitled resource';
+      link.setAttribute('aria-label', 'Jump to ' + link.textContent + ' in all resources');
+      container.appendChild(link);
+    });
+  }
+
   function renderResources() {
     const filtered = getFilteredResources();
     const featured = filtered.filter(resource => resource.featured === true);
 
-    renderResourceCards(
+    renderFeaturedResourceLinks(
       getElement('featured-resources'),
       featured,
       'There are no featured resources available at the moment.'
