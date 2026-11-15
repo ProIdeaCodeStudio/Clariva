@@ -192,13 +192,18 @@ if (emailConfirmationLoginBtn) {
       const { data: profile, error: profileError } =
         await supabaseClient
           .from('students')
-          .select('Verified, Role')
+          .select('Verified, Role, password_reset_required')
           .eq('user_id', user.id)
           .single();
 
       if (profileError || !profile) {
         console.error('Unable to verify account permissions:', profileError);
         window.location.replace('index.html#step-1');
+        return;
+      }
+
+      if (profile.password_reset_required === true) {
+        window.location.replace('reset-password.html');
         return;
       }
 
@@ -626,7 +631,7 @@ if (error) error.classList.remove('visible');
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { data: studentData, error: queryError } = await supabaseClient
     .from('students')
-    .select('Verified')
+    .select('Verified, password_reset_required')
     .eq('user_id', user.id)
     .single();
 
@@ -636,6 +641,12 @@ if (error) error.classList.remove('visible');
       error.classList.add('visible');
     }
     if (buttonLoading) buttonLoading.restore();
+    return;
+  }
+
+  if (studentData.password_reset_required === true) {
+    if (buttonLoading) buttonLoading.restore();
+    window.location.href = 'reset-password.html';
     return;
   }
 
@@ -806,7 +817,19 @@ async function initializeResetPasswordPage() {
     recoveryMarker.userId === session.user.id &&
     Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
 
-  if (!validRecoverySession) {
+  let mandatoryPasswordReset = false;
+  if (session?.user?.id) {
+    const { data: resetProfile, error: resetProfileError } = await supabaseClient
+      .from('students')
+      .select('password_reset_required')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (resetProfileError) throw resetProfileError;
+    mandatoryPasswordReset = resetProfile?.password_reset_required === true;
+  }
+
+  if (!validRecoverySession && !mandatoryPasswordReset) {
     sessionStorage.removeItem(recoveryMarkerKey);
 
     if (buttonLoading) buttonLoading.restore();
@@ -829,12 +852,24 @@ async function initializeResetPasswordPage() {
     return;
   }
 
+  if (mandatoryPasswordReset) {
+    const { error: completionError } = await supabaseClient.rpc('complete_required_password_reset');
+    if (completionError) {
+      if (buttonLoading) buttonLoading.restore();
+      errorElement.textContent = 'Your password was changed, but Clariva could not finish the account update. Please try submitting again or contact an administrator. ' + completionError.message;
+      errorElement.classList.add('visible');
+      return;
+    }
+  }
+
     sessionStorage.removeItem(recoveryMarkerKey);
       
  if (buttonLoading) buttonLoading.restore();
     showNotification(
       "Password Updated",
-      "Your password has been updated successfully. You can now sign in with your new password.",
+      mandatoryPasswordReset
+        ? "Your password has been updated. Please sign in again using your new password."
+        : "Your password has been updated successfully. You can now sign in with your new password.",
       "success",
       "Go to Login",
       () => {
