@@ -851,7 +851,7 @@ async function initializeResetPasswordPage() {
 
       if (profile?.password_reset_required === true) {
         showMandatoryResetPanel(
-          "To keep your Clariva account secure, we're updating account access. Please reset your password once to continue using your resources."
+          "Send a secure reset link to your registered email address to continue."
         );
       } else {
         showMandatoryResetPanel(
