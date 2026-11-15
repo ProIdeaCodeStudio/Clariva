@@ -1446,6 +1446,59 @@
      RESOURCE UPLOAD
      ============================================================ */
 
+  function getResourceTitleFromFileName(fileName) {
+    const title = String(fileName || '')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[_-]+/g, ' ')
+      .trim()
+      .slice(0, 160);
+    return title || 'Untitled resource';
+  }
+
+  function confirmBatchUpload(metadata) {
+    const dialog = getElement('resource-batch-confirm-dialog');
+    if (!dialog || typeof dialog.showModal !== 'function') {
+      return Promise.resolve(window.confirm(
+        'You selected multiple files. Make sure every file uses the same semester, course code, level and resource type before uploading.'
+      ));
+    }
+
+    const values = {
+      'batch-confirm-level': metadata.level + ' Level',
+      'batch-confirm-semester': metadata.semester === 1 ? 'First semester' : 'Second semester',
+      'batch-confirm-course-code': metadata.courseCode || 'Not specified',
+      'batch-confirm-resource-type': metadata.resourceType
+    };
+    Object.entries(values).forEach(([id, value]) => {
+      const element = getElement(id);
+      if (element) element.textContent = value;
+    });
+
+    return new Promise(resolve => {
+      const confirmButton = getElement('resource-batch-confirm');
+      const cancelButton = getElement('resource-batch-cancel');
+      const finish = confirmed => {
+        dialog.removeEventListener('close', handleClose);
+        confirmButton?.removeEventListener('click', handleConfirm);
+        cancelButton?.removeEventListener('click', handleCancel);
+        if (dialog.open) dialog.close(confirmed ? 'confirm' : 'cancel');
+        resolve(confirmed);
+      };
+      const handleConfirm = () => finish(true);
+      const handleCancel = () => finish(false);
+      const handleClose = () => {
+        confirmButton?.removeEventListener('click', handleConfirm);
+        cancelButton?.removeEventListener('click', handleCancel);
+        resolve(dialog.returnValue === 'confirm');
+      };
+
+      confirmButton?.addEventListener('click', handleConfirm);
+      cancelButton?.addEventListener('click', handleCancel);
+      dialog.addEventListener('close', handleClose, { once: true });
+      dialog.showModal();
+    });
+  }
+
   async function uploadOneFile(file, index, metadata, user, session) {
     validateFile(file);
     const safeName = sanitizeFileName(file.name);
@@ -1496,9 +1549,7 @@
     });
 
     updateQueueItem(index, 'Saving details…', 100);
-    const title = metadata.filesCount > 1
-      ? `${metadata.title} — ${file.name.replace(/\.[^.]+$/, '')}`
-      : metadata.title;
+    const title = getResourceTitleFromFileName(file.name);
 
     const { error: insertError } = await supabaseClient
       .from('Resources')
@@ -1542,18 +1593,16 @@
     }
 
     const metadata = {
-      title: getElement('resource-title').value.trim(),
       description: getElement('resource-description').value.trim(),
       department: getElement('resource-department').value.trim(),
       level: Number(getElement('resource-level').value),
       semester: Number(getElement('resource-semester').value),
       courseCode: getElement('resource-course-code').value.trim(),
       courseTitle: getElement('resource-course-title').value.trim(),
-      resourceType: getElement('resource-type').value,
-      filesCount: files.length
+      resourceType: getElement('resource-type').value
     };
 
-    if (!metadata.title || !metadata.level || !metadata.semester || !metadata.resourceType) {
+    if (!metadata.level || !metadata.semester || !metadata.resourceType) {
       setStatus('Please complete all required resource details.', 'error');
       return;
     }
@@ -1563,6 +1612,14 @@
     } catch (error) {
       setStatus(error.message, 'error');
       return;
+    }
+
+    if (files.length > 1) {
+      const confirmed = await confirmBatchUpload(metadata);
+      if (!confirmed) {
+        setStatus('Batch upload cancelled. Review the selected files and details before uploading.');
+        return;
+      }
     }
 
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
