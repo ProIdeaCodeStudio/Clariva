@@ -239,6 +239,16 @@
     .admin-batch-confirm-dialog {
       width: min(520px, calc(100% - 32px));
     }
+    .admin-update-success-dialog {
+      width: min(400px, calc(100% - 32px));
+    }
+    .admin-update-success-dialog > p {
+      margin: 16px 0 20px;
+      line-height: 1.55;
+    }
+    .admin-update-success-dialog .admin-actions {
+      justify-content: flex-end;
+    }
     .admin-batch-confirm-dialog > p {
       margin: 18px 0 12px;
       line-height: 1.55;
@@ -841,6 +851,16 @@
                 <button class="admin-button admin-button-secondary" id="resource-batch-cancel" type="button">Cancel</button>
               </div>
             </dialog>
+            <dialog id="resource-update-success-dialog" class="admin-source-dialog admin-update-success-dialog"
+              aria-labelledby="resource-update-success-title" aria-describedby="resource-update-success-message">
+              <div class="admin-source-dialog-header">
+                <h3 id="resource-update-success-title">Changes saved</h3>
+              </div>
+              <p id="resource-update-success-message" class="admin-muted">The resource was updated successfully.</p>
+              <div class="admin-actions">
+                <button class="admin-button" id="resource-update-success-ok" type="button">OK</button>
+              </div>
+            </dialog>
             <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected</p>
             <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
             <p id="resource-network-warning" class="admin-network-warning" role="status" aria-live="polite" hidden></p>
@@ -914,7 +934,6 @@
       <p class="admin-section-kicker">Accounts</p>
       <h2 id="user-overview-title">User Overview</h2>
       <p class="admin-panel-intro">Account totals and role distribution. Contact details are kept private.</p>
-      <p id="admin-user-overview-status" class="admin-action-status" role="status" aria-live="polite">Loading account statistics...</p>
       <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
         <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
         <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
@@ -938,7 +957,6 @@
       <p class="admin-section-kicker">Platform activity</p>
       <h2 id="platform-overview-title">Platform Overview</h2>
       <p class="admin-panel-intro">Library totals and recent activity.</p>
-      <p id="admin-platform-overview-status" class="admin-action-status" role="status" aria-live="polite">Loading platform statistics...</p>
       <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
         <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
         <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
