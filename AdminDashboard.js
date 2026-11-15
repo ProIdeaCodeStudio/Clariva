@@ -1494,6 +1494,7 @@
 
       confirmButton?.addEventListener('click', handleConfirm);
       cancelButton?.addEventListener('click', handleCancel);
+      dialog.returnValue = 'cancel';
       dialog.addEventListener('close', handleClose, { once: true });
       dialog.showModal();
     });
