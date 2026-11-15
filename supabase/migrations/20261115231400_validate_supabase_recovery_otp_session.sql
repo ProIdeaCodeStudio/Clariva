@@ -82,8 +82,6 @@ BEGIN
     RAISE EXCEPTION 'No pending password reset was found for this account.';
   END IF;
 
-  DELETE FROM private.password_reset_pending
-   WHERE user_id = auth.uid();
 END;
 $$;
 
