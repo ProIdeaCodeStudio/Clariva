@@ -1375,16 +1375,19 @@
       const featuredButton = document.createElement('button');
       featuredButton.type = 'button';
       featuredButton.className = 'admin-button admin-button-secondary';
-      featuredButton.textContent = resource.featured ? 'Unfeature' : 'Feature Resource';
+      featuredButton.textContent = resource.featured
+        ? (resource.featured_permanent ? 'Unfeature' : 'Keep Featured')
+        : 'Feature Resource';
       featuredButton.addEventListener('click', () => {
-        const nextFeatured = !resource.featured;
+        const keepFeatured = resource.featured && resource.featured_permanent !== true;
+        const nextFeatured = !resource.featured || keepFeatured;
         updateResourceRecord(
           resource,
           nextFeatured
             ? { featured: true, featured_permanent: true, featured_until: null }
             : { featured: false, featured_permanent: false, featured_until: null },
           featuredButton,
-          nextFeatured ? 'Featuring...' : 'Updating...'
+          keepFeatured ? 'Keeping featured...' : nextFeatured ? 'Featuring...' : 'Updating...'
         );
       });
 
