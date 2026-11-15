@@ -20,7 +20,7 @@ UPDATE public."Resources"
 SET
   title = COALESCE(
     NULLIF(
-      btrim(regexp_replace(regexp_replace(file_name, '\\.[^.]+$', ''), '[_-]+', ' ', 'g')),
+      btrim(regexp_replace(regexp_replace(file_name, '\.[^.]+$', ''), '[_-]+', ' ', 'g')),
       ''
     ),
     title
