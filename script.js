@@ -756,6 +756,12 @@ async function initializeResetPasswordPage() {
   const mandatoryStatus = document.getElementById("mandatory-reset-link-status");
   if (!resetButton || !resetForm || !mandatoryPanel || !sendMandatoryLinkButton) return;
 
+  if (!supabaseClient) {
+    showMandatoryResetPanel("The account service is unavailable. Please refresh this page and try again.");
+    sendMandatoryLinkButton.hidden = true;
+    return;
+  }
+
   const recoveryMarkerKey = "clariva-password-recovery";
   const pendingCompletionKey = "clariva-forced-reset-password-updated";
   const redirectTo = "https://proideacodestudio.github.io/Clariva/reset-password.html";
@@ -780,16 +786,35 @@ async function initializeResetPasswordPage() {
     if (mandatoryStatus) mandatoryStatus.textContent = message;
   }
 
+  function saveRecoveryMarker(userId) {
+    sessionStorage.setItem(
+      recoveryMarkerKey,
+      JSON.stringify({ userId, createdAt: Date.now() })
+    );
+    sessionStorage.removeItem(pendingCompletionKey);
+  }
+
+  async function hasVerifiedRecoveryClaim(expectedUserId) {
+    const { data: claimsData, error: claimsError } =
+      await supabaseClient.auth.getClaims();
+
+    if (claimsError) throw claimsError;
+
+    const claims = claimsData?.claims;
+    if (!claims || claims.sub !== expectedUserId || !Array.isArray(claims.amr)) {
+      return false;
+    }
+
+    return claims.amr.some(
+      (method) => method && method.method === "recovery"
+    );
+  }
+
+  // Subscribe before reading the existing session so a recovery event cannot
+  // be missed while the page is initializing.
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
-      sessionStorage.setItem(
-        recoveryMarkerKey,
-        JSON.stringify({
-          userId: session.user.id,
-          createdAt: Date.now()
-        })
-      );
-      sessionStorage.removeItem(pendingCompletionKey);
+      saveRecoveryMarker(session.user.id);
       showRecoveryForm();
     } else if (event === "SIGNED_OUT") {
       sessionStorage.removeItem(recoveryMarkerKey);
@@ -797,20 +822,35 @@ async function initializeResetPasswordPage() {
     }
   });
 
-  // Decide which part of the page is available. A mandatory reset can only
-  // begin by sending the account's registered email through Supabase recovery.
+  // The auth event is the normal signal. Also verify the signed JWT's amr
+  // claim after initialization, covering cases where the event fired before
+  // the page listener was attached or the page was refreshed.
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const recoveryMarker = readRecoveryMarker();
-    const validRecoverySession =
-      session &&
-      recoveryMarker &&
-      recoveryMarker.userId === session.user.id &&
-      Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
+    const { data: { session }, error: sessionError } =
+      await supabaseClient.auth.getSession();
 
-    if (validRecoverySession) {
-      showRecoveryForm();
-    } else if (session?.user?.id) {
+    if (sessionError) throw sessionError;
+
+    if (session?.user?.id) {
+      const recoveryClaimValid =
+        await hasVerifiedRecoveryClaim(session.user.id);
+
+      if (recoveryClaimValid) {
+        saveRecoveryMarker(session.user.id);
+        showRecoveryForm();
+        return;
+      }
+
+      const recoveryMarker = readRecoveryMarker();
+      const markerMatchesUser =
+        recoveryMarker &&
+        recoveryMarker.userId === session.user.id;
+
+      if (markerMatchesUser) {
+        showRecoveryForm();
+        return;
+      }
+
       const { data: profile, error: profileError } = await supabaseClient
         .from("students")
         .select("password_reset_required")
@@ -821,7 +861,7 @@ async function initializeResetPasswordPage() {
 
       if (profile?.password_reset_required === true) {
         showMandatoryResetPanel(
-          "A password reset is required for this account. We'll send a secure reset link to its registered email address."
+          "To keep your Clariva account secure, we're updating account access. Please reset your password once to continue using your resources."
         );
       } else {
         showMandatoryResetPanel(
@@ -838,7 +878,7 @@ async function initializeResetPasswordPage() {
   } catch (initializationError) {
     console.error("Unable to initialize password reset:", initializationError);
     showMandatoryResetPanel(
-      "We couldn't verify this account. Please return to Login and try again."
+      "We couldn't verify this account. Please refresh the page or request a new password reset link."
     );
     sendMandatoryLinkButton.hidden = true;
   }
@@ -882,7 +922,7 @@ async function initializeResetPasswordPage() {
       if (mandatoryStatus) {
         mandatoryStatus.textContent =
           "A password reset link has been sent to " + user.email +
-          ". Open that email on this browser and follow the link to continue. Check Spam if it doesn't arrive.";
+          ". Open that email and follow the link to continue. Check Spam if it doesn't arrive.";
       }
 
       let seconds = 60;
@@ -940,7 +980,7 @@ async function initializeResetPasswordPage() {
         session &&
         recoveryMarker &&
         recoveryMarker.userId === session.user.id &&
-        Date.now() - recoveryMarker.createdAt < 30 * 60 * 1000;
+        await hasVerifiedRecoveryClaim(session.user.id);
 
       if (!validRecoverySession) {
         sessionStorage.removeItem(recoveryMarkerKey);
@@ -1014,4 +1054,3 @@ async function initializeResetPasswordPage() {
     }
   });
 }
-
