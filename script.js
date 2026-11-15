@@ -841,16 +841,6 @@ async function initializeResetPasswordPage() {
         return;
       }
 
-      const recoveryMarker = readRecoveryMarker();
-      const markerMatchesUser =
-        recoveryMarker &&
-        recoveryMarker.userId === session.user.id;
-
-      if (markerMatchesUser) {
-        showRecoveryForm();
-        return;
-      }
-
       const { data: profile, error: profileError } = await supabaseClient
         .from("students")
         .select("password_reset_required")
