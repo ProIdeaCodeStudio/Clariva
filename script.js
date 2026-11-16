@@ -8,7 +8,21 @@
 
 const SUPABASE_URL = 'https://euadmjyyjtbbdyjgnoqg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_a3dhZzlwWPmFD9ixA6VuRg_MZC1X2Nj';
-let supabaseClient = null; // will be initialized when the Supabase library is available
+let supabaseClient = null; // initialized before recovery-link handling begins
+
+function initializeSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+
+  if (typeof supabase !== 'undefined' && supabase && typeof supabase.createClient === 'function') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else if (typeof createClient === 'function') {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else {
+    console.warn('Supabase library not detected at script initialization. Some features will be unavailable.');
+  }
+
+  return supabaseClient;
+}
 const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
 let gateTriggerElement = null; // stores the element that opened the gate for focus restoration
 
@@ -135,17 +149,8 @@ async function getCurrentUser() {
 }
 
 window.onload = async function () {
-  // Initialize Supabase client if the library is available
-  if (typeof supabase !== 'undefined' && supabase && typeof supabase.createClient === 'function') {
-    const { createClient } = supabase;
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-  } else if (typeof createClient === 'function') {
-    // In case createClient is exposed globally in a different way
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-  } else {
-    console.warn('Supabase library not detected at load time. Some features will be unavailable until it loads.');
-  }
-  initializeResetPasswordPage();
+  // Retry safely if the CDN was unavailable during initial script execution.
+  initializeSupabaseClient();
   const backToLoginBtn = document.getElementById('back-to-login-button');
   if (backToLoginBtn) {
     backToLoginBtn.addEventListener('click', () => {
@@ -765,12 +770,61 @@ async function initializeResetPasswordPage() {
   const recoveryMarkerKey = "clariva-password-recovery";
   const pendingCompletionKey = "clariva-forced-reset-password-updated";
   const redirectTo = "https://proideacodestudio.github.io/Clariva/reset-password.html";
+  let activeRecoveryUserId = null;
+  let passwordUpdatedInThisTab = false;
+  let recoveryEventReceived = false;
 
   function readRecoveryMarker() {
     try {
-      return JSON.parse(sessionStorage.getItem(recoveryMarkerKey) || "null");
-    } catch {
-      return null;
+      const stored = JSON.parse(sessionStorage.getItem(recoveryMarkerKey) || "null");
+      if (stored) return stored;
+    } catch (_) {
+      // Some mobile/private browsing contexts restrict sessionStorage.
+    }
+    return activeRecoveryUserId
+      ? { userId: activeRecoveryUserId, createdAt: Date.now() }
+      : null;
+  }
+
+  function saveRecoveryMarker(userId) {
+    activeRecoveryUserId = userId;
+    passwordUpdatedInThisTab = false;
+    try {
+      sessionStorage.setItem(
+        recoveryMarkerKey,
+        JSON.stringify({ userId, createdAt: Date.now() })
+      );
+      sessionStorage.removeItem(pendingCompletionKey);
+    } catch (storageError) {
+      console.warn("Clariva could not persist recovery state; keeping it in memory for this page.", storageError);
+    }
+  }
+
+  function clearRecoveryState() {
+    activeRecoveryUserId = null;
+    passwordUpdatedInThisTab = false;
+    try {
+      sessionStorage.removeItem(recoveryMarkerKey);
+      sessionStorage.removeItem(pendingCompletionKey);
+    } catch (_) {
+      // In-memory state is still cleared when browser storage is unavailable.
+    }
+  }
+
+  function hasPendingPasswordUpdate(userId) {
+    try {
+      return sessionStorage.getItem(pendingCompletionKey) === userId;
+    } catch (_) {
+      return passwordUpdatedInThisTab;
+    }
+  }
+
+  function markPasswordUpdated(userId) {
+    passwordUpdatedInThisTab = true;
+    try {
+      sessionStorage.setItem(pendingCompletionKey, userId);
+    } catch (_) {
+      // The current page can still retry the completion RPC using in-memory state.
     }
   }
 
@@ -821,33 +875,15 @@ async function initializeResetPasswordPage() {
     return isValidRecovery === true;
   }
 
-  // Subscribe before reading the existing session so a recovery event cannot
-  // be missed while the page is initializing.
+  // Supabase emits this event only after it accepts a password-recovery link.
+  // Reveal the form immediately; the server-side validator still gates completion.
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
-      // Run follow-up Auth calls after the auth-state callback returns.
-      // Awaiting Supabase calls inside this callback can deadlock the client.
-      setTimeout(async () => {
-        try {
-          const recoveryIsValid = await hasVerifiedRecoveryClaim(session.user.id);
-          if (recoveryIsValid) {
-            saveRecoveryMarker(session.user.id);
-            showRecoveryForm();
-          } else {
-            showMandatoryResetPanel(
-              "This recovery session could not be verified. Please request a new reset link."
-            );
-          }
-        } catch (validationError) {
-          console.error("Recovery session validation failed:", validationError);
-          showMandatoryResetPanel(
-            "We couldn't verify the recovery session. Please refresh and try again."
-          );
-        }
-      }, 0);
+      recoveryEventReceived = true;
+      saveRecoveryMarker(session.user.id);
+      showRecoveryForm();
     } else if (event === "SIGNED_OUT") {
-      sessionStorage.removeItem(recoveryMarkerKey);
-      sessionStorage.removeItem(pendingCompletionKey);
+      clearRecoveryState();
     }
   });
 
@@ -861,6 +897,13 @@ async function initializeResetPasswordPage() {
     if (sessionError) throw sessionError;
 
     if (session?.user?.id) {
+      // Do not let the initial-session fallback hide a form already revealed
+      // by the PASSWORD_RECOVERY event while getSession() was resolving.
+      if (recoveryEventReceived) {
+        showRecoveryForm();
+        return;
+      }
+
       const recoveryClaimValid =
         await hasVerifiedRecoveryClaim(session.user.id);
 
@@ -1002,12 +1045,15 @@ async function initializeResetPasswordPage() {
         await hasVerifiedRecoveryClaim(session.user.id);
 
       if (!validRecoverySession) {
-        sessionStorage.removeItem(recoveryMarkerKey);
+        clearRecoveryState();
         if (buttonLoading) buttonLoading.restore();
         errorElement.textContent =
-          "Your secure password reset link is missing or has expired. Please request a new reset link.";
+          "We couldn't verify this recovery session. Please request a fresh password reset link before continuing.";
         errorElement.classList.add("visible");
-        showMandatoryResetPanel();
+        mandatoryPanel.hidden = false;
+        if (mandatoryStatus) {
+          mandatoryStatus.textContent = "Use the button below to request a new secure reset link.";
+        }
         return;
       }
 
@@ -1023,7 +1069,7 @@ async function initializeResetPasswordPage() {
 
       const passwordAlreadyUpdated =
         mandatoryPasswordReset &&
-        sessionStorage.getItem(pendingCompletionKey) === session.user.id;
+        hasPendingPasswordUpdate(session.user.id);
 
       if (!passwordAlreadyUpdated) {
         const { error: updateError } = await supabaseClient.auth.updateUser({
@@ -1032,7 +1078,7 @@ async function initializeResetPasswordPage() {
         if (updateError) throw updateError;
 
         if (mandatoryPasswordReset) {
-          sessionStorage.setItem(pendingCompletionKey, session.user.id);
+          markPasswordUpdated(session.user.id);
         }
       }
 
@@ -1048,10 +1094,9 @@ async function initializeResetPasswordPage() {
           errorElement.classList.add("visible");
           return;
         }
-        sessionStorage.removeItem(pendingCompletionKey);
       }
 
-      sessionStorage.removeItem(recoveryMarkerKey);
+      clearRecoveryState();
 
       if (buttonLoading) buttonLoading.restore();
       showNotification(
@@ -1072,4 +1117,13 @@ async function initializeResetPasswordPage() {
       errorElement.classList.add("visible");
     }
   });
+}
+
+// Initialize Supabase while the deferred script is executing, before the page's
+// load event. This gives recovery-link detection time to establish the session.
+initializeSupabaseClient();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeResetPasswordPage, { once: true });
+} else {
+  initializeResetPasswordPage();
 }
