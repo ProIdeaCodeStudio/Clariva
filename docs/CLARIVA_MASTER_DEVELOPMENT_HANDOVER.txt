@@ -1,6 +1,6 @@
 CLARIVA — MASTER DEVELOPMENT HANDOVER
-Version: 1.0
-Prepared: 15 November 2026
+Version: 1.1
+Prepared: 16 November 2026
 Owner / Product studio: Pro Idea
 Repository: https://github.com/ProIdeaCodeStudio/Clariva
 Live site: https://proideacodestudio.github.io/Clariva/
@@ -12,12 +12,12 @@ Status: Active development; first usable release target: 22 November 2026
 ======================================================================
 
 This document is the working handover for continuing Clariva development in a new ChatGPT conversation. It consolidates:
-- Claude-era discussions found in the available exported conversation archives.
+- Claude-era material recoverable from available Library files and project context; complete exported Claude conversation transcripts have not yet been retrieved.
 - ChatGPT-era decisions and implementation history available in this project context.
 - Current GitHub repository structure, README, migrations, commit history and deployment workflow status.
 - Relevant Supabase work and troubleshooting history described in the development conversation.
 
-It is deliberately not a claim that every message ever exchanged in Claude or ChatGPT has been recovered. The available Claude archive exports inspected include conversations titled "Pro Idea Code Studio" and "Evening greeting"; the "Pro Idea Code Studio" conversation contains the transition from Pro Idea's original web presence to the separate Clariva educational platform. The Build Mode guidance file was also located. Other archives may exist and should be checked if a truly exhaustive historical record is required.
+It is deliberately not a claim that every message ever exchanged in Claude or ChatGPT has been recovered. Searches for the Claude conversations titled "Pro Idea Code Studio", "Evening greeting" and "Morning greeting" did not surface their complete transcripts in the currently available Library. The Build Mode guidance file (SKILL.md) was directly inspected and is documented in Sections 15–16. Historical product decisions in this handover must therefore be treated as partial unless corroborated by an accessible original conversation, current repository evidence or an explicit user confirmation.
 
 STATUS LABELS
 [VERIFIED] Supported by current repository files, GitHub metadata, a successful deployment run, an inspected archive, or a confirmed user test.
