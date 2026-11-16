@@ -319,6 +319,53 @@ a:hover {
   color: var(--ember-text);
 }
 
+
+/* Password fields share a consistent, accessible visibility control. */
+.password-input-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.password-input-wrapper > input.gate-input {
+  padding-right: 50px;
+}
+
+.password-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ember-text);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 0.2s, background 0.2s;
+}
+
+.password-visibility-toggle:hover {
+  color: var(--deep-ink);
+  background: var(--amber-10);
+}
+
+.password-visibility-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.password-visibility-toggle svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
 .gate-btn {
   font-family: var(--font-label);
   font-size: var(--text-label);
