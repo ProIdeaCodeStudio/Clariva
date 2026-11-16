@@ -874,76 +874,6 @@ async function initializeResetPasswordPage() {
     return resetInProgress === true;
   }
 
-  // Supabase emits this event only after it accepts a password-recovery link.
-  // Reveal the form immediately; the server-side validator still gates completion.
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
-      recoveryEventReceived = true;
-      saveRecoveryMarker(session.user.id);
-      showRecoveryForm();
-    } else if (event === "SIGNED_OUT") {
-      clearRecoveryState();
-    }
-  });
-
-  // The auth event is the normal signal. Also verify the signed JWT's amr
-  // claim after initialization, covering cases where the event fired before
-  // the page listener was attached or the page was refreshed.
-  try {
-    const { data: { session }, error: sessionError } =
-      await supabaseClient.auth.getSession();
-
-    if (sessionError) throw sessionError;
-
-    if (session?.user?.id) {
-      // Do not let the initial-session fallback hide a form already revealed
-      // by the PASSWORD_RECOVERY event while getSession() was resolving.
-      if (recoveryEventReceived) {
-        showRecoveryForm();
-        return;
-      }
-
-      const recoveryClaimValid =
-        await hasVerifiedRecoveryClaim(session.user.id);
-
-      if (recoveryClaimValid) {
-        saveRecoveryMarker(session.user.id);
-        showRecoveryForm();
-        return;
-      }
-
-      const { data: profile, error: profileError } = await supabaseClient
-        .from("students")
-        .select("password_reset_required")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      if (profile?.password_reset_required === true) {
-        showMandatoryResetPanel(
-          "Send a secure reset link to your registered email address to continue."
-        );
-      } else {
-        showMandatoryResetPanel(
-          "To change your password, request a reset link from the Login page."
-        );
-        sendMandatoryLinkButton.hidden = true;
-      }
-    } else {
-      showMandatoryResetPanel(
-        "Open the password reset link sent to your email. If you need a new link, return to Login and choose Forgot Password."
-      );
-      sendMandatoryLinkButton.hidden = true;
-    }
-  } catch (initializationError) {
-    console.error("Unable to initialize password reset:", initializationError);
-    showMandatoryResetPanel(
-      "We couldn't verify this account. Please refresh the page or request a new password reset link."
-    );
-    sendMandatoryLinkButton.hidden = true;
-  }
-
   sendMandatoryLinkButton.addEventListener("click", async () => {
     if (!supabaseClient) return;
 
@@ -1123,10 +1053,142 @@ async function initializeResetPasswordPage() {
       errorElement.classList.add("visible");
     }
   });
+
+  // Supabase emits this event only after it accepts a password-recovery link.
+  // Reveal the form immediately; the server-side validator still gates completion.
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY" && session?.user?.id) {
+      recoveryEventReceived = true;
+      saveRecoveryMarker(session.user.id);
+      showRecoveryForm();
+    } else if (event === "SIGNED_OUT") {
+      clearRecoveryState();
+    }
+  });
+
+  // The auth event is the normal signal. Also verify the signed JWT's amr
+  // claim after initialization, covering cases where the event fired before
+  // the page listener was attached or the page was refreshed.
+  try {
+    const { data: { session }, error: sessionError } =
+      await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (session?.user?.id) {
+      // Do not let the initial-session fallback hide a form already revealed
+      // by the PASSWORD_RECOVERY event while getSession() was resolving.
+      if (recoveryEventReceived) {
+        showRecoveryForm();
+        return;
+      }
+
+      const recoveryClaimValid =
+        await hasVerifiedRecoveryClaim(session.user.id);
+
+      if (recoveryClaimValid) {
+        saveRecoveryMarker(session.user.id);
+        showRecoveryForm();
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabaseClient
+        .from("students")
+        .select("password_reset_required")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (profile?.password_reset_required === true) {
+        showMandatoryResetPanel(
+          "Send a secure reset link to your registered email address to continue."
+        );
+      } else {
+        showMandatoryResetPanel(
+          "To change your password, request a reset link from the Login page."
+        );
+        sendMandatoryLinkButton.hidden = true;
+      }
+    } else {
+      showMandatoryResetPanel(
+        "Open the password reset link sent to your email. If you need a new link, return to Login and choose Forgot Password."
+      );
+      sendMandatoryLinkButton.hidden = true;
+    }
+  } catch (initializationError) {
+    console.error("Unable to initialize password reset:", initializationError);
+    showMandatoryResetPanel(
+      "We couldn't verify this account. Please refresh the page or request a new password reset link."
+    );
+    sendMandatoryLinkButton.hidden = true;
+  }
+
+
+
+
+}
+
+
+/* ============================================================
+   PASSWORD VISIBILITY CONTROLS
+   Apply consistently to every password input on every page.
+   ============================================================ */
+function initializePasswordVisibilityToggles() {
+  const eyeIcon = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="12" r="3"
+        fill="none" stroke="currentColor" stroke-width="1.8"/>
+    </svg>`;
+  const eyeOffIcon = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M3 3l18 18M10.6 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a16 16 0 0 1-3.1 3.9M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.5 10.5 0 0 0 4-.8"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"
+        fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round"/>
+    </svg>`;
+
+  document.querySelectorAll('input[type="password"]').forEach((input, index) => {
+    if (input.closest(".password-input-wrapper")) return;
+
+    if (!input.id) input.id = `clariva-password-field-${index + 1}`;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "password-input-wrapper";
+    input.parentNode.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "password-visibility-toggle";
+    toggle.setAttribute("aria-controls", input.id);
+    toggle.setAttribute("aria-label", "Show password");
+    toggle.setAttribute("title", "Show password");
+    toggle.setAttribute("aria-pressed", "false");
+    toggle.innerHTML = eyeIcon;
+
+    toggle.addEventListener("click", () => {
+      const reveal = input.type === "password";
+      input.type = reveal ? "text" : "password";
+      toggle.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+      toggle.setAttribute("title", reveal ? "Hide password" : "Show password");
+      toggle.setAttribute("aria-pressed", String(reveal));
+      toggle.innerHTML = reveal ? eyeOffIcon : eyeIcon;
+      input.focus({ preventScroll: true });
+    });
+
+    wrapper.appendChild(toggle);
+  });
 }
 
 // Initialize Supabase while the deferred script is executing, before the page's
 // load event. This gives recovery-link detection time to establish the session.
+initializePasswordVisibilityToggles();
 initializeSupabaseClient();
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initializeResetPasswordPage, { once: true });
