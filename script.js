@@ -812,10 +812,11 @@ async function initializeResetPasswordPage() {
   }
 
   function hasPendingPasswordUpdate(userId) {
+    if (passwordUpdatedInThisTab) return true;
     try {
       return sessionStorage.getItem(pendingCompletionKey) === userId;
     } catch (_) {
-      return passwordUpdatedInThisTab;
+      return false;
     }
   }
 
@@ -838,14 +839,6 @@ async function initializeResetPasswordPage() {
     resetForm.hidden = true;
     mandatoryPanel.hidden = false;
     if (mandatoryStatus) mandatoryStatus.textContent = message;
-  }
-
-  function saveRecoveryMarker(userId) {
-    sessionStorage.setItem(
-      recoveryMarkerKey,
-      JSON.stringify({ userId, createdAt: Date.now() })
-    );
-    sessionStorage.removeItem(pendingCompletionKey);
   }
 
   async function hasVerifiedRecoveryClaim(expectedUserId) {
