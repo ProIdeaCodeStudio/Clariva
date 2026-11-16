@@ -1,5 +1,5 @@
 CLARIVA — MASTER DEVELOPMENT HANDOVER
-Version: 1.1
+Version: 1.2
 Prepared: 16 November 2026
 Owner / Product studio: Pro Idea
 Repository: https://github.com/ProIdeaCodeStudio/Clariva
@@ -688,3 +688,424 @@ The available early code snapshots contain:
 These are historical snapshots only. They must not be treated as a current schema or security configuration. In particular, never copy historical secrets or credentials from old code into current source. Only the current publishable key may be used in browser code, and only alongside correct database security.
 
 END OF VERSION 1.1 ADDENDUM
+
+
+======================================================================
+18. MASTER RECONCILIATION — ROADMAP, DELIVERY AND RELEASE STATE
+======================================================================
+
+Reconciliation date: 16 November 2026, 09:27 WAT (Africa/Lagos)
+Evidence checked: current main-branch handover; GitHub pull-request collection;
+recent commit history; GitHub issue collection; GitHub Pages workflow runs;
+available project conversation context. This is a status snapshot, not a
+claim that every feature has been manually tested.
+
+REPOSITORY GOVERNANCE SNAPSHOT
+- Pull requests #1 and #3–#18 are merged into main.
+- PR #2 ("Complete core resource management controls") was closed without
+  merging. Its resource edit/publish/feature work was incorporated into the
+  later consolidated PR #4; do not treat PR #2 as a separate delivered merge.
+- The PR #1 body contains stale draft wording, but GitHub's merge metadata
+  confirms it was merged on 12 November 2026.
+- No open pull requests were returned by the repository pull-request query.
+- No standalone GitHub issues were returned. The repository's issue list
+  contains pull-request records only. Conversation-level bugs and action
+  items are therefore tracked in this handover, not in GitHub Issues.
+- The latest checked GitHub Pages run is run #275 for commit
+  135631884228ce069aab006741ccbb0f118bfc59; it completed successfully.
+  This verifies publication of the documentation commit, not every feature.
+- The Pages runs checked for the recent merged changes (#7–#18 and the
+  handover commits) completed successfully. A green Pages run verifies
+  publication/build, not browser behaviour or backend correctness.
+
+ROADMAP REGISTER
+
+A. PRODUCT FOUNDATION
+[IMPLEMENTED / DEPLOYED; RELEASE REVIEW PENDING]
+- Independent Clariva identity, tagline and public landing page.
+- Static frontend hosted through GitHub Pages and Supabase-backed services.
+- Public Privacy Policy and Terms pages exist. Their content was described
+  in PR #11 as working drafts; obtain appropriate owner/legal review before
+  treating them as final legal advice or compliance certification.
+- SEO metadata and public landing-page sitemap are present. Search Console
+  ownership verification and sitemap submission require the owner's account;
+  successful deployment does not prove indexing.
+
+B. AUTHENTICATION AND ACCOUNT SECURITY
+[IMPLEMENTED; TESTS PARTLY COMPLETE]
+- Shared password-strength validation for registration and password reset:
+  minimum 8 characters, uppercase, lowercase, number and special character.
+  Six automated positive/negative cases passed in the recorded test.
+- Mandatory password-reset system is implemented in frontend and database
+  work, and PR #18 is merged/deployed.
+- The full fresh-email recovery journey on the live site is still unverified.
+- The database enforcement switch was deliberately staged OFF pending that
+  test. Do not claim the mandatory gate is active or turn it on without
+  verifying the current production setting and completing the release test.
+- PR #15 recorded 14 existing accounts flagged for reset at that point.
+  Re-query the current production count before relying on that number.
+- Negative security checks recorded in PR #18: current recovery session
+  accepted; older OTP session rejected; ordinary password session rejected;
+  anonymous execution denied; authenticated execution allowed.
+- Existing Supabase security-advisor findings recorded in PR #18 include
+  intentional authenticated SECURITY DEFINER warnings and leaked-password
+  protection. Recheck current advisor output before release.
+
+C. STUDENT RESOURCE LIBRARY
+[IMPLEMENTED; CORE USER TESTS RECORDED, REGRESSION TESTS PENDING]
+- Search/filter, academic-level filtering and in-page PDF reading implemented.
+- PR #3 records user tests for Level 100/200 visibility, search, resource-type
+  filtering, PDF open, page navigation, zoom, close and Escape key.
+- Resource view tracking is separate from downloads; transaction-scoped
+  tests cover eligible first view, 30-second repeat suppression, academic-
+  level mismatch rejection and anonymous/private-schema restrictions.
+- Full live PDF-open-to-view-event journey still needs a release regression.
+
+D. ADMIN DASHBOARD AND RESOURCE MANAGEMENT
+[IMPLEMENTED; INTERACTIVE REGRESSION TESTS PENDING]
+- Admin/owner dashboard overview, aggregate statistics, resource metadata
+  editing, publish/hide, feature/unfeature, resource deletion, admin PDF
+  reader, shared account menu and dashboard section navigation are present.
+- PR #8 recorded SQL role tests and anonymous privilege checks for protected
+  aggregate statistics.
+- PR #9 recorded code/security checks for confirmation, metadata deletion,
+  Storage cleanup and failure handling.
+- Live end-to-end admin tests remain outstanding for statistics display,
+  editing, publish/hide, feature/unfeature, deletion, cleanup failures,
+  confirmation messages and navigation.
+
+E. UPLOAD, GOOGLE DRIVE AND FILE PREPARATION
+[IMPLEMENTED; DEVICE/BROWSER REGRESSION TESTS PENDING]
+- Multi-file local selection, Google Drive Picker import, sequential queue,
+  progress, partial-failure handling, retries and resumable uploads exist.
+- Unified Choose files source dialog supports device storage and Drive.
+- Resource titles derive from each filename; batch metadata confirmation
+  and filename/title handling were added.
+- PDF preparation/compression uses a 15 MiB trigger, moderate image
+  compression and PDF.js validation; the existing 50 MiB hard limit remains.
+  If compression fails or is invalid, the original is retained only when
+  it remains within the hard limit. Office files are not compressed.
+- PR #12 static checks passed; actual browser/CDN loading, text selection,
+  vector preservation, readability, page counts, fallback, hard-limit
+  rejection and retries remain to be tested.
+- PRs #11, #13 and #14 record static checks, not complete device/Drive
+  browser tests. Test Android and desktop, nested Drive folders, multi-select,
+  import, metadata, upload queue and retry behaviour.
+- Google Auth Platform Branding still needed homepage, privacy and terms
+  links entered in the account configuration according to PR #11.
+  OAuth consent was External / Testing with the owner as a test user at that
+  time; verify current configuration and intended access before launch.
+
+F. FEATURED RESOURCES
+[IMPLEMENTED; REGRESSION TEST PENDING]
+- Recent uploads are intended to be featured for three days.
+- Admins can explicitly keep a resource featured.
+- Featured links jump to the matching resource in All Resources.
+- Test the timestamp boundary, existing recent items, expiry, manual override,
+  time-zone handling and jump targets in the live application.
+
+G. PROFILE, AVATAR AND NAVIGATION
+[IMPLEMENTED IN PART; POLISH AND USER TEST PENDING]
+- Five account-level avatar choices and Supabase persistence were included
+  in PR #4; a later student avatar-choice migration is in repository history.
+- Shared profile menu, hamburger navigation and persistent dashboard
+  headers are implemented in the merged work.
+- Complete mobile interaction, profile persistence, sign-out, role-specific
+  links and visual polish remain part of release regression.
+- Further profile/avatar improvements, icon review and experience polish
+  remain roadmap work, not a fully closed task.
+
+H. FUTURE PRODUCT ROADMAP
+[PLANNED — NOT TO BE REPRESENTED AS LIVE]
+- CBT practice and past-paper system.
+- AI-assisted learning.
+- Community/student support.
+- Payment integration and any secondary-school paid tier.
+- Define product scope, safeguarding, pricing and access rules before
+  implementation.
+
+I. RELEASE TARGET
+The recorded first usable release target is 22 November 2026. This remains a
+target, not a confirmed launch date. Do not mark release-ready until the
+mandatory recovery gate decision, live regression suite, security checks,
+legal-page review and owner acceptance are recorded.
+
+======================================================================
+19. ISSUE, ROOT-CAUSE, FIX AND REGRESSION REGISTER
+======================================================================
+
+The register below separates implementation evidence from end-to-end proof.
+"Fixed in code" does not mean "fully verified in production".
+
+19.1 PASSWORD POLICY CONSISTENCY
+Issue:
+- Registration and reset needed the same password-format policy.
+Cause / change:
+- Shared validation helper and matching UI guidance were introduced.
+Resolution:
+[FIXED; AUTOMATED TESTS RECORDED]
+- PR #1 merged. Six positive/negative cases passed.
+Follow-up:
+- A later JavaScript string-literal syntax defect in the password error
+  message was corrected by commit 3b000e5 (14 November).
+- Keep syntax checks in the regression process.
+
+19.2 STUDENT RESOURCE LIBRARY AND DUPLICATE SUPABASE CLIENT
+Issue:
+- The library needed level-scoped resource visibility and a PDF reader.
+- A duplicate GoTrueClient warning occurred when the resource module created
+  another Supabase client.
+Resolution:
+[FIXED; USER TESTS RECORDED]
+- PR #3 reused the shared client and records the warning disappearing.
+- Level 100/200, filters and reader interactions were user-tested.
+Follow-up:
+- Repeat key tests after later resource and access-control changes.
+
+19.3 ADMIN RESOURCE MANAGEMENT BRANCH DIVERGENCE
+Issue:
+- PR #2 contained early resource-management controls but its branch diverged
+  from the newer main branch.
+Resolution:
+[SUPERSEDED / INCORPORATED]
+- PR #2 was closed unmerged. Its work was incorporated into the consolidated
+  PR #4. Do not revive or merge the old branch as a separate feature.
+
+19.4 ADMIN STATISTICS ACCESS
+Issue:
+- An exposed aggregate view/function risked giving broader access than
+  intended.
+Resolution:
+[BACKEND CHECKS RECORDED]
+- PR #7 added aggregate statistics; PR #8 moved privileged aggregation into
+  a private schema and guarded access by verified admin/owner role.
+- Recorded tests: admin receives expected aggregates; student returns no
+  row/NULL; anonymous access denied.
+Follow-up:
+- Recheck current grants, RLS and security-advisor findings during release.
+
+19.5 RESOURCE DELETION AND STORAGE CLEANUP
+Issue:
+- Deleting a resource must not leave it accessible, and storage cleanup can
+  fail independently of metadata deletion.
+Resolution:
+[IMPLEMENTED; LIVE FAILURE-PATH TEST PENDING]
+- PR #9 adds irreversible-action confirmation, role recheck, metadata delete,
+  Storage cleanup and explicit cleanup-failure reporting.
+Follow-up:
+- Test normal deletion and cleanup-failure behaviour on a controlled resource.
+
+19.6 RESOURCE VIEW TRACKING
+Issue:
+- Resource views needed to be measured separately from downloads, without
+  allowing arbitrary or excessive view events.
+Resolution:
+[DATABASE TESTS RECORDED; LIVE FLOW PENDING]
+- PR #10 adds private raw events, a narrow authenticated RPC, eligibility
+  and academic-level checks, and 30-second duplicate suppression.
+- SQL/permission tests recorded as passing.
+Follow-up:
+- Verify the full real student PDF-open event and admin display.
+
+19.7 GOOGLE DRIVE AND BATCH UPLOAD
+Issue:
+- Administrators needed reliable multi-file uploads from device storage and
+  Google Drive, including unstable connections and partial failures.
+Resolution:
+[IMPLEMENTED; BROWSER TESTS PENDING]
+- PR #11 adds Drive import, sequential queue, TUS resumable upload,
+  progress, retries and level-scoped library display.
+- PR #13 unifies device/Drive selection.
+- PR #14 changes Picker DocsView to LIST while preserving multi-select and
+  folder navigation for the narrower drive.file scope.
+Follow-up / residual risks:
+- Live Android and desktop testing remains required.
+- The Undergraduates page's level filter is a frontend display restriction;
+  PR #11 explicitly says the existing RLS/Storage policies still permit
+  verified admins/owners cross-level access. Do not describe the page filter
+  as a server-enforced security boundary. Review whether the intended product
+  requires stronger backend separation before launch.
+- Google OAuth branding links and consent-screen status need owner review.
+
+19.8 PDF COMPRESSION
+Issue:
+- Large PDFs needed preparation before upload without silently damaging
+  content or accepting invalid output.
+Resolution:
+[IMPLEMENTED; STATIC CHECKS RECORDED; REAL PDF TESTS PENDING]
+- PR #12 adds the 15 MiB trigger, PDF.js validation, page-count comparison,
+  fallback to original and 50 MiB hard limit.
+Follow-up:
+- Test representative text-heavy and vector PDFs, readability, selection,
+  fallback, page count, file size, Office files and Drive/local parity.
+
+19.9 INTERFACE COPY AND PICKER POLISH
+Issue:
+- Upload and account guidance was too verbose; Drive Picker presentation
+  needed adjustment.
+Resolution:
+[IMPLEMENTED; VISUAL TEST PENDING]
+- PR #14 records static read-back of LIST mode, multi-select, folder
+  navigation, compact upload form and shorter guidance.
+Follow-up:
+- Verify visual layout and multi-select in live browsers.
+
+19.10 FEATURED RESOURCE EXPIRY AND ADMIN OVERRIDE
+Issue:
+- Temporary featured resources needed automatic expiry, while allowing
+  admins to retain selected resources.
+Resolution:
+[IMPLEMENTED; REGRESSION TEST PENDING]
+- Merged commits add three-day expiry, permanent admin keep option and
+  jump links to matching library entries.
+Follow-up:
+- Verify boundary conditions and override persistence in production.
+
+19.11 MANDATORY PASSWORD RECOVERY — MULTI-STAGE FAILURE
+Original issue:
+- Existing accounts were to be required to reset passwords before accessing
+  student or admin areas. The recovery email link previously returned to
+  the reset page without exposing the new-password form.
+
+Changes and causes addressed:
+- PR #15 added the mandatory reset workflow and staged the database gate OFF
+  until the new frontend and live flow were verified. It recorded 14 accounts
+  flagged at that time.
+- PR #16 improved recovery-session detection by checking verified Supabase
+  recovery claims as well as the PASSWORD_RECOVERY auth event.
+- PR #17 removed duplicated explanatory copy.
+- PR #18 addressed an incorrect assumption about the JWT AMR: the actual
+  verified Supabase email-recovery session used AMR "otp", not a method
+  literally named "recovery".
+- PR #18 validates the current JWT session ID against auth.sessions and
+  checks session creation against auth.users.recovery_sent_at. It protects
+  both form access and completion, and revokes anonymous execution on the
+  validator RPC.
+
+Resolution:
+[CODE AND DATABASE SECURITY FIX MERGED; LIVE END-TO-END TEST PENDING]
+- PR #18 merged 15 November.
+- Its PR verification records acceptance of the latest recovery session,
+  rejection of an older OTP session and an ordinary password session, and
+  denial of anonymous RPC execution.
+- The migration was reported applied to the connected production Supabase
+  project and grants verified.
+- GitHub Pages deployment run #272 for the merge completed successfully.
+- The complete fresh-email → reset form → password update → flag cleared →
+  ordinary login → student/admin access path has not yet been confirmed.
+- The enforcement switch was intentionally OFF in PR #15 and the handover
+  still treats it as staged. Re-check the actual production value before
+  changing it. Do not turn it on solely because PR #18 merged.
+- PR #15 reported 14 flagged accounts at that time; this is historical until
+  a fresh production count is checked.
+
+19.12 OTHER SECURITY / RELEASE FOLLOW-UPS
+[CHECK CURRENT STATE]
+- Recheck Supabase leaked-password protection and the intentional
+  authenticated SECURITY DEFINER advisor findings noted in PR #18.
+- Recheck the actual production migration history, RLS, Storage policies,
+  RPC grants and mandatory-reset switch. Repository migration files alone
+  do not prove the production database has the same state.
+- Recheck whether the level-based page filter is sufficient or whether
+  stronger server-side access separation is required.
+- Review legal pages and Google OAuth branding/configuration before launch.
+
+======================================================================
+20. MASTER ACTION REGISTER — NEXT WORK IN ORDER
+======================================================================
+
+P0 — CONFIRM PASSWORD-RECOVERY RELEASE STATE
+Owner action required: user must perform the fresh email-link test when
+Supabase email rate limits permit. Assistant should first re-read current
+production configuration and relevant frontend/backend code.
+Acceptance criteria:
+- Recovery email opens the reset page.
+- Verified recovery session exposes the new-password form.
+- Valid password update succeeds.
+- Completion clears the flag only after the password update.
+- Normal sign-in succeeds afterwards.
+- Student library and authorised admin dashboard access work.
+- Ordinary login session and anonymous caller cannot clear the flag.
+- Record actual enforcement-switch value and current flagged-account count.
+
+P1 — RUN UPLOAD / DRIVE / COMPRESSION REGRESSION
+- Android and desktop local multi-select.
+- Google Drive Picker, nested folders and multi-select.
+- Per-file filename-derived title and extension removal.
+- Shared batch metadata confirmation.
+- Sequential queue, progress, partial failures and retries.
+- Resumable upload on interrupted/slow connections.
+- PDF compression quality, page count, text/vector preservation and fallback.
+- Office document handling and 50 MiB rejection.
+- Confirm resulting resource metadata and student visibility.
+
+P2 — RUN ADMIN REGRESSION
+- Admin/owner authentication and role restrictions.
+- Overview aggregates and refresh.
+- Edit, publish/hide, feature/unfeature.
+- Edit-success modal appears only after a successful edit.
+- Safe deletion and Storage cleanup failure handling.
+- Featured expiry, permanent override and jump links.
+- User overview, navigation and profile/avatar persistence.
+
+P3 — RUN STUDENT REGRESSION
+- Registration and email confirmation.
+- Login, sign-out and password validation.
+- Academic-level filtering and resource search/type filters.
+- PDF reader and resource view tracking.
+- Profile menu, avatar and responsive navigation.
+- Loading, empty, error and slow-network states.
+
+P4 — SECURITY AND RELEASE REVIEW
+- Reconcile production migrations with repository migration files.
+- Inspect current RLS, Storage policies, RPC grants and admin role checks.
+- Resolve or formally accept the level-filter/security-boundary limitation.
+- Review Supabase security advisor output.
+- Review legal-page content and Google OAuth branding.
+- Check privacy/terms links, SEO metadata and public/private page indexing.
+- Record defects, evidence, owner and retest outcome.
+- Confirm owner acceptance before release.
+
+P5 — ROADMAP AFTER CORE RELEASE
+- Finish profile/avatar polish, icon review and navigation refinements.
+- Define CBT scope.
+- Define AI-assisted learning scope and safeguards.
+- Define community/student-support scope.
+- Decide payment model and secondary-school tier only after product and
+  operational requirements are clear.
+
+ISSUE TRACKING RULE
+GitHub currently has no standalone issue records for this project. Until
+issues are opened in GitHub, use Sections 19–20 as the authoritative
+conversation-level issue/action register. When an issue is fixed, retain its
+history and change only its status with evidence; do not erase resolved bugs
+or treat a merged PR as proof of full user-flow resolution.
+
+======================================================================
+21. TIME-TRACKING RECORD — AWAITING USER'S AUTHORITATIVE SCREENSHOT
+======================================================================
+
+The user has stated that they possess a screenshot containing the current
+and correct time-tracking details. That screenshot is the authoritative
+source for the time ledger and must be used when supplied.
+
+Do not reconstruct, estimate or overwrite time entries from conversation
+timestamps, GitHub commit times, assistant message times or partial memory.
+Those timestamps are not a substitute for the user's session-time records.
+
+Until the screenshot is inspected:
+- Historical session totals: awaiting source.
+- Start/pause/resume/end entries: awaiting source.
+- Task-level time allocations: awaiting source.
+- Cumulative project time: awaiting source.
+- The reconciliation timestamp in Section 18 is an audit timestamp only;
+  it is not a work-session start time or a duration entry.
+
+After the screenshot is supplied, transcribe its entries faithfully,
+preserve its terminology and values, identify any illegible/ambiguous
+fields for user confirmation, and add the verified ledger here without
+inventing missing intervals.
+
+======================================================================
+END OF VERSION 1.2 RECONCILIATION ADDENDUM
+======================================================================
