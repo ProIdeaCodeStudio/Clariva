@@ -848,24 +848,30 @@ async function initializeResetPasswordPage() {
     if (claimsError) throw claimsError;
 
     const claims = claimsData?.claims;
-    if (!claims || claims.sub !== expectedUserId || !Array.isArray(claims.amr)) {
+    if (!claims || claims.sub !== expectedUserId) {
       return false;
     }
 
-    const hasOtpMethod = claims.amr.some(
+    const hasOtpMethod = Array.isArray(claims.amr) && claims.amr.some(
       (method) => method && method.method === "otp"
     );
 
-    if (!hasOtpMethod) return false;
+    if (hasOtpMethod) {
+      // Validate the recovery link before the password has been changed.
+      const { data: isValidRecovery, error: validationError } =
+        await supabaseClient.rpc("is_valid_required_password_recovery_session");
 
-    // Supabase records email recovery verification as an OTP-authenticated
-    // session. Confirm server-side that this exact session was created after
-    // the user's latest recovery email was requested.
-    const { data: isValidRecovery, error: validationError } =
-      await supabaseClient.rpc("is_valid_required_password_recovery_session");
+      if (validationError) throw validationError;
+      if (isValidRecovery === true) return true;
+    }
 
-    if (validationError) throw validationError;
-    return isValidRecovery === true;
+    // Auth clears recovery_sent_at after a successful password update. A
+    // server-stored attempt tied to this exact session keeps safe retries valid.
+    const { data: resetInProgress, error: inProgressError } =
+      await supabaseClient.rpc("is_required_password_reset_in_progress");
+
+    if (inProgressError) throw inProgressError;
+    return resetInProgress === true;
   }
 
   // Supabase emits this event only after it accepts a password-recovery link.
@@ -1065,6 +1071,13 @@ async function initializeResetPasswordPage() {
         hasPendingPasswordUpdate(session.user.id);
 
       if (!passwordAlreadyUpdated) {
+        if (mandatoryPasswordReset) {
+          const { error: beginError } = await supabaseClient.rpc(
+            "begin_required_password_reset"
+          );
+          if (beginError) throw beginError;
+        }
+
         const { error: updateError } = await supabaseClient.auth.updateUser({
           password: newPassword
         });
