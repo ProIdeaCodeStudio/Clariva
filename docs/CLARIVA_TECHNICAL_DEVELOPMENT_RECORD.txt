@@ -1,0 +1,432 @@
+CLARIVA TECHNICAL DEVELOPMENT RECORD
+Version: 1.0
+Record date: 16 November 2026
+Project: Clariva
+Repository: https://github.com/ProIdeaCodeStudio/Clariva
+Public site: https://proideacodestudio.github.io/Clariva/
+
+PURPOSE AND MAINTENANCE RULE
+This is the technical build and maintenance record for Clariva. It is separate from
+CLARIVA_MASTER_DEVELOPMENT_HANDOVER.txt, which records project history and decisions.
+This document explains the system architecture, component responsibilities, data
+flows, security boundaries, deployment process, and known technical issues.
+
+Update this record whenever an implementation, database migration, integration,
+security control, test result, or deployment changes. Record the date, branch,
+commit, reason, implementation, and verification result.
+
+This document intentionally excludes passwords, API secrets, service-role keys,
+private tokens, recovery codes, personal account identifiers, and privileged
+account-recovery instructions. The Project Owner / Lead Developer retains control
+of privileged access and must approve sensitive production operations.
+
+1. PRODUCT AND RELEASE SCOPE
+
+Clariva is a student-facing academic resource platform. Its current usable core is
+the account system, student profile, academic-level access control, and resource
+library, with an administrator dashboard for resource management.
+
+The first usable version target is 22 November 2026. The stated buffer target is
+29 November 2026. The project must be operational before 1 December 2026. A prior
+reference to 31 November is invalid because November has 30 days; the Project Owner
+must confirm whether 30 November is the intended final bug-fix date.
+
+CBT and AI assistance are mentioned in some public-facing descriptions but are not
+implemented in the current repository. Treat them as future scope until their
+implementation and acceptance tests are complete.
+
+2. SYSTEM ARCHITECTURE
+
+The application is a static front end hosted by GitHub Pages. It does not run a
+custom application server. Browser code communicates directly with Supabase using
+the public client key and relies on Supabase Auth, PostgreSQL permissions and
+Row-Level Security (RLS), Storage policies, and database functions for protected
+operations.
+
+Primary components:
+- GitHub repository: source control for HTML, CSS, JavaScript, SQL migrations,
+  documentation, and static assets.
+- GitHub Pages: serves the static site from the repository's deployment branch.
+- Supabase Auth: registration, email confirmation, sign-in, sessions, and recovery.
+- Supabase PostgreSQL: student profiles, resource metadata, role checks, view
+  tracking, reset enforcement, and RPC functions.
+- Supabase Storage: private resource files and short-lived signed URLs.
+- Supabase Edge Functions: deployed server-side functions. The legacy
+  verify-group-code function was found deployed with gateway JWT verification
+  disabled; no current front-end call was found during this audit. Do not disable
+  it until all external dependencies have been checked.
+
+High-level request path:
+Browser page -> Supabase Auth session -> public RPC / table API -> RLS and grants
+-> private database function where explicitly authorized -> database result.
+Resource file path:
+Browser -> authorized Storage request -> private bucket policy -> signed URL
+-> PDF viewer or browser file handler.
+
+3. REPOSITORY STRUCTURE AND RESPONSIBILITIES
+
+index.html
+- Public landing page, registration and login interface, and primary entry point.
+- Loads the shared Supabase client library and script.js.
+- Public marketing text must not describe unimplemented features as available.
+
+script.js
+- Shared Supabase client initialization.
+- Registration and login flows.
+- Session checks, profile lookup, role routing, mandatory-reset routing, and
+  password recovery.
+- Shared form validation, loading states, notifications, and page-level behavior.
+- The recovery client must initialize early enough to process the Supabase
+  PASSWORD_RECOVERY event before the page load event.
+
+reset-password.html
+- Dedicated password recovery and mandatory-reset interface.
+- Displays the password form only in a recovery context or a server-confirmed
+  in-progress recovery context.
+- The browser-side interface is not the security boundary. The database must
+  validate the accepted recovery session and the actual password update before
+  clearing the mandatory-reset flag.
+
+Undergraduates.html
+- Student resource-library page.
+- Loads StudentResources.js and shared profile/auth behavior.
+- The current student viewer supports PDF resources.
+
+StudentResources.js
+- Fetches resource metadata for the signed-in student.
+- Applies academic-level filtering through database policy and query conditions.
+- Obtains signed URLs for private files.
+- Opens PDF resources and records resource views through the
+  record_resource_view RPC.
+
+AdminDashboard.html
+- Administrator dashboard layout and script dependencies.
+- Contains browser-side Google Drive Picker configuration. A browser API key is
+  visible by design and is not a server secret; it must be restricted in Google
+  Cloud by HTTP referrer and allowed API.
+
+AdminDashboard.js
+- Administrator authorization checks and dashboard initialization.
+- Resource upload, metadata editing, publication/visibility, deletion, and
+  featured-resource controls.
+- Resumable uploads through TUS.
+- PDF compression for large PDFs, with checks intended to preserve digitally
+  signed PDFs.
+- Google Drive Picker integration and transfer of selected files.
+
+ProfileMenu.js / ProfileMenu.css
+- Shared signed-in profile menu, profile display, and avatar selection/editing.
+
+Stylesheet.css
+- Main application styling and responsive layout.
+
+privacy.html / terms.html
+- Public privacy and terms pages. They are working drafts and require final review
+  before public release.
+
+README.md, SECURITY.md, PDF_COMPRESSION.md, THIRD_PARTY_NOTICES.md, LICENSE,
+.gitignore, sitemap.xml
+- Repository setup, security guidance, PDF compression notes, third-party
+  notices, license, ignored local files, and search-engine metadata.
+
+docs/CLARIVA_MASTER_DEVELOPMENT_HANDOVER.txt
+- Existing project history and handover record. Keep it distinct from this
+  technical implementation record.
+
+supabase/migrations/
+- Ordered PostgreSQL migration history. Filenames must match the live migration
+  versions; do not replay production migrations blindly.
+
+4. AUTHENTICATION AND ACCOUNT LIFECYCLE
+
+Registration:
+1. The browser validates registration fields.
+2. Supabase Auth creates an email/password account.
+3. A database trigger creates the corresponding student profile.
+4. Email confirmation updates the profile verification state through the
+   database-side verification flow.
+5. The current registration scope supports 100 Level and 200 Level.
+
+Login:
+1. Supabase Auth authenticates the credentials.
+2. The front end reads the user's student profile.
+3. The application checks email verification, role, and mandatory-reset status.
+4. A student is routed to the student resource area; an authorized administrator
+   is routed to the admin dashboard.
+5. Database RLS remains authoritative even if a user manually opens a protected
+   page URL.
+
+Password recovery:
+1. The user requests a recovery email through Supabase Auth.
+2. The redirect target is reset-password.html.
+3. Supabase verifies the recovery link and establishes a recovery session.
+4. The front end listens for PASSWORD_RECOVERY and also checks an existing
+   session when the page initializes.
+5. Before a mandatory password update, the database records the exact accepted
+   recovery session.
+6. Supabase Auth updates auth.users.encrypted_password. A database trigger records
+   the actual password-hash update.
+7. The completion RPC checks the recorded recovery session and password-change
+   event before clearing students.password_reset_required.
+
+Important Auth behavior discovered during this audit:
+Supabase Auth clears recovery_sent_at when a password is successfully updated.
+Therefore a completion function must not re-run a validator that depends on
+recovery_sent_at after auth.updateUser({ password }) has completed. The new
+recovery-attempt snapshot design in the working branch addresses this ordering.
+
+The use of auth.users.updated_at alone is not a reliable proof of password
+change because other user attributes can also be updated. The working-branch
+migration replaces that test with a trigger on encrypted_password updates.
+
+5. DATABASE OBJECTS AND SECURITY BOUNDARIES
+
+public.students
+- Student profile keyed to the Supabase Auth user.
+- Holds academic level, role, verification status, avatar choice, and mandatory
+  password-reset state.
+- RLS restricts profile access to the relevant signed-in user and authorized
+  administrative operations.
+- Users must not be able to change their own role, verification status, or
+  mandatory-reset flag.
+
+public."Resources"
+- Resource metadata, academic level, publication/visibility state, file path,
+  featured state, and view/download counters.
+- RLS controls which verified students can view resources and which
+  administrators can create, update, or delete them.
+- The authenticated role had unnecessary TRUNCATE, REFERENCES, and TRIGGER
+  privileges at audit time. A least-privilege revoke is included in the
+  working-branch migration.
+
+private schema
+- Holds internal functions and tables that must not be directly exposed through
+  the browser API.
+- private.resource_views stores resource-view events and has RLS enabled with no
+  direct client table grants.
+- private.password_reset_enforcement stores the global enforcement switch.
+- At audit time, private.password_reset_enforcement had RLS disabled, but anon
+  and authenticated had neither schema USAGE nor direct table grants. This
+  limits the immediate exposure. Enabling RLS on this existing table is pending
+  explicit Project Owner approval; no client policies or grants are proposed.
+
+RPC functions:
+- get_admin_dashboard_stats: public wrapper for administrator overview metrics.
+- record_resource_view: public wrapper for student resource-view tracking.
+- is_valid_required_password_recovery_session: validates the recovery session
+  before a mandatory password update.
+- begin_required_password_reset: records the validated recovery session before
+  Auth changes the password.
+- is_required_password_reset_in_progress: recognizes the same accepted session
+  after Auth clears recovery_sent_at.
+- complete_required_password_reset: clears the mandatory-reset flag only after
+  the same session has an actual encrypted_password update.
+
+The working branch restores USAGE on the private schema to authenticated only
+because the two public invoker wrappers call explicitly granted private
+functions. Internal tables remain without client table grants. Only the
+necessary private functions receive EXECUTE permission.
+
+6. STORAGE AND RESOURCE DELIVERY
+
+The clariva-resources bucket is private. The observed configuration used a 50 MiB
+maximum file size and allowed PDF, DOC, DOCX, PPT, and PPTX MIME types.
+
+Administrator upload flow:
+1. Validate file type and size.
+2. Prepare the file; large PDFs may be compressed.
+3. Upload through resumable TUS transfer.
+4. Insert resource metadata.
+5. If metadata insertion fails, attempt to remove the uploaded object.
+6. Store the private object path, not a public URL.
+
+Student delivery flow:
+1. Query only resources permitted by academic level and verification status.
+2. Request a signed URL for the private object.
+3. Open supported PDFs in the PDF viewer.
+4. Record the view through the database RPC.
+
+Known scope gap:
+The administrator can upload DOC, DOCX, PPT, and PPTX, but the current student
+opening function supports PDF only. Decide whether non-PDF resources should be
+downloaded, opened through an approved viewer, converted to PDF, or excluded
+from the first usable version.
+
+The dashboard contains download statistics, but the current front-end did not
+show a complete download-count increment path during this audit. Do not treat
+download_count as reliable until that path is implemented and tested.
+
+7. FEATURED RESOURCES AND SCHEDULED WORK
+
+Temporary featured resources expire through a scheduled database job. The live
+project contained an active job named
+clariva-expire-temporary-featured-resources, scheduled every ten minutes.
+Permanent featured resources are excluded from expiry.
+
+Do not recreate or reschedule the job without checking the live cron catalog.
+Avoid running duplicate jobs.
+
+8. EXTERNAL LIBRARIES AND INTEGRATIONS
+
+The front end loads browser libraries for Supabase JS, PDF rendering, resumable
+uploads, PDF compression, Google Identity Services, and Google Picker.
+
+Security requirements:
+- A Supabase publishable/anon key may be used in browser code only with correct
+  RLS and grants.
+- Never place a Supabase service-role key, database password, private token, or
+  privileged credential in HTML, JavaScript, CSS, or public documentation.
+- Restrict the Google browser API key by HTTP referrer and allowed APIs.
+- OAuth client IDs are identifiers, not substitutes for server-side security.
+- Keep third-party library versions deliberate and review changes before
+  upgrading floating CDN dependencies.
+
+9. MIGRATION HISTORY AND DEPLOYMENT REPRODUCIBILITY
+
+The live Supabase migration ledger contained 15 applied migrations. The original
+repository migration directory did not align with that ledger: one applied
+migration was missing, several filenames had different timestamps, and the
+resource-view SQL in the repository had an older function signature.
+
+The working branch reconstructs the 15 recorded migration filenames and SQL
+statements. The resource_views table bootstrap is included with the relevant
+resource-view migration because the production table had been created during
+implementation outside the recorded migration ledger. This makes a clean replay
+self-contained. Review this reconstructed history before applying it to any
+database.
+
+A new working-branch migration adds:
+- Narrow private-schema USAGE and function EXECUTE grants for the two RPC paths.
+- Revocation of unnecessary table-level privileges on public."Resources".
+- A private recovery-attempt record bound to the user's Auth session.
+- A trigger that records actual encrypted_password changes.
+- Updated begin, in-progress, and completion RPCs.
+
+This migration has not been applied to production as of this record revision.
+The existing private.password_reset_enforcement RLS hardening is separate and
+awaits Project Owner approval.
+
+10. KNOWN AUDIT FINDINGS
+
+Confirmed at audit time:
+- The live mandatory-reset enforcement switch was enabled.
+- All 14 existing student/admin profiles had password_reset_required = true.
+- All 14 corresponding Auth accounts were email-confirmed.
+- The recovery validator accepted a session created after the latest recovery
+  request when tested with the expected OTP claim and session ID.
+- Auth logs showed successful recovery-email/verification activity as well as
+  email-send rate limiting on repeated requests.
+- The public admin-statistics and resource-view wrappers failed because
+  authenticated lacked USAGE on private while the wrappers invoked private
+  functions.
+- The private password-reset enforcement table had RLS disabled, but no direct
+  anon/authenticated schema or table access was granted.
+- The production migration ledger and repository migration files were not
+  aligned.
+- The student viewer currently supports PDF only, while administrator uploads
+  include additional office formats.
+- The legacy verify-group-code Edge Function was deployed with gateway JWT
+  verification disabled and no current repository caller was found.
+
+Do not infer that a successful GitHub Pages deployment proves browser-level
+authentication, storage, or RPC behavior. These require real end-to-end tests.
+
+11. TEST PLAN FOR THE FIRST USABLE VERSION
+
+Authentication and recovery:
+1. Register a new controlled test account.
+2. Confirm the email and verify the profile state.
+3. Sign in and verify the correct student route.
+4. Sign out and request a fresh password recovery email.
+5. Open the link in the same browser context.
+6. Confirm the password form is visible.
+7. Submit a valid password and confirm the completion RPC succeeds.
+8. Sign in with the new password.
+9. Confirm the mandatory-reset gate no longer blocks the account.
+10. Verify that an ordinary metadata update cannot clear the mandatory-reset flag.
+
+Authorization:
+1. Confirm a verified student can read only permitted resources.
+2. Confirm a student cannot edit role, verification, or reset flags.
+3. Confirm a student cannot access administrator management functions.
+4. Confirm an authorized administrator can load dashboard statistics.
+5. Confirm a student resource view is recorded without direct table access.
+
+Resource management:
+1. Upload a small PDF.
+2. Upload a large PDF and verify compression behavior.
+3. Upload each supported office format and confirm the chosen student delivery
+   behavior.
+4. Edit metadata and visibility.
+5. Test temporary and permanent featured status.
+6. Confirm signed URLs expire and private files are not publicly accessible.
+7. Confirm failed metadata insertion does not leave an unmanaged object.
+
+Deployment:
+1. Review branch diff and migration order.
+2. Merge the approved pull request into main.
+3. Confirm GitHub Pages deployment succeeds.
+4. Apply the approved database migration and verify the migration ledger.
+5. Test the deployed site in a real browser.
+6. Record the commit, deployment result, test evidence, and any rollback action.
+
+12. BRANCH, MERGE, AND RELEASE PROCEDURE
+
+All code changes must be made on a named working branch. Do not edit main directly.
+
+Standard sequence:
+1. Inspect the complete dependency path before modifying a component.
+2. Create a working branch from the current main commit.
+3. Make the smallest coherent change that preserves working behavior.
+4. Review the complete diff, including SQL, policies, and documentation.
+5. Run available static checks and database verification.
+6. Open a pull request with the reason, files changed, risks, and test plan.
+7. Merge only after the change is reviewed.
+8. Confirm the GitHub Pages deployment completed successfully.
+9. Apply production database migrations only after the corresponding change is
+   approved and the migration order is verified.
+10. Ask the Project Owner to perform the agreed browser test.
+11. Record the result and update this document.
+
+Never replay all migrations against production without checking the live
+supabase_migrations.schema_migrations ledger. Never disable an existing
+Edge Function or change authentication enforcement based only on an unused-code
+search.
+
+13. ACCESS CONTROL AND PROJECT OWNERSHIP
+
+This record is an architecture and maintenance guide, not an access-transfer
+document. It intentionally omits privileged credentials, service-role secrets,
+private tokens, account recovery details, and takeover procedures.
+
+A maintainer who needs privileged GitHub, Supabase, Google Cloud, or email access
+must contact the Project Owner / Lead Developer and receive explicit authorization.
+Do not attempt to recover, replace, or bypass account ownership controls.
+
+14. CURRENT WORKING STATE AT REVISION 1.0
+
+Working branch:
+fix-clariva-auth-recovery-baseline-20261116
+
+Changes on the branch:
+- Earlier Supabase client initialization for recovery-link processing.
+- Immediate recovery-form visibility on PASSWORD_RECOVERY while retaining
+  server-side validation before password completion.
+- Resilient in-memory fallback for recovery state when sessionStorage is blocked.
+- Migration filenames and SQL reconstructed against the 15-entry live ledger.
+- A new, unapplied migration for private RPC access, least-privilege grants,
+  recovery-session snapshotting, and actual password-change auditing.
+
+Not yet completed:
+- Validate the new migration on a Supabase development branch.
+- Obtain Project Owner approval before enabling RLS on the existing
+  private.password_reset_enforcement table.
+- Merge the working branch and verify GitHub Pages deployment.
+- Apply the database migration to production after review.
+- Complete the browser-level recovery and role-access tests.
+- Confirm Google Cloud API-key restrictions.
+- Finalize Privacy Policy and Terms.
+- Decide non-PDF resource delivery and correct download statistics.
+- Confirm the intended final bug-fix date in place of the invalid 31 November.
+
+END OF TECHNICAL DEVELOPMENT RECORD
