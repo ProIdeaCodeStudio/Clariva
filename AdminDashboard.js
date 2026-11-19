@@ -278,11 +278,41 @@
   function renderSelectedFiles() {
     const files = getSelectedFiles();
     const label = getElement('resource-file-selection');
+    const list = getElement('resource-selected-file-list');
     if (label) {
       label.textContent = files.length
-        ? `${files.length} file${files.length === 1 ? '' : 's'} selected · ${formatFileSize(files.reduce((sum, file) => sum + file.size, 0))} total`
+        ? files.length + ' file' + (files.length === 1 ? '' : 's') + ' selected · ' + formatFileSize(files.reduce((sum, file) => sum + file.size, 0)) + ' total'
         : 'No files selected.';
     }
+    if (!list) return;
+    list.replaceChildren();
+    files.forEach((file, index) => {
+      const item = document.createElement('li');
+      item.className = 'admin-selected-file-item';
+      const details = document.createElement('span');
+      details.className = 'admin-selected-file-details';
+      const name = document.createElement('strong');
+      name.textContent = file.name;
+      const size = document.createElement('small');
+      size.textContent = formatFileSize(file.size);
+      details.append(name, size);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'admin-button admin-button-secondary admin-selected-file-remove';
+      remove.textContent = 'Remove';
+      remove.setAttribute('aria-label', 'Remove ' + file.name);
+      remove.addEventListener('click', () => {
+        const transfer = new DataTransfer();
+        getSelectedFiles().forEach((selected, selectedIndex) => {
+          if (selectedIndex !== index) transfer.items.add(selected);
+        });
+        const input = getElement('resource-file');
+        if (input) input.files = transfer.files;
+        renderSelectedFiles();
+      });
+      item.append(details, remove);
+      list.appendChild(item);
+    });
   }
 
   function addFilesToPicker(files) {
@@ -1459,23 +1489,19 @@
 
   function confirmBatchUpload(metadata) {
     const dialog = getElement('resource-batch-confirm-dialog');
-    if (!dialog || typeof dialog.showModal !== 'function') {
-      return Promise.resolve(window.confirm(
-        'You selected multiple files. Make sure every file uses the same semester, course code, level and resource type before uploading.'
-      ));
-    }
-
-    const values = {
-      'batch-confirm-level': metadata.level + ' Level',
-      'batch-confirm-semester': metadata.semester === 1 ? 'First semester' : 'Second semester',
-      'batch-confirm-course-code': metadata.courseCode || 'Not specified',
-      'batch-confirm-resource-type': metadata.resourceType
+    const fields = {
+      level: getElement('batch-edit-level'),
+      semester: getElement('batch-edit-semester'),
+      courseCode: getElement('batch-edit-course-code'),
+      resourceType: getElement('batch-edit-resource-type')
     };
-    Object.entries(values).forEach(([id, value]) => {
-      const element = getElement(id);
-      if (element) element.textContent = value;
-    });
-
+    if (!dialog || typeof dialog.showModal !== 'function') {
+      return Promise.resolve(window.confirm('You selected multiple files. Continue only if the semester, course code, level and resource type are correct for every file.'));
+    }
+    fields.level.value = String(metadata.level);
+    fields.semester.value = String(metadata.semester);
+    fields.courseCode.value = metadata.courseCode || '';
+    fields.resourceType.value = metadata.resourceType;
     return new Promise(resolve => {
       const confirmButton = getElement('resource-batch-confirm');
       const cancelButton = getElement('resource-batch-cancel');
@@ -1486,14 +1512,23 @@
         if (dialog.open) dialog.close(confirmed ? 'confirm' : 'cancel');
         resolve(confirmed);
       };
-      const handleConfirm = () => finish(true);
+      const handleConfirm = () => {
+        if (!fields.level.value || !fields.semester.value || !fields.resourceType.value) {
+          Object.values(fields).forEach(field => field?.reportValidity?.());
+          return;
+        }
+        metadata.level = Number(fields.level.value);
+        metadata.semester = Number(fields.semester.value);
+        metadata.courseCode = fields.courseCode.value.trim();
+        metadata.resourceType = fields.resourceType.value;
+        finish(true);
+      };
       const handleCancel = () => finish(false);
       const handleClose = () => {
         confirmButton?.removeEventListener('click', handleConfirm);
         cancelButton?.removeEventListener('click', handleCancel);
         resolve(dialog.returnValue === 'confirm');
       };
-
       confirmButton?.addEventListener('click', handleConfirm);
       cancelButton?.addEventListener('click', handleCancel);
       dialog.returnValue = 'cancel';
