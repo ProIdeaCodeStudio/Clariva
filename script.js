@@ -148,7 +148,7 @@ async function getCurrentUser() {
   }
 }
 
-window.onload = async function () {
+async function initializeClarivaPage() {
   // Retry safely if the CDN was unavailable during initial script execution.
   initializeSupabaseClient();
   const backToLoginBtn = document.getElementById('back-to-login-button');
@@ -345,7 +345,12 @@ if (pageLoader) {
     }, 500);
   }, remainingTime);
 }
-};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeClarivaPage, { once: true });
+} else {
+  void initializeClarivaPage();
+}
 
 function showGate() {
   const gate = document.getElementById('gate-overlay');
