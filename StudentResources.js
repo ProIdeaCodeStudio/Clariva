@@ -613,11 +613,12 @@
     loadResources();
   }
 
-  // Initialize as soon as the parsed page is ready instead of waiting for
-  // every image and unrelated external resource to finish loading.
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeResourceLibrary, { once: true });
+  const ready = window.clarivaPageReady;
+  if (ready && typeof ready.then === 'function') {
+    ready.then(() => initializeResourceLibrary()).catch(error => {
+      console.error('Student library initialization was blocked:', error);
+    });
   } else {
-    initializeResourceLibrary();
+    void initializeResourceLibrary();
   }
 })();
