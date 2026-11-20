@@ -286,7 +286,7 @@
     } catch (error) {
       console.error('Clariva owner activity overview error:', error);
       if (status) {
-        status.textContent = error.message || 'Unable to load platform activity.';
+        status.textContent = window.clarivaFriendlyError?.(error, 'Unable to load platform activity. Try again.') || 'Unable to load platform activity. Try again.';
         status.dataset.state = 'error';
       }
     } finally {
