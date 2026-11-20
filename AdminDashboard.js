@@ -918,6 +918,11 @@
   }
 
   async function loadAdminOverview() {
+    const status = getElement('admin-overview-status');
+    if (status) {
+      status.hidden = false;
+      status.textContent = 'Refreshing overview…';
+    }
     try {
       if (typeof supabaseClient === 'undefined' || !supabaseClient) {
         throw new Error('Supabase is not ready. Refresh the page and try again.');
@@ -953,9 +958,17 @@
 
       const latest = getElement('admin-latest-resource');
       if (latest) latest.textContent = formatOverviewDate(data.latest_resource_at);
+      if (status) {
+        status.hidden = true;
+        status.textContent = '';
+      }
 
     } catch (error) {
       console.error('Clariva admin overview error:', error);
+      if (status) {
+        status.textContent = window.clarivaFriendlyError?.(error, 'Unable to refresh the overview. Try again.') || 'Unable to refresh the overview. Try again.';
+        status.hidden = false;
+      }
     }
   }
 
