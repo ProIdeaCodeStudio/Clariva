@@ -346,11 +346,9 @@ if (pageLoader) {
   }, remainingTime);
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeClarivaPage, { once: true });
-} else {
-  void initializeClarivaPage();
-}
+// script.js is loaded with defer on every page. DOMContentLoaded runs after
+// all deferred scripts, so shared dashboard integrations are available first.
+document.addEventListener('DOMContentLoaded', initializeClarivaPage, { once: true });
 
 function showGate() {
   const gate = document.getElementById('gate-overlay');
