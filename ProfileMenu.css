@@ -20,6 +20,8 @@
 .clariva-menu-panel nav{display:grid;gap:4px}
 .clariva-menu-panel a,.clariva-menu-panel button.menu-action{display:block;width:100%;padding:10px 12px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--deep-ink);text-align:left;text-decoration:none;font:500 13px var(--font-body);cursor:pointer}
 .clariva-menu-panel a:hover,.clariva-menu-panel button.menu-action:hover{background:var(--parchment-light);color:var(--deep-ink)}
+/* Preserve per-item visibility: link display styles must not override HTML's hidden attribute. */
+.clariva-menu-panel [hidden]{display:none!important}
 .clariva-menu-heading{margin:0 0 8px;font:700 15px var(--font-display)}
 .clariva-account-meta{margin:0 0 12px;color:var(--ember-text);font-size:12px;overflow-wrap:anywhere}
 .clariva-menu-divider{height:1px;margin:12px 0;background:var(--parchment)}
