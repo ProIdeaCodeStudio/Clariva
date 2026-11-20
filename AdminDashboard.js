@@ -1836,8 +1836,11 @@
     }
   }
 
-  window.addEventListener(
-    'load',
-    initializeAdminDashboard
-  );
+  // Wire the dashboard as soon as the DOM is ready; do not wait for images or
+  // unrelated external resources to finish loading before controls become usable.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAdminDashboard, { once: true });
+  } else {
+    initializeAdminDashboard();
+  }
 })();
