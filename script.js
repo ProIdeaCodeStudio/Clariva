@@ -812,7 +812,7 @@ async function handlePasswordReset() {
   }, 1000);
 } catch (error) {
   if (buttonLoading) buttonLoading.restore();
-  errorElement.textContent = error.message || "Unable to send reset email. Please try again.";
+  errorElement.textContent = clarivaFriendlyError(error, "Unable to send the reset link. Try again.");
   errorElement.classList.add("visible");
   return;
   }
@@ -1001,7 +1001,7 @@ async function initializeResetPasswordPage() {
       if (buttonLoading) buttonLoading.restore();
       if (mandatoryStatus) {
         mandatoryStatus.textContent =
-          sendError.message || "Unable to send the reset link. Please try again.";
+          clarivaFriendlyError(sendError, "Unable to send the reset link. Try again.");
       }
     }
   });
@@ -1119,7 +1119,7 @@ async function initializeResetPasswordPage() {
     } catch (resetError) {
       if (buttonLoading) buttonLoading.restore();
       errorElement.textContent =
-        resetError.message || "Unable to update your password. Please try again.";
+        clarivaFriendlyError(resetError, "Unable to update your password. Try again.");
       errorElement.classList.add("visible");
     }
   });
@@ -1201,7 +1201,7 @@ async function initializeResetPasswordPage() {
   } catch (initializationError) {
     console.error("Unable to initialize password reset:", initializationError);
     showMandatoryResetPanel(
-      "We couldn't verify this account. Please refresh the page or request a new password reset link."
+      clarivaFriendlyError(initializationError, "We could not verify this account. Refresh or request a new reset link.")
     );
     sendMandatoryLinkButton.hidden = true;
   }
