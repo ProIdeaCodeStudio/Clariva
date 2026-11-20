@@ -682,6 +682,10 @@
             <a href="#manage-resources">Manage resources</a>
             <a href="#user-overview">User overview</a>
             <a href="#platform-overview">Platform overview</a>
+            <div class="clariva-menu-divider"></div>
+            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
+            <a id="clariva-owner-dashboard-link" href="OwnerDashboard.html" hidden>Open Owner Dashboard</a>
+            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
           </nav>
           <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger"
             type="button" aria-label="Open account menu" aria-controls="clariva-profile-menu" aria-expanded="false">
@@ -702,11 +706,7 @@
               <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-5" data-avatar="avatar-5" aria-label="Nature avatar" aria-pressed="false">🌿</button>
             </div>
             <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p>
-            <div class="clariva-menu-divider"></div>
-            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
-            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
-            <a id="clariva-owner-dashboard-link" href="OwnerDashboard.html" hidden>Open Owner Dashboard</a>
-            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+            
           </section>
         </div>
       </div>
@@ -975,6 +975,7 @@
       <p class="admin-section-kicker">Platform activity</p>
       <h2 id="platform-overview-title">Platform Overview</h2>
       <p class="admin-panel-intro">Library totals and recent activity.</p>
+      <p id="admin-overview-status" class="admin-muted" role="status" aria-live="polite" hidden></p>
       <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
         <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
         <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>

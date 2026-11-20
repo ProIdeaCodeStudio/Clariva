@@ -244,7 +244,7 @@
     const lowDownlink = Number.isFinite(downlink) && downlink > 0 && downlink < 1;
     networkSlowByConnection = slowType || lowDownlink;
     if (networkSlowByConnection) {
-      setNetworkWarning('Your connection appears slow. Uploads may take longer. Keep this page open while files are uploading.');
+      setNetworkWarning('Low network speed. Refresh your network.');
     } else if (!getElement('resource-network-warning')?.dataset.measuredSlow) {
       setNetworkWarning('');
     }
@@ -258,7 +258,7 @@
       if (!networkWarningTimer) {
         networkWarningTimer = window.setTimeout(() => {
           if (warning) warning.dataset.measuredSlow = 'true';
-          setNetworkWarning('Your upload speed is currently slow. The upload may take longer; please keep this page open.');
+          setNetworkWarning('Low network speed. Refresh your network.');
           networkWarningTimer = null;
         }, 4500);
       }
@@ -865,8 +865,7 @@
     } catch (error) {
       console.error('Clariva resource loading error:', error);
 
-      list.textContent =
-        `Unable to load resources: ${error.message || 'Unknown error'}`;
+      list.textContent = window.clarivaFriendlyError?.(error, 'Unable to load resources. Refresh and try again.') || 'Unable to load resources. Refresh and try again.';
     }
   }
 
@@ -919,6 +918,11 @@
   }
 
   async function loadAdminOverview() {
+    const status = getElement('admin-overview-status');
+    if (status) {
+      status.hidden = false;
+      status.textContent = 'Refreshing overview…';
+    }
     try {
       if (typeof supabaseClient === 'undefined' || !supabaseClient) {
         throw new Error('Supabase is not ready. Refresh the page and try again.');
@@ -954,9 +958,17 @@
 
       const latest = getElement('admin-latest-resource');
       if (latest) latest.textContent = formatOverviewDate(data.latest_resource_at);
+      if (status) {
+        status.hidden = true;
+        status.textContent = '';
+      }
 
     } catch (error) {
       console.error('Clariva admin overview error:', error);
+      if (status) {
+        status.textContent = window.clarivaFriendlyError?.(error, 'Unable to refresh the overview. Try again.') || 'Unable to refresh the overview. Try again.';
+        status.hidden = false;
+      }
     }
   }
 
@@ -1121,10 +1133,10 @@
     } catch (error) {
       console.error('Clariva resource update error:', error);
       setResourceActionStatus(
-        'Unable to update this resource: ' + (error.message || 'Unknown error'),
+        window.clarivaFriendlyError?.(error, 'Unable to update this resource. Try again.') || 'Unable to update this resource. Try again.',
         'error'
       );
-      alert('Unable to update this resource: ' + (error.message || 'Unknown error'));
+      // The inline status already gives the user a concise, actionable message.
       button.disabled = false;
       button.textContent = originalText;
     }
@@ -1179,7 +1191,7 @@
     } catch (error) {
       console.error('Clariva resource deletion error:', error);
       setResourceActionStatus(
-        'Unable to delete this resource: ' + (error.message || 'Unknown error'),
+        window.clarivaFriendlyError?.(error, 'Unable to delete this resource. Try again.') || 'Unable to delete this resource. Try again.',
         'error'
       );
       button.disabled = false;
@@ -1495,7 +1507,7 @@
       }
     } catch (error) {
       console.error('Clariva file retrieval error:', error);
-      alert(`Unable to open this resource: ${error.message}`);
+      alert(window.clarivaFriendlyError?.(error, 'Unable to open this resource. Try again.') || 'Unable to open this resource. Try again.');
     } finally {
       button.disabled = false;
       button.textContent = originalText;
@@ -1757,7 +1769,7 @@
         } catch (error) {
           console.error(`Upload failed for ${file.name}:`, error);
           updateQueueItem(index, 'Failed', 0);
-          failures.push(`${originalFile.name}: ${error.message || 'Upload failed'}`);
+          failures.push(`${originalFile.name}: ${window.clarivaFriendlyError?.(error, 'Upload failed.') || 'Upload failed.'}`);
           failedFiles.push(originalFile);
         }
       }
@@ -1782,7 +1794,7 @@
       }
     } catch (error) {
       console.error('Clariva resource upload queue error:', error);
-      setStatus(error.message || 'An unexpected upload error occurred.', 'error');
+      setStatus(window.clarivaFriendlyError?.(error, 'Upload failed. Try again.') || 'Upload failed. Try again.', 'error');
     } finally {
       setUploading(false);
       checkConnectionQuality();

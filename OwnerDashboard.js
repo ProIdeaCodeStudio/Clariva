@@ -140,7 +140,7 @@
       accounts = [];
       updateMetrics();
       renderAccounts();
-      setStatus(error.message || 'Unable to load account directory.', 'error');
+      setStatus(window.clarivaFriendlyError?.(error, 'Unable to load accounts. Refresh and try again.') || 'Unable to load accounts. Refresh and try again.', 'error');
       setRoleStatus('Owner permissions could not be confirmed.', 'error');
     } finally {
       if (refresh) refresh.disabled = false;
@@ -169,7 +169,7 @@
       await loadAccounts();
     } catch (error) {
       console.error('Clariva owner role update error:', error);
-      setRoleStatus(error.message || 'The role could not be updated.', 'error');
+      setRoleStatus(window.clarivaFriendlyError?.(error, 'The role could not be updated. Try again.') || 'The role could not be updated. Try again.', 'error');
     } finally {
       busy = false;
       if (button) button.disabled = false;
@@ -195,7 +195,7 @@
       await loadAccounts();
     } catch (error) {
       console.error('Clariva owner account status error:', error);
-      setRoleStatus(error.message || 'The account verification status could not be updated.', 'error');
+      setRoleStatus(window.clarivaFriendlyError?.(error, 'The account status could not be updated. Try again.') || 'The account status could not be updated. Try again.', 'error');
     } finally {
       busy = false;
       if (button) button.disabled = false;
@@ -230,7 +230,7 @@
       setRoleStatus('Account permanently removed.', 'success');
     } catch (error) {
       console.error('Clariva owner account removal error:', error);
-      setRoleStatus(error.message || 'The account could not be removed.', 'error');
+      setRoleStatus(window.clarivaFriendlyError?.(error, 'The account could not be removed. Try again.') || 'The account could not be removed. Try again.', 'error');
     } finally {
       busy = false;
       if (button) button.disabled = false;
@@ -286,7 +286,7 @@
     } catch (error) {
       console.error('Clariva owner activity overview error:', error);
       if (status) {
-        status.textContent = error.message || 'Unable to load platform activity.';
+        status.textContent = window.clarivaFriendlyError?.(error, 'Unable to load platform activity. Try again.') || 'Unable to load platform activity. Try again.';
         status.dataset.state = 'error';
       }
     } finally {

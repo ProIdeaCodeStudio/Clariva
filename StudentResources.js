@@ -473,7 +473,7 @@
     } catch (error) {
       console.error('Clariva resource opening error:', error);
       setLibraryStatus(
-        error.message || 'Unable to open this resource. Please try again.',
+        window.clarivaFriendlyError?.(error, 'Unable to open this resource. Try again.') || 'Unable to open this resource. Try again.',
         'error'
       );
     } finally {
@@ -595,7 +595,7 @@
     } catch (error) {
       console.error('Clariva Resource Library loading error:', error);
       setLibraryStatus(
-        error.message || 'Unable to load resources. Please refresh the page.',
+        window.clarivaFriendlyError?.(error, 'Unable to load resources. Refresh and try again.') || 'Unable to load resources. Refresh and try again.',
         'error'
       );
     }

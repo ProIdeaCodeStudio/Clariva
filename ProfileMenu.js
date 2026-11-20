@@ -14,6 +14,7 @@
   const page = window.location.pathname.split('/').pop();
   const isAdminPage = page === 'AdminDashboard.html';
   const isOwnerPage = page === 'OwnerDashboard.html';
+  const isStudentPage = page === 'Undergraduates.html';
 
   function setStatus(message, state = 'info') {
     const status = byId('clariva-profile-status');
@@ -58,13 +59,12 @@
       .single();
 
     if (error || !profile) {
-      setStatus('Unable to load account details. Refresh to try again.', 'error');
-      return;
+      setStatus(window.clarivaFriendlyError?.(error, 'Unable to load account details. Refresh and try again.') || 'Unable to load account details. Refresh and try again.', 'error');
     }
 
-    const role = String(profile.Role || '').toLowerCase();
+    const role = String(profile?.Role || '').toLowerCase();
     const isPrivileged = ['admin', 'owner'].includes(role);
-    const name = profile.Name || 'Clariva member';
+    const name = profile?.Name || 'Clariva member';
 
     const nameNode = byId('clariva-profile-name');
     const emailNode = byId('clariva-profile-email');
@@ -73,16 +73,16 @@
     if (nameNode) nameNode.textContent = name;
     if (emailNode) emailNode.textContent = user.email || 'Email unavailable';
     if (roleNode) roleNode.textContent = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Member';
-    if (levelNode) levelNode.textContent = profile.Level ? 'Level ' + profile.Level : '—';
+    if (levelNode) levelNode.textContent = profile?.Level ? 'Level ' + profile.Level : '—';
 
     const studentLink = byId('clariva-student-dashboard-link');
     const adminLink = byId('clariva-admin-dashboard-link');
     const ownerLink = byId('clariva-owner-dashboard-link');
-    if (studentLink) studentLink.hidden = !(isAdminPage || isOwnerPage) || !isPrivileged;
-    if (adminLink) adminLink.hidden = isAdminPage || !isPrivileged;
-    if (ownerLink) ownerLink.hidden = isOwnerPage || role !== 'owner';
+    if (studentLink) studentLink.hidden = !isPrivileged || isStudentPage;
+    if (adminLink) adminLink.hidden = !isPrivileged || isAdminPage;
+    if (ownerLink) ownerLink.hidden = role !== 'owner' || isOwnerPage;
 
-    setAvatar(profile.avatar_choice);
+    setAvatar(profile?.avatar_choice);
 
     byId('clariva-menu-toggle')?.addEventListener('click', () => {
       const nav = byId('clariva-nav-menu');
@@ -113,7 +113,7 @@
         button.disabled = false;
         if (updateError) {
           console.error('Avatar preference update failed:', updateError);
-          setStatus('Could not save this avatar. Please try again.', 'error');
+          setStatus(window.clarivaFriendlyError?.(updateError, 'Could not save this avatar. Try again.') || 'Could not save this avatar. Try again.', 'error');
           return;
         }
         setAvatar(choice);
@@ -129,7 +129,7 @@
       if (signOutError) {
         button.disabled = false;
         button.textContent = 'Sign out';
-        setStatus('Sign-out failed. Please try again.', 'error');
+        setStatus(window.clarivaFriendlyError?.(signOutError, 'Sign-out failed. Try again.') || 'Sign-out failed. Try again.', 'error');
         return;
       }
       window.location.replace('index.html#step-1');

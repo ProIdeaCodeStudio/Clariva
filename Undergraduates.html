@@ -372,7 +372,11 @@
         </div>
         <div class="clariva-header-actions">
           <button id="clariva-menu-toggle" class="clariva-header-control" type="button" aria-label="Open dashboard navigation" aria-controls="clariva-nav-menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
-          <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden><a href="#" data-open-semester="1">First semester resources</a><a href="#" data-open-semester="2">Second semester resources</a><a href="#footer">About Clariva</a></nav>
+          <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden>
+            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
+            <a id="clariva-owner-dashboard-link" href="OwnerDashboard.html" hidden>Open Owner Dashboard</a>
+            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+          </nav>
           <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger" type="button" aria-label="Open account menu" aria-controls="clariva-profile-menu" aria-expanded="false"><span id="clariva-current-avatar" class="clariva-avatar" data-avatar="avatar-1" aria-hidden="true">🎓</span><span class="clariva-profile-trigger-label">Account</span></button>
           <section id="clariva-profile-menu" class="clariva-menu-panel" aria-label="Account menu" hidden>
             <h2 class="clariva-menu-heading" id="clariva-profile-name">Your account</h2><p class="clariva-account-meta" id="clariva-profile-email"></p>
@@ -385,10 +389,8 @@
               <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-4" data-avatar="avatar-4" aria-label="Science avatar" aria-pressed="false">⚛️</button>
               <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-5" data-avatar="avatar-5" aria-label="Nature avatar" aria-pressed="false">🌿</button>
             </div>
-            <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p><div class="clariva-menu-divider"></div>
-            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
-            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
-            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+            <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p>
+            
           </section>
         </div>
       </div>
