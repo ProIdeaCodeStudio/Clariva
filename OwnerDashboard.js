@@ -226,11 +226,13 @@
     byId('owner-refresh-accounts')?.addEventListener('click', loadAccounts);
     byId('owner-refresh-activity')?.addEventListener('click', loadActivity);
     byId('owner-account-search')?.addEventListener('input', renderAccounts);
-    // Start data loading as soon as the parsed page is ready. The RPCs enforce
-    // owner authorization independently of the page-level route guard.
+    // Load owner-only data only after the shared route guard confirms access.
     const loadOwnerDashboardData = () => { void loadAccounts(); void loadActivity(); };
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadOwnerDashboardData, { once: true });
+    const ready = window.clarivaPageReady;
+    if (ready && typeof ready.then === 'function') {
+      ready.then(loadOwnerDashboardData).catch(error => {
+        console.error('Owner dashboard initialization was blocked:', error);
+      });
     } else {
       loadOwnerDashboardData();
     }
