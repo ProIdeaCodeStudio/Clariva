@@ -58,7 +58,7 @@
     if (!filtered.length) {
       const row = document.createElement('tr');
       const cell = makeCell(query ? 'No matching accounts.' : 'No accounts were returned.');
-      cell.colSpan = 8;
+      cell.colSpan = 7;
       row.appendChild(cell);
       body.appendChild(row);
       return;
@@ -294,8 +294,39 @@
     }
   }
 
+  function initializeOwnerSectionNavigation() {
+    const main = byId('owner-dashboard');
+    const nav = byId('clariva-nav-menu');
+    if (!main || !nav) return;
+
+    const sections = Array.from(main.querySelectorAll(':scope > .admin-panel[id]'));
+    const showSection = id => {
+      const target = sections.find(section => section.id === id) || byId('owner-overview');
+      if (!target) return;
+      sections.forEach(section => { section.hidden = section !== target; });
+      if (window.location.hash !== '#' + target.id) {
+        history.replaceState(null, '', window.location.pathname + window.location.search + '#' + target.id);
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    nav.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        const id = link.getAttribute('href').slice(1);
+        showSection(id);
+        nav.hidden = true;
+        byId('clariva-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // The owner always lands on the metrics overview, never on a management panel.
+    showSection('owner-overview');
+  }
+
   function initialize() {
     if (!byId('owner-dashboard')) return;
+    initializeOwnerSectionNavigation();
     byId('owner-refresh-accounts')?.addEventListener('click', loadAccounts);
     byId('owner-refresh-activity')?.addEventListener('click', loadActivity);
     byId('owner-account-search')?.addEventListener('input', renderAccounts);
