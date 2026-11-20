@@ -663,7 +663,7 @@ if (error) error.classList.remove('visible');
   const { data: { user } } = await supabaseClient.auth.getUser();
   const { data: studentData, error: queryError } = await supabaseClient
     .from('students')
-    .select('Verified, password_reset_required')
+    .select('Verified, Role, password_reset_required')
     .eq('user_id', user.id)
     .single();
 
@@ -684,7 +684,14 @@ if (error) error.classList.remove('visible');
 
   if (studentData.Verified === true) {
     if (buttonLoading) buttonLoading.restore();
-window.location.href = 'Undergraduates.html';
+    const role = String(studentData.Role || '').toLowerCase();
+    if (role === 'owner') {
+      window.location.replace('OwnerDashboard.html');
+    } else if (role === 'admin') {
+      window.location.replace('AdminDashboard.html');
+    } else {
+      window.location.replace('Undergraduates.html');
+    }
   } else {
     if (buttonLoading) buttonLoading.restore();
     showStep('step-2');
