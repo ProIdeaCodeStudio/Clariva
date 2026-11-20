@@ -23,6 +23,24 @@ function initializeSupabaseClient() {
 
   return supabaseClient;
 }
+function clarivaFriendlyError(error, fallback = 'This action could not be completed. Try again.') {
+  const message = String(error?.message || error || '');
+  const networkFailure = navigator.onLine === false ||
+    error?.name === 'TypeError' ||
+    /failed to fetch|network request failed|network error|connection (was )?lost|timed? ?out|load failed/i.test(message);
+  if (networkFailure) return 'Check your network connection and try again.';
+  if (Number(error?.status || error?.statusCode) === 429) return 'Service is busy. Try again shortly.';
+  return fallback;
+}
+window.clarivaFriendlyError = clarivaFriendlyError;
+
+function isMissingAccountAuthError(error) {
+  const code = String(error?.code || '').toLowerCase();
+  const message = String(error?.message || '').toLowerCase();
+  return ['user_not_found', 'user-not-found', 'email_not_found'].includes(code) ||
+    /user not found|no user found|email address not found/.test(message);
+}
+
 const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/JhEBwDkfKWgB46dZ3y3ZnK?mode=gi_t';
 let gateTriggerElement = null; // stores the element that opened the gate for focus restoration
 
@@ -548,7 +566,7 @@ async function handleFormSubmit(e) {
 
     } else {
 
-      errorEl.textContent = "✗ " + signUpError.message;
+      errorEl.textContent = clarivaFriendlyError(signUpError, 'Account creation failed. Check your details and try again.');
       errorEl.classList.add("visible");
 
     }
@@ -590,7 +608,7 @@ async function handleFormSubmit(e) {
 
   if (errorEl) {
     errorEl.textContent =
-      '✗ An unexpected error occurred. Please try again.';
+      clarivaFriendlyError(error, 'Account creation failed. Please try again.');
     errorEl.classList.add('visible');
   }
 }
@@ -642,20 +660,26 @@ if (error) error.classList.remove('visible');
   });
 
   if (signInError) {
-
-    let message = "Unable to sign in. Please check your email and password.";
-
-    if (signInError.message.toLowerCase().includes("email not confirmed")) {
-      message = "Please verify your email before signing in.";
+    if (isMissingAccountAuthError(signInError)) {
+      if (buttonLoading) buttonLoading.restore();
+      showStep('step-1');
+      const registrationMessage = document.getElementById('form-error');
+      if (registrationMessage) {
+        registrationMessage.textContent = 'No account found. Create an account to continue.';
+        registrationMessage.classList.add('visible');
+      }
+      return;
     }
+
+    const message = /email not confirmed/i.test(signInError.message || '')
+      ? 'Verify your email before signing in.'
+      : clarivaFriendlyError(signInError, 'Email or password is incorrect. If you do not have an account, create one.');
 
     if (error) {
       error.textContent = message;
-      error.classList.add("visible");
+      error.classList.add('visible');
     }
-
     if (buttonLoading) buttonLoading.restore();
-
     return;
   }
 
@@ -667,12 +691,24 @@ if (error) error.classList.remove('visible');
     .eq('user_id', user.id)
     .single();
 
-  if (queryError || !studentData) {
+  if (queryError && queryError.code !== 'PGRST116') {
     if (error) {
-      error.textContent = '✗ Profile not found. Please create an account.';
+      error.textContent = clarivaFriendlyError(queryError, 'We could not verify your account. Try again.');
       error.classList.add('visible');
     }
     if (buttonLoading) buttonLoading.restore();
+    return;
+  }
+
+  if (!studentData) {
+    await supabaseClient.auth.signOut();
+    if (buttonLoading) buttonLoading.restore();
+    showStep('step-1');
+    const registrationMessage = document.getElementById('form-error');
+    if (registrationMessage) {
+      registrationMessage.textContent = 'No active account was found. Create an account to continue.';
+      registrationMessage.classList.add('visible');
+    }
     return;
   }
 
@@ -703,7 +739,7 @@ if (error) error.classList.remove('visible');
 
   if (error) {
     error.textContent =
-      'An unexpected error occurred. Please try again.';
+      clarivaFriendlyError(exception, 'Unable to sign in. Please try again.');
     error.classList.add('visible');
   }
 }
