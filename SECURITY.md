@@ -1,22 +1,11 @@
-# Security Policy
+# Clariva — Security Contact
 
-## Supported deployment
+If you believe you have discovered a security concern involving Clariva, do not publish technical details or sensitive evidence in a public issue or discussion.
 
-Security reports are welcome for the currently deployed Clariva application.
+Contact the project owner directly:
 
-## Reporting a vulnerability
+**Email:** [proidea2025@gmail.com](mailto:proidea2025@gmail.com)
 
-Please email **Proidea2025@gmail.com** with:
-- A concise description of the issue.
-- The affected page or feature.
-- Steps to reproduce the issue, where safe to do so.
-- Any relevant screenshots or non-sensitive evidence.
+Please do not include passwords, access tokens, private keys, or unnecessary personal information in your message.
 
-Please do not include passwords, access tokens, private keys, student records, or other personal information in a report. Do not publicly disclose an unpatched vulnerability.
-
-## Security expectations
-
-- Never commit secret keys, service-role keys, passwords, or private tokens.
-- Keep Supabase Row Level Security and Storage policies enabled and restrictive.
-- Treat all browser-visible configuration as public.
-- Validate authorisation on the backend; hiding a UI control is not an access-control boundary.
+Security investigations and any privileged changes are handled by the project owner or a developer explicitly authorised by the owner.
