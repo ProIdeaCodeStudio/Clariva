@@ -14,6 +14,7 @@
   const page = window.location.pathname.split('/').pop();
   const isAdminPage = page === 'AdminDashboard.html';
   const isOwnerPage = page === 'OwnerDashboard.html';
+  const isStudentPage = page === 'Undergraduates.html';
 
   function setStatus(message, state = 'info') {
     const status = byId('clariva-profile-status');
@@ -78,9 +79,9 @@
     const studentLink = byId('clariva-student-dashboard-link');
     const adminLink = byId('clariva-admin-dashboard-link');
     const ownerLink = byId('clariva-owner-dashboard-link');
-    if (studentLink) studentLink.hidden = !(isAdminPage || isOwnerPage) || !isPrivileged;
-    if (adminLink) adminLink.hidden = isAdminPage || !isPrivileged;
-    if (ownerLink) ownerLink.hidden = isOwnerPage || role !== 'owner';
+    if (studentLink) studentLink.hidden = !isPrivileged || isStudentPage;
+    if (adminLink) adminLink.hidden = !isPrivileged || isAdminPage;
+    if (ownerLink) ownerLink.hidden = role !== 'owner' || isOwnerPage;
 
     setAvatar(profile.avatar_choice);
 
