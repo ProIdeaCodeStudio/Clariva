@@ -322,6 +322,7 @@ if (emailConfirmationLoginBtn) {
 
   // Show the default gate step
   showStep('step-1');
+}
 
 // Run the shared guard as soon as this deferred script executes. It is
 // deliberately not tied to DOMContentLoaded: unrelated third-party deferred
