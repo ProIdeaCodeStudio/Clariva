@@ -70,7 +70,7 @@
       row.appendChild(makeCell(account.email));
       row.appendChild(makeCell(String(account.role || 'student').toUpperCase()));
       row.appendChild(makeCell(account.level));
-      row.appendChild(makeCell(account.verified ? 'Active' : 'Suspended'));
+      row.appendChild(makeCell(account.verified ? 'Verified' : 'Pending'));
       const created = account.created_at ? new Date(account.created_at) : null;
       row.appendChild(makeCell(created && !Number.isNaN(created.getTime())
         ? created.toLocaleDateString() : '—'));
@@ -100,7 +100,7 @@
         const statusButton = document.createElement('button');
         statusButton.type = 'button';
         statusButton.className = 'admin-button admin-button-secondary owner-role-save';
-        statusButton.textContent = account.verified ? 'Suspend' : 'Activate';
+        statusButton.textContent = account.verified ? 'Revoke verification' : 'Verify account';
         statusButton.addEventListener('click', () => changeAccountStatus(account, !account.verified, statusButton));
 
         const removeButton = document.createElement('button');
@@ -180,7 +180,7 @@
   async function changeAccountStatus(account, verified, button) {
     if (busy) return;
     const label = account.full_name || account.email || 'this account';
-    const action = verified ? 'activate' : 'suspend';
+    const action = verified ? 'verify' : 'revoke verification for';
     if (!window.confirm('Are you sure you want to ' + action + ' ' + label + '?')) return;
     busy = true;
     if (button) button.disabled = true;
@@ -191,11 +191,11 @@
         requested_verified: verified
       });
       if (error) throw error;
-      setRoleStatus('Account status updated.', 'success');
+      setRoleStatus('Account verification status updated.', 'success');
       await loadAccounts();
     } catch (error) {
       console.error('Clariva owner account status error:', error);
-      setRoleStatus(error.message || 'The account status could not be updated.', 'error');
+      setRoleStatus(error.message || 'The account verification status could not be updated.', 'error');
     } finally {
       busy = false;
       if (button) button.disabled = false;
