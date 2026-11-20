@@ -1871,11 +1871,14 @@
     }
   }
 
-  // Wire the dashboard as soon as the DOM is ready; do not wait for images or
-  // unrelated external resources to finish loading before controls become usable.
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAdminDashboard, { once: true });
+  // Do not initialize dashboard data until the shared authentication guard
+  // has completed. Optional third-party libraries load independently.
+  const ready = window.clarivaPageReady;
+  if (ready && typeof ready.then === 'function') {
+    ready.then(() => initializeAdminDashboard()).catch(error => {
+      console.error('Admin dashboard initialization was blocked:', error);
+    });
   } else {
-    initializeAdminDashboard();
+    void initializeAdminDashboard();
   }
 })();

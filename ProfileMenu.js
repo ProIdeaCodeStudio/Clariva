@@ -148,4 +148,15 @@
   }
 
   window.initializeClarivaProfileMenu = initialize;
+
+  // ProfileMenu.js is deferred after script.js. Wait for the shared auth guard
+  // to finish, then initialize this menu independently of DOMContentLoaded.
+  const ready = window.clarivaPageReady;
+  if (ready && typeof ready.then === 'function') {
+    ready.then(() => initialize()).catch(error => {
+      console.error('Clariva profile menu initialization failed:', error);
+    });
+  } else {
+    void initialize();
+  }
 })();

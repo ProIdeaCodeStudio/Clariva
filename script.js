@@ -253,12 +253,6 @@ if (emailConfirmationLoginBtn) {
     }
   }
 
-  // Initialize the shared account menu on both protected dashboards.
-  if ((isUndergraduatesPage || isAdminDashboard || isOwnerDashboard) &&
-      typeof window.initializeClarivaProfileMenu === 'function') {
-    window.initializeClarivaProfileMenu();
-  }
-
   // Initialize EmailJS only if it's loaded and you left the public key defined
   if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
     try {
@@ -329,26 +323,48 @@ if (emailConfirmationLoginBtn) {
   // Show the default gate step
   showStep('step-1');
 
-// Authentication checks and page initialization are complete.
-const pageLoader = document.getElementById('clariva-page-loader');
-
-if (pageLoader) {
-  const minimumDisplayTime = 5000;
-  const elapsedTime = performance.now();
-  const remainingTime = Math.max(0, minimumDisplayTime - elapsedTime);
-
-  window.setTimeout(() => {
-    pageLoader.classList.add('is-hidden');
-
-    window.setTimeout(() => {
-      pageLoader.remove();
-    }, 500);
-  }, remainingTime);
+// Run the shared guard as soon as this deferred script executes. It is
+// deliberately not tied to DOMContentLoaded: unrelated third-party deferred
+// scripts must not be able to hold the entire site behind the page loader.
+function hideClarivaPageLoader() {
+  const loader = document.getElementById('clariva-page-loader');
+  if (!loader) return;
+  loader.classList.add('is-hidden');
+  window.setTimeout(() => loader.remove(), 500);
 }
 
-// script.js is loaded with defer on every page. DOMContentLoaded runs after
-// all deferred scripts, so shared dashboard integrations are available first.
-document.addEventListener('DOMContentLoaded', initializeClarivaPage, { once: true });
+const protectedClarivaPage = ['Undergraduates.html', 'AdminDashboard.html', 'OwnerDashboard.html']
+  .includes(window.location.pathname.split('/').pop());
+
+window.clarivaPageReady = initializeClarivaPage();
+
+let clarivaInitializationSettled = false;
+const clarivaInitializationTimeout = window.setTimeout(() => {
+  if (clarivaInitializationSettled) return;
+  console.error('Clariva initialization exceeded 15 seconds.');
+  if (protectedClarivaPage) {
+    window.location.replace('index.html#step-1');
+  } else {
+    hideClarivaPageLoader();
+  }
+}, 15000);
+
+window.clarivaPageReady
+  .then(() => {
+    clarivaInitializationSettled = true;
+    window.clearTimeout(clarivaInitializationTimeout);
+    hideClarivaPageLoader();
+  })
+  .catch(error => {
+    clarivaInitializationSettled = true;
+    window.clearTimeout(clarivaInitializationTimeout);
+    console.error('Clariva page initialization failed:', error);
+    if (protectedClarivaPage) {
+      window.location.replace('index.html#step-1');
+    } else {
+      hideClarivaPageLoader();
+    }
+  });
 
 function showGate() {
   const gate = document.getElementById('gate-overlay');
