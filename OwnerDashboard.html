@@ -763,12 +763,8 @@
         <div class="admin-stat"><span class="admin-stat-label">Views · last 30 days</span><span class="admin-stat-value" id="owner-views-30d">—</span></div>
         <div class="admin-stat"><span class="admin-stat-label">Unique viewers · last 7 days</span><span class="admin-stat-value" id="owner-unique-viewers-7d">—</span></div>
       </div>
-    </section>
-
-    <section class="admin-panel" id="resource-management" hidden>
-      <p class="admin-section-kicker">Learning materials</p>
-      <h2>Resource Management</h2>
-      <p class="admin-panel-intro">Manage the student learning library.</p>
+    
+      <h3 class="admin-overview-subtitle">Resource library</h3>
       <div class="admin-stat-grid" aria-label="Resource summary">
         <div class="admin-stat">
           <span class="admin-stat-label">Total resources</span>
@@ -783,6 +779,30 @@
           <span class="admin-stat-value" id="resource-download-total">—</span>
         </div>
       </div>
+      <h3 class="admin-overview-subtitle">Users</h3>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
+        <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="admin-verified-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Pending verification</span><span class="admin-stat-value" id="admin-pending-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">New accounts · 7 days</span><span class="admin-stat-value" id="admin-new-users">—</span></div>
+      </div>
+      <h3 class="admin-overview-subtitle">Platform</h3>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
+        <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Featured resources</span><span class="admin-stat-value" id="admin-featured-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Resource views</span><span class="admin-stat-value" id="admin-total-views">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Recorded downloads</span><span class="admin-stat-value" id="admin-total-downloads">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Added · 7 days</span><span class="admin-stat-value" id="admin-new-resources">—</span></div>
+      </div>
+</section>
+
+    <section class="admin-panel" id="resource-management" hidden>
+      <p class="admin-section-kicker">Learning materials</p>
+      <h2>Resource Management</h2>
+      <p class="admin-panel-intro">Manage the student learning library.</p>
+      
     </section>
 
     <section class="admin-panel" id="upload-resource" hidden>
@@ -996,13 +1016,7 @@
       <p class="admin-section-kicker">Accounts</p>
       <h2 id="user-overview-title">User Overview</h2>
       <p class="admin-panel-intro">Account totals and role distribution. Contact details are kept private.</p>
-      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
-        <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="admin-verified-users">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Pending verification</span><span class="admin-stat-value" id="admin-pending-users">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">New accounts · 7 days</span><span class="admin-stat-value" id="admin-new-users">—</span></div>
-      </div>
+      
       <div class="admin-overview-columns">
         <div>
           <h3 class="admin-overview-subtitle">Accounts by role</h3>
@@ -1019,14 +1033,7 @@
       <p class="admin-section-kicker">Platform activity</p>
       <h2 id="platform-overview-title">Platform Overview</h2>
       <p class="admin-panel-intro">Library totals and recent activity.</p>
-      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
-        <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Featured resources</span><span class="admin-stat-value" id="admin-featured-resources">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Resource views</span><span class="admin-stat-value" id="admin-total-views">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Recorded downloads</span><span class="admin-stat-value" id="admin-total-downloads">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Added · 7 days</span><span class="admin-stat-value" id="admin-new-resources">—</span></div>
-      </div>
+      
       <div class="admin-overview-columns">
         <div>
           <h3 class="admin-overview-subtitle">Resources by type</h3>
