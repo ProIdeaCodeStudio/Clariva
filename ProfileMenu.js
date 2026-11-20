@@ -60,12 +60,11 @@
 
     if (error || !profile) {
       setStatus(window.clarivaFriendlyError?.(error, 'Unable to load account details. Refresh and try again.') || 'Unable to load account details. Refresh and try again.', 'error');
-      return;
     }
 
-    const role = String(profile.Role || '').toLowerCase();
+    const role = String(profile?.Role || '').toLowerCase();
     const isPrivileged = ['admin', 'owner'].includes(role);
-    const name = profile.Name || 'Clariva member';
+    const name = profile?.Name || 'Clariva member';
 
     const nameNode = byId('clariva-profile-name');
     const emailNode = byId('clariva-profile-email');
@@ -74,7 +73,7 @@
     if (nameNode) nameNode.textContent = name;
     if (emailNode) emailNode.textContent = user.email || 'Email unavailable';
     if (roleNode) roleNode.textContent = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Member';
-    if (levelNode) levelNode.textContent = profile.Level ? 'Level ' + profile.Level : '—';
+    if (levelNode) levelNode.textContent = profile?.Level ? 'Level ' + profile.Level : '—';
 
     const studentLink = byId('clariva-student-dashboard-link');
     const adminLink = byId('clariva-admin-dashboard-link');
@@ -83,7 +82,7 @@
     if (adminLink) adminLink.hidden = !isPrivileged || isAdminPage;
     if (ownerLink) ownerLink.hidden = role !== 'owner' || isOwnerPage;
 
-    setAvatar(profile.avatar_choice);
+    setAvatar(profile?.avatar_choice);
 
     byId('clariva-menu-toggle')?.addEventListener('click', () => {
       const nav = byId('clariva-nav-menu');
