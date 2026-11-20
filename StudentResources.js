@@ -144,14 +144,19 @@
     });
   }
 
+  let activeSemester = null;
+  let lastSemesterTrigger = null;
+
   function getFilteredResources() {
     const search = (getElement('resource-search')?.value || '').trim().toLowerCase();
     const type = getElement('resource-type-filter')?.value || '';
 
     return resources.filter(resource => {
+      const matchesSemester = activeSemester !== null &&
+        Number(resource.semester) === Number(activeSemester);
       const matchesSearch = !search || getResourceSearchText(resource).includes(search);
       const matchesType = !type || resource.resource_type === type;
-      return matchesSearch && matchesType;
+      return matchesSemester && matchesSearch && matchesType;
     });
   }
 
@@ -180,22 +185,113 @@
   }
 
   function renderResources() {
+    if (activeSemester === null) return;
+
     const filtered = getFilteredResources();
     const featured = filtered.filter(resource => resource.featured === true);
+    const semesterLabel = Number(activeSemester) === 1 ? 'First Semester' : 'Second Semester';
+    const semesterTotal = resources.filter(resource =>
+      Number(resource.semester) === Number(activeSemester)
+    ).length;
+
+    const count = getElement('semester-overlay-count');
+    if (count) {
+      count.textContent = semesterTotal + ' resource' + (semesterTotal === 1 ? '' : 's') + ' available';
+    }
 
     renderFeaturedResourceLinks(
       getElement('featured-resources'),
       featured,
-      'There are no featured resources available at the moment.'
+      'There are no featured resources for this semester at the moment.'
     );
 
     renderResourceCards(
       getElement('all-resources'),
       filtered,
-      resources.length
+      semesterTotal
         ? 'No resources match your search or selected filter.'
-        : 'No resources have been published for your level yet.'
+        : 'No resources have been published for ' + semesterLabel + ' yet.'
     );
+  }
+
+  function updateSemesterCounts() {
+    [1, 2].forEach(semester => {
+      const count = resources.filter(resource =>
+        Number(resource.semester) === semester
+      ).length;
+      const node = getElement('semester-count-' + semester);
+      if (node) {
+        node.textContent = count + ' resource' + (count === 1 ? '' : 's') + ' available';
+      }
+    });
+  }
+
+  function openSemester(semester, trigger = null) {
+    const safeSemester = Number(semester);
+    if (![1, 2].includes(safeSemester)) return;
+
+    activeSemester = safeSemester;
+    lastSemesterTrigger = trigger || lastSemesterTrigger;
+    const overlay = getElement('semester-resource-overlay');
+    const title = getElement('semester-overlay-title');
+    const label = safeSemester === 1 ? 'First Semester' : 'Second Semester';
+
+    if (title) title.textContent = label;
+    const search = getElement('resource-search');
+    const typeFilter = getElement('resource-type-filter');
+    if (search) search.value = '';
+    if (typeFilter) typeFilter.value = '';
+
+    overlay.hidden = false;
+    document.body.classList.add('semester-overlay-open');
+    syncSemesterOverlayOffset();
+    renderResources();
+    getElement('semester-overlay-back')?.focus();
+  }
+
+  function closeSemesterOverlay() {
+    const overlay = getElement('semester-resource-overlay');
+    if (!overlay || overlay.hidden) return;
+
+    overlay.hidden = true;
+    activeSemester = null;
+    document.body.classList.remove('semester-overlay-open');
+    lastSemesterTrigger?.focus();
+  }
+
+  function syncSemesterOverlayOffset() {
+    const header = getElement('header');
+    if (!header) return;
+    const height = Math.ceil(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty(
+      '--clariva-library-header-height',
+      height + 'px'
+    );
+  }
+
+  function initializeSemesterNavigation() {
+    document.querySelectorAll('[data-semester-choice]').forEach(button => {
+      button.addEventListener('click', () => {
+        openSemester(button.dataset.semesterChoice, button);
+      });
+    });
+
+    document.querySelectorAll('[data-open-semester]').forEach(link => {
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        openSemester(link.dataset.openSemester);
+      });
+    });
+
+    getElement('semester-overlay-back')?.addEventListener('click', closeSemesterOverlay);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !getElement('semester-resource-overlay')?.hidden) {
+        closeSemesterOverlay();
+      }
+    });
+
+    window.addEventListener('resize', syncSemesterOverlayOffset);
+    syncSemesterOverlayOffset();
   }
 
   function populateResourceTypeFilter() {
@@ -485,7 +581,7 @@
 
       resources = data || [];
       populateResourceTypeFilter();
-      renderResources();
+      updateSemesterCounts();
 
       setLibraryStatus(
         isPrivileged
@@ -511,6 +607,7 @@
 
     search?.addEventListener('input', renderResources);
     filter?.addEventListener('change', renderResources);
+    initializeSemesterNavigation();
     initializePdfReaderControls();
 
     loadResources();
