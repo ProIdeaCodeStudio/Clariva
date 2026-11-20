@@ -226,8 +226,14 @@
     byId('owner-refresh-accounts')?.addEventListener('click', loadAccounts);
     byId('owner-refresh-activity')?.addEventListener('click', loadActivity);
     byId('owner-account-search')?.addEventListener('input', renderAccounts);
-    // Run after deferred auth and dashboard scripts have initialized.
-    window.addEventListener('load', () => { void loadAccounts(); void loadActivity(); }, { once: true });
+    // Start data loading as soon as the parsed page is ready. The RPCs enforce
+    // owner authorization independently of the page-level route guard.
+    const loadOwnerDashboardData = () => { void loadAccounts(); void loadActivity(); };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadOwnerDashboardData, { once: true });
+    } else {
+      loadOwnerDashboardData();
+    }
   }
 
   initialize();
