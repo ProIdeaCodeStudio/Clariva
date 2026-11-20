@@ -1624,7 +1624,14 @@
     if (uploadQueueBusy) return;
 
     const form = getElement('resource-upload-form');
-    if (!form || !form.reportValidity()) return;
+    if (!form) {
+      setStatus('The upload form is unavailable. Refresh the dashboard and try again.', 'error');
+      return;
+    }
+    if (!form.reportValidity()) {
+      setStatus('Please complete the highlighted required fields before uploading.', 'error');
+      return;
+    }
 
     const files = getSelectedFiles();
     if (!files.length) {
@@ -1766,6 +1773,18 @@
         }, 0);
       });
       form.dataset.uploadHandlerAttached = 'true';
+    }
+
+    // Handle an explicit tap before the browser's native submit sequence.
+    // uploadResource performs the same form validation itself, then reports
+    // any validation or upload errors in the dashboard status region.
+    const uploadButton = getElement('resource-upload-button');
+    if (uploadButton && uploadButton.dataset.clickHandlerAttached !== 'true') {
+      uploadButton.addEventListener('click', event => {
+        event.preventDefault();
+        void uploadResource(event);
+      });
+      uploadButton.dataset.clickHandlerAttached = 'true';
     }
     const fileInput = getElement('resource-file');
     if (fileInput && fileInput.dataset.selectionHandlerAttached !== 'true') {
