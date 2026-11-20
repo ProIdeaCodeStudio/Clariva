@@ -69,6 +69,22 @@ begin
     raise exception 'Owner accounts cannot be removed through this operation' using errcode = '42501';
   end if;
 
+  -- Supabase Storage objects are not automatically deleted with Auth users.
+  -- Refuse removal while files remain so the owner can transfer or clean them up safely.
+  if exists (
+    select 1 from storage.objects o
+    where o.owner_id = target_user_id::text or o.owner = target_user_id
+  ) then
+    raise exception 'This account owns stored files. Transfer or remove those files before deleting the account.'
+      using errcode = '23503';
+  end if;
+
+  -- SCIM-managed identities require deliberate deprovisioning at the identity provider.
+  if exists (select 1 from auth.scim_users su where su.user_id = target_user_id) then
+    raise exception 'This account is linked to SCIM. Deprovision it through the identity provider first.'
+      using errcode = '23503';
+  end if;
+
   -- Remove the profile first, then the Auth identity. Any dependent-row
   -- constraint failure aborts the whole transaction rather than leaving a partial removal.
   delete from public.students where user_id = target_user_id;
