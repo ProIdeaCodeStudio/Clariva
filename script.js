@@ -1110,8 +1110,20 @@ async function initializeResetPasswordPage() {
         return;
       }
 
-      const recoveryClaimValid =
-        await hasVerifiedRecoveryClaim(session.user.id);
+      // Recovery validation controls access to the password form, not access
+      // to the mandatory email-link action. A transient claim/RPC validation
+      // failure must not hide the only way for a signed-in user to request
+      // the required recovery link.
+      let recoveryClaimValid = false;
+      try {
+        recoveryClaimValid =
+          await hasVerifiedRecoveryClaim(session.user.id);
+      } catch (recoveryValidationError) {
+        console.warn(
+          "Recovery session is not yet validated; keeping the mandatory reset-link option available.",
+          recoveryValidationError
+        );
+      }
 
       if (recoveryClaimValid) {
         saveRecoveryMarker(session.user.id);
