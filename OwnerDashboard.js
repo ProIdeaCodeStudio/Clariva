@@ -79,24 +79,36 @@
       const isOwner = String(account.role || '').toLowerCase() === 'owner';
       const isSelf = account.user_id === currentUserId;
       if (isOwner || isSelf) {
-        actionCell.textContent = isSelf ? 'Your account' : 'Protected owner';
+        actionCell.textContent = isSelf ? 'Your account — protected' : 'Owner account — protected';
       } else {
-        const select = document.createElement('select');
-        select.className = 'owner-role-select';
-        select.setAttribute('aria-label', 'Role for ' + (account.full_name || account.email || 'account'));
+        const roleSelect = document.createElement('select');
+        roleSelect.className = 'owner-role-select';
+        roleSelect.setAttribute('aria-label', 'Role for ' + (account.full_name || account.email || 'account'));
         [['student', 'Student'], ['admin', 'Administrator']].forEach(([value, label]) => {
           const option = document.createElement('option');
           option.value = value;
           option.textContent = label;
           option.selected = String(account.role || 'student').toLowerCase() === value;
-          select.appendChild(option);
+          roleSelect.appendChild(option);
         });
-        const save = document.createElement('button');
-        save.type = 'button';
-        save.className = 'admin-button admin-button-secondary owner-role-save';
-        save.textContent = 'Save';
-        save.addEventListener('click', () => changeRole(account, select.value, save));
-        actionCell.append(select, save);
+        const saveRole = document.createElement('button');
+        saveRole.type = 'button';
+        saveRole.className = 'admin-button admin-button-secondary owner-role-save';
+        saveRole.textContent = 'Save role';
+        saveRole.addEventListener('click', () => changeRole(account, roleSelect.value, saveRole));
+
+        const statusButton = document.createElement('button');
+        statusButton.type = 'button';
+        statusButton.className = 'admin-button admin-button-secondary owner-role-save';
+        statusButton.textContent = account.verified ? 'Revoke verification' : 'Verify account';
+        statusButton.addEventListener('click', () => changeAccountStatus(account, !account.verified, statusButton));
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'admin-button admin-button-danger owner-role-save';
+        removeButton.textContent = 'Remove user';
+        removeButton.addEventListener('click', () => removeAccount(account, removeButton));
+        actionCell.append(roleSelect, saveRole, statusButton, removeButton);
       }
       row.appendChild(actionCell);
       body.appendChild(row);
@@ -165,6 +177,67 @@
   }
 
 
+  async function changeAccountStatus(account, verified, button) {
+    if (busy) return;
+    const label = account.full_name || account.email || 'this account';
+    const action = verified ? 'verify' : 'revoke verification for';
+    if (!window.confirm('Are you sure you want to ' + action + ' ' + label + '?')) return;
+    busy = true;
+    if (button) button.disabled = true;
+    setRoleStatus('Updating account status…');
+    try {
+      const { error } = await supabaseClient.rpc('owner_set_account_status', {
+        target_user_id: account.user_id,
+        requested_verified: verified
+      });
+      if (error) throw error;
+      setRoleStatus('Account verification status updated.', 'success');
+      await loadAccounts();
+    } catch (error) {
+      console.error('Clariva owner account status error:', error);
+      setRoleStatus(error.message || 'The account verification status could not be updated.', 'error');
+    } finally {
+      busy = false;
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function removeAccount(account, button) {
+    if (busy) return;
+    const label = account.full_name || account.email || 'this account';
+    const email = String(account.email || '').trim();
+    if (!email) {
+      setRoleStatus('This account has no email address available for removal confirmation.', 'error');
+      return;
+    }
+    if (!window.confirm('Permanently remove ' + label + ' (' + email + ')? This deletes the account and cannot be undone.')) return;
+    const confirmation = window.prompt('To confirm, enter the account email address exactly:');
+    if (confirmation === null || confirmation.trim().toLowerCase() !== email.toLowerCase()) {
+      setRoleStatus('Removal cancelled: the email confirmation did not match.', 'error');
+      return;
+    }
+    busy = true;
+    if (button) button.disabled = true;
+    setRoleStatus('Removing account…');
+    try {
+      const { error } = await supabaseClient.rpc('owner_remove_account', {
+        target_user_id: account.user_id
+      });
+      if (error) throw error;
+      accounts = accounts.filter(item => item.user_id !== account.user_id);
+      updateMetrics();
+      renderAccounts();
+      setRoleStatus('Account permanently removed.', 'success');
+    } catch (error) {
+      console.error('Clariva owner account removal error:', error);
+      setRoleStatus(error.message || 'The account could not be removed.', 'error');
+    } finally {
+      busy = false;
+      if (button) button.disabled = false;
+    }
+  }
+
+
   async function loadActivity() {
     const refresh = byId('owner-refresh-activity');
     const status = byId('owner-activity-status');
@@ -221,8 +294,39 @@
     }
   }
 
+  function initializeOwnerSectionNavigation() {
+    const main = byId('owner-dashboard');
+    const nav = byId('clariva-nav-menu');
+    if (!main || !nav) return;
+
+    const sections = Array.from(main.querySelectorAll(':scope > .admin-panel[id]'));
+    const showSection = id => {
+      const target = sections.find(section => section.id === id) || byId('owner-overview');
+      if (!target) return;
+      sections.forEach(section => { section.hidden = section !== target; });
+      if (window.location.hash !== '#' + target.id) {
+        history.replaceState(null, '', window.location.pathname + window.location.search + '#' + target.id);
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    nav.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        const id = link.getAttribute('href').slice(1);
+        showSection(id);
+        nav.hidden = true;
+        byId('clariva-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // The owner always lands on the metrics overview, never on a management panel.
+    showSection('owner-overview');
+  }
+
   function initialize() {
     if (!byId('owner-dashboard')) return;
+    initializeOwnerSectionNavigation();
     byId('owner-refresh-accounts')?.addEventListener('click', loadAccounts);
     byId('owner-refresh-activity')?.addEventListener('click', loadActivity);
     byId('owner-account-search')?.addEventListener('input', renderAccounts);

@@ -698,12 +698,12 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </button>
           <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden>
-            <a href="#resource-management">Resource overview</a>
+            <a href="#owner-overview">Owner overview</a>
             <a href="#upload-resource">Upload resource</a>
             <a href="#manage-resources">Manage resources</a>
             <a href="#user-overview">User overview</a>
             <a href="#platform-overview">Platform overview</a>
-            <a href="#owner-controls">Owner controls</a>
+            <a href="#owner-controls">User management</a>
             <a href="#owner-activity">Owner activity</a>
           </nav>
           <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger"
@@ -744,10 +744,26 @@
       <p class="admin-description">Oversee the platform, manage administrators and monitor Clariva.</p>
     </section>
 
-    <section class="admin-panel" id="resource-management">
-      <p class="admin-section-kicker">Learning materials</p>
-      <h2>Resource Management</h2>
-      <p class="admin-panel-intro">Manage the student learning library.</p>
+    <section class="admin-panel" id="owner-overview">
+      <p class="admin-section-kicker">Platform at a glance</p>
+      <h2>Overview</h2>
+      <p class="admin-panel-intro">Key account and platform activity metrics. Use the dashboard menu to open management tools and other sections.</p>
+      <h3 class="admin-overview-subtitle">Accounts</h3>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Owner account summary">
+        <div class="admin-stat"><span class="admin-stat-label">Total accounts</span><span class="admin-stat-value" id="owner-total-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Students</span><span class="admin-stat-value" id="owner-student-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Administrators</span><span class="admin-stat-value" id="owner-admin-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Owners</span><span class="admin-stat-value" id="owner-owner-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="owner-verified-accounts">—</span></div>
+      </div>
+      <h3 class="admin-overview-subtitle">Platform activity</h3>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform activity summary">
+        <div class="admin-stat"><span class="admin-stat-label">Views · last 7 days</span><span class="admin-stat-value" id="owner-views-7d">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Views · last 30 days</span><span class="admin-stat-value" id="owner-views-30d">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Unique viewers · last 7 days</span><span class="admin-stat-value" id="owner-unique-viewers-7d">—</span></div>
+      </div>
+    
+      <h3 class="admin-overview-subtitle">Resource library</h3>
       <div class="admin-stat-grid" aria-label="Resource summary">
         <div class="admin-stat">
           <span class="admin-stat-label">Total resources</span>
@@ -762,9 +778,28 @@
           <span class="admin-stat-value" id="resource-download-total">—</span>
         </div>
       </div>
-    </section>
+      <h3 class="admin-overview-subtitle">Users</h3>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
+        <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="admin-verified-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Pending verification</span><span class="admin-stat-value" id="admin-pending-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">New accounts · 7 days</span><span class="admin-stat-value" id="admin-new-users">—</span></div>
+      </div>
+      <h3 class="admin-overview-subtitle">Platform</h3>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
+        <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Featured resources</span><span class="admin-stat-value" id="admin-featured-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Resource views</span><span class="admin-stat-value" id="admin-total-views">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Recorded downloads</span><span class="admin-stat-value" id="admin-total-downloads">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Added · 7 days</span><span class="admin-stat-value" id="admin-new-resources">—</span></div>
+      </div>
+</section>
 
-    <section class="admin-panel" id="upload-resource">
+
+
+    <section class="admin-panel" id="upload-resource" hidden>
       <p class="admin-section-kicker">Add to library</p>
       <h2>Upload Resource</h2>
       <p class="admin-panel-intro">Add a resource to the library.</p>
@@ -916,7 +951,7 @@
       </form>
     </section>
 
-    <section class="admin-panel" id="manage-resources">
+    <section class="admin-panel" id="manage-resources" hidden>
       <p class="admin-section-kicker">Library administration</p>
       <h2>Manage Resources</h2>
       <p class="admin-panel-intro">Search and manage library resources.</p>
@@ -971,17 +1006,11 @@
       </div>
     </section>
 
-    <section class="admin-panel" id="user-overview" aria-labelledby="user-overview-title">
+    <section class="admin-panel" id="user-overview" aria-labelledby="user-overview-title" hidden>
       <p class="admin-section-kicker">Accounts</p>
       <h2 id="user-overview-title">User Overview</h2>
       <p class="admin-panel-intro">Account totals and role distribution. Contact details are kept private.</p>
-      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
-        <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="admin-verified-users">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Pending verification</span><span class="admin-stat-value" id="admin-pending-users">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">New accounts · 7 days</span><span class="admin-stat-value" id="admin-new-users">—</span></div>
-      </div>
+      
       <div class="admin-overview-columns">
         <div>
           <h3 class="admin-overview-subtitle">Accounts by role</h3>
@@ -994,18 +1023,11 @@
       </div>
     </section>
 
-    <section class="admin-panel" id="platform-overview" aria-labelledby="platform-overview-title">
+    <section class="admin-panel" id="platform-overview" aria-labelledby="platform-overview-title" hidden>
       <p class="admin-section-kicker">Platform activity</p>
       <h2 id="platform-overview-title">Platform Overview</h2>
       <p class="admin-panel-intro">Library totals and recent activity.</p>
-      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
-        <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Featured resources</span><span class="admin-stat-value" id="admin-featured-resources">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Resource views</span><span class="admin-stat-value" id="admin-total-views">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Recorded downloads</span><span class="admin-stat-value" id="admin-total-downloads">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Added · 7 days</span><span class="admin-stat-value" id="admin-new-resources">—</span></div>
-      </div>
+      
       <div class="admin-overview-columns">
         <div>
           <h3 class="admin-overview-subtitle">Resources by type</h3>
@@ -1019,17 +1041,10 @@
       </div>
     </section>
 
-    <section class="admin-panel" id="owner-controls">
+    <section class="admin-panel" id="owner-controls" hidden>
       <p class="admin-section-kicker">Platform ownership</p>
-      <h2>Owner Controls</h2>
-      <p class="admin-panel-intro">Manage account roles and review platform-wide account activity. Owner accounts are protected from role changes here.</p>
-      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Owner account summary">
-        <div class="admin-stat"><span class="admin-stat-label">Total accounts</span><span class="admin-stat-value" id="owner-total-accounts">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Students</span><span class="admin-stat-value" id="owner-student-accounts">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Administrators</span><span class="admin-stat-value" id="owner-admin-accounts">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Owners</span><span class="admin-stat-value" id="owner-owner-accounts">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="owner-verified-accounts">—</span></div>
-      </div>
+      <h2>User Management</h2>
+      <p class="admin-panel-intro">Manage all Clariva accounts: assign roles, revoke administrator access, verify or revoke verification for accounts, and permanently remove non-owner accounts. Your account and all owner accounts are protected.</p>
       <div class="admin-overview-columns">
         <div>
           <h3 class="admin-overview-subtitle">Account directory</h3>
@@ -1038,14 +1053,14 @@
           <p id="owner-account-status" class="admin-muted" role="status" aria-live="polite">Loading account directory…</p>
         </div>
         <div>
-          <h3 class="admin-overview-subtitle">Role management</h3>
-          <p class="admin-muted">Assign Student or Administrator access. Owner accounts cannot be changed here, and your own role is protected.</p>
+          <h3 class="admin-overview-subtitle">Account privileges and status</h3>
+          <p class="admin-muted">Change a user's role, verify or revoke verification, or permanently remove an account. Owner accounts and your own account cannot be modified here.</p>
           <p id="owner-role-status" class="admin-muted" role="status" aria-live="polite"></p>
         </div>
       </div>
       <div class="admin-resource-list-wrap" style="overflow-x:auto">
         <table class="admin-resource-table" id="owner-account-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Verified</th><th>Joined</th><th>Action</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Verification</th><th>Joined</th><th>Action</th></tr></thead>
           <tbody id="owner-account-list"><tr><td colspan="7">Loading accounts…</td></tr></tbody>
         </table>
       </div>
@@ -1053,15 +1068,10 @@
     </section>
 
 
-    <section class="admin-panel" id="owner-activity">
+    <section class="admin-panel" id="owner-activity" hidden>
       <p class="admin-section-kicker">Engagement monitoring</p>
       <h2>Platform Activity</h2>
       <p class="admin-panel-intro">Aggregate resource-view activity across Clariva. This view shows totals and daily trends without exposing individual student activity records.</p>
-      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform activity summary">
-        <div class="admin-stat"><span class="admin-stat-label">Views · last 7 days</span><span class="admin-stat-value" id="owner-views-7d">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Views · last 30 days</span><span class="admin-stat-value" id="owner-views-30d">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Unique viewers · last 7 days</span><span class="admin-stat-value" id="owner-unique-viewers-7d">—</span></div>
-      </div>
       <div class="admin-overview-columns">
         <div>
           <h3 class="admin-overview-subtitle">Daily resource views</h3>
