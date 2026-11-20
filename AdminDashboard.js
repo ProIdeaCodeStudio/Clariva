@@ -35,6 +35,7 @@
   let googleAccessToken = null;
   let googlePickerReady = false;
   let uploadQueueBusy = false;
+  let excludedUploadFiles = new Set();
   let networkSlowByConnection = false;
   let networkWarningTimer = null;
   let pdfCompressorPromise = null;
@@ -221,7 +222,7 @@
     if (devicePicker) devicePicker.disabled = isUploading;
     const form = getElement('resource-upload-form');
     if (form) {
-      form.querySelectorAll('input, select, textarea, button[type="reset"]').forEach(control => {
+      form.querySelectorAll('input, select, textarea, button[type="reset"], .admin-selected-file-remove').forEach(control => {
         control.disabled = isUploading;
       });
     }
@@ -275,13 +276,23 @@
     return Array.from(getElement('resource-file')?.files || []);
   }
 
+  function getFilesForUpload() {
+    return getSelectedFiles().filter(file => !excludedUploadFiles.has(file));
+  }
+
   function renderSelectedFiles() {
     const files = getSelectedFiles();
+    const currentFiles = new Set(files);
+    excludedUploadFiles.forEach(file => {
+      if (!currentFiles.has(file)) excludedUploadFiles.delete(file);
+    });
+    const uploadFiles = getFilesForUpload();
     const label = getElement('resource-file-selection');
     const list = getElement('resource-selected-file-list');
     if (label) {
       label.textContent = files.length
-        ? files.length + ' file' + (files.length === 1 ? '' : 's') + ' selected · ' + formatFileSize(files.reduce((sum, file) => sum + file.size, 0)) + ' total'
+        ? uploadFiles.length + ' of ' + files.length + ' file' + (files.length === 1 ? '' : 's') +
+          ' selected for upload · ' + formatFileSize(uploadFiles.reduce((sum, file) => sum + file.size, 0)) + ' selected'
         : 'No files selected.';
     }
     if (!list) return;
@@ -296,6 +307,22 @@
       const size = document.createElement('small');
       size.textContent = formatFileSize(file.size);
       details.append(name, size);
+
+      const toggle = document.createElement('label');
+      toggle.className = 'admin-selected-file-toggle';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !excludedUploadFiles.has(file);
+      checkbox.setAttribute('aria-label', 'Include ' + file.name + ' in upload');
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) excludedUploadFiles.delete(file);
+        else excludedUploadFiles.add(file);
+        renderSelectedFiles();
+      });
+      const toggleText = document.createElement('span');
+      toggleText.textContent = 'Include';
+      toggle.append(checkbox, toggleText);
+
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.className = 'admin-button admin-button-secondary admin-selected-file-remove';
@@ -308,9 +335,10 @@
         });
         const input = getElement('resource-file');
         if (input) input.files = transfer.files;
+        excludedUploadFiles.delete(file);
         renderSelectedFiles();
       });
-      item.append(details, remove);
+      item.append(details, toggle, remove);
       list.appendChild(item);
     });
   }
@@ -1633,9 +1661,14 @@
       return;
     }
 
-    const files = getSelectedFiles();
-    if (!files.length) {
+    const allFiles = getSelectedFiles();
+    if (!allFiles.length) {
       setStatus('Select at least one document to upload.', 'error');
+      return;
+    }
+    const files = getFilesForUpload();
+    if (!files.length) {
+      setStatus('Tick at least one file to include in the upload.', 'error');
       return;
     }
 
@@ -1739,6 +1772,7 @@
         failedFiles.forEach(file => retrySelection.items.add(file));
         const fileInput = getElement('resource-file');
         if (fileInput) fileInput.files = retrySelection.files;
+        excludedUploadFiles.clear();
         renderSelectedFiles();
         setStatus(`${completed} of ${files.length} files uploaded. Only failed files remain selected for retry: ${failures.join(' | ')}`, 'error');
       } else {
@@ -1766,6 +1800,7 @@
       form.addEventListener('submit', uploadResource);
       form.addEventListener('reset', () => {
         window.setTimeout(() => {
+          excludedUploadFiles.clear();
           renderSelectedFiles();
           const queue = getElement('resource-upload-queue');
           if (queue) queue.replaceChildren();
