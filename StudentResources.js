@@ -613,5 +613,11 @@
     loadResources();
   }
 
-  window.addEventListener('load', initializeResourceLibrary, { once: true });
+  // Initialize as soon as the parsed page is ready instead of waiting for
+  // every image and unrelated external resource to finish loading.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeResourceLibrary, { once: true });
+  } else {
+    initializeResourceLibrary();
+  }
 })();
