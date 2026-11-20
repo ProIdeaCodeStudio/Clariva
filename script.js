@@ -253,12 +253,6 @@ if (emailConfirmationLoginBtn) {
     }
   }
 
-  // Initialize the shared account menu on both protected dashboards.
-  if ((isUndergraduatesPage || isAdminDashboard || isOwnerDashboard) &&
-      typeof window.initializeClarivaProfileMenu === 'function') {
-    window.initializeClarivaProfileMenu();
-  }
-
   // Initialize EmailJS only if it's loaded and you left the public key defined
   if (typeof emailjs !== 'undefined' && emailjs && typeof emailjs.init === 'function') {
     try {
