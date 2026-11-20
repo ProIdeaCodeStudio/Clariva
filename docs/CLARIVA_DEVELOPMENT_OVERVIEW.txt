@@ -1,0 +1,64 @@
+CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
+Version: 2.0
+Prepared: 20 November 2026
+Product: Clariva
+Product studio: Pro Idea
+Public website: https://proideacodestudio.github.io/Clariva/
+
+PURPOSE
+This document provides a public, non-technical account of Clariva's development and product direction. It is intended to communicate the project's evolution and user-facing capabilities. It is not an implementation manual, technical handover, security guide, deployment guide, or troubleshooting reference.
+
+PRODUCT VISION
+Clariva is an educational platform created to help learners move from confusion to confidence by making academic resources easier to discover and use. The project began within the wider Pro Idea digital work and developed into a distinct educational product with its own identity.
+
+DEVELOPMENT HISTORY
+
+1. INITIAL CONCEPT AND IDENTITY — MAY 2026
+The educational-services idea was separated from the wider creative-services website so that each could have a clearer purpose and audience. Clariva emerged as the independent educational platform, with its own name, identity and academic direction.
+
+2. FOUNDATIONAL STUDENT EXPERIENCE — MAY TO JUNE 2026
+The first student-facing experience took shape. Work during this period focused on the public introduction to Clariva, account access, the student journey and the initial academic-resource experience.
+
+3. ACCOUNT EXPERIENCE AND USABILITY — JUNE TO JULY 2026
+The platform's account experience was refined through successive improvements to registration, sign-in, account assistance, password recovery, form feedback and general usability. The focus was on making routine actions clearer and more dependable.
+
+4. ADMINISTRATION AND RESOURCE MANAGEMENT — OCTOBER 2026
+The administrative experience expanded to support the management of learning materials. The project introduced a dedicated administrative workspace and continued refining the relationship between student access and administrative responsibilities.
+
+5. STUDENT LIBRARY AND PLATFORM INSIGHTS — NOVEMBER 2026
+The student resource experience was expanded with improved browsing and document viewing. Administrative overviews were introduced to make key platform and library activity easier to understand. Navigation and resource-management experiences were refined alongside these additions.
+
+6. RESOURCE UPLOAD EXPERIENCE — NOVEMBER 2026
+The resource-submission experience was improved to support files selected from device storage and Google Drive. Batch selection and review were refined, and the interface now makes clear that files submitted together should share the same academic and resource details.
+
+7. ACCOUNT RELIABILITY AND RELEASE PREPARATION — NOVEMBER 2026
+Further work concentrated on account recovery, administrative feedback, resource visibility and the reliability of the release experience. The platform is being prepared for feedback from a small group of early users before wider availability.
+
+CURRENT PRODUCT AREAS
+- Student accounts and academic resource access.
+- A student library for discovering and viewing available learning materials.
+- Administrative tools for maintaining the resource collection.
+- Platform and library overviews for authorised administrators.
+- Ongoing usability, accessibility and release-readiness improvements.
+
+DIRECTION UNDER DEVELOPMENT
+The next planned stage includes stronger owner-level oversight, clearer role administration, structured course-representative coordination and a semester-led way of browsing undergraduate resources. These items should be considered planned until they have been released and verified.
+
+PRODUCT OWNERSHIP AND SUPPORT
+Clariva is developed and maintained by Pro Idea. This public document intentionally does not explain how the website is implemented, how its internal services are configured, how access controls are enforced, how privileged operations are performed, or how technical faults are diagnosed.
+
+For technical questions, account-access issues requiring intervention, suspected faults, security concerns, or requests for changes, contact the project owner directly:
+
+Email: proidea2025@gmail.com
+
+Please do not attempt to infer or reproduce internal operations from this document. Technical investigation and changes should be handled by the project owner or an explicitly authorised developer.
+
+DOCUMENTATION BOUNDARY
+This public record deliberately excludes:
+- Source-code structure and component responsibilities.
+- Database design, data relationships, policies and internal service configuration.
+- Authentication, account-recovery and privilege-management procedures.
+- Deployment, maintenance, diagnostic and troubleshooting instructions.
+- Internal access paths, privileged workflows, and operational details.
+
+END OF PUBLIC DEVELOPMENT OVERVIEW
