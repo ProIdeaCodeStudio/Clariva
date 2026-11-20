@@ -243,6 +243,8 @@
     .admin-selected-file-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--ember-fog); border-radius: var(--radius-sm); background: var(--warm-white); min-width: 0; }
     .admin-selected-file-details { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
     .admin-selected-file-details small { color: var(--ember-text); font-size: var(--text-xs); }
+    .admin-selected-file-toggle { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; color: var(--ember-text); font-size: var(--text-xs); cursor: pointer; }
+    .admin-selected-file-toggle input { width: 16px; height: 16px; margin: 0; accent-color: var(--amber); }
     .admin-selected-file-remove { flex: 0 0 auto; min-height: 38px; padding: 6px 10px; }
     @media (max-width: 430px) { .admin-batch-edit-fields { grid-template-columns: 1fr; } .admin-selected-file-item { align-items: flex-start; } }
     .admin-update-success-dialog {
