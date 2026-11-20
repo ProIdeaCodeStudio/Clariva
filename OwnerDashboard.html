@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Clariva — From Confusion to Confidence">
+  <meta name="keywords"
+    content="education, students, University, 100 level, 200 level, Clariva, materials, PDF, notes, past questions, answers, solutions">
+  <meta name="author" content="Pro Idea">
+  <title>Clariva — Owner Dashboard</title>
+  <link rel="stylesheet" href="Stylesheet.css">
+  <link rel="stylesheet" href="ProfileMenu.css">
+  <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="script.js" defer></script>
+  <script src="ProfileMenu.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" defer></script>
+  <script src="https://apis.google.com/js/api.js" defer></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
+  <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
+  <!-- Fill these three public Google Picker settings after configuring the Google Cloud project. -->
+  <script>
+    window.CLARIVA_GOOGLE_DRIVE_CONFIG = {
+      apiKey: 'AIzaSyD4nV8sc8SeWxn_bPiZQIBqCQf6tJMLRE8',
+      clientId: '579040774646-ig0qsm5hf88pnlb2tc3heiclp8jj0bog.apps.googleusercontent.com',
+      appId: '579040774646'
+    };
+  </script>
+  <script src="AdminDashboard.js" defer></script>
+  <script src="OwnerDashboard.js" defer></script>
+
+  <style>
+    /* ============================================================
+   CLARIVA — ADMIN DASHBOARD
+   Uses the existing Ember Design System.
+   Dashboard-specific styles only.
+   ============================================================ */
+
+    .admin-main {
+      padding-top: var(--space-xl);
+      padding-bottom: var(--space-2xl);
+    }
+
+    .admin-intro {
+      margin-bottom: var(--space-lg);
+    }
+
+    .admin-kicker,
+    .admin-section-kicker {
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ember-text);
+    }
+
+    .admin-title {
+      font-family: var(--font-display);
+      font-size: var(--text-hero);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--deep-ink);
+      margin: var(--space-xs) 0;
+    }
+
+    .admin-description,
+    .admin-panel-intro,
+    .admin-muted,
+    .admin-file-note {
+      font-family: var(--font-body);
+      color: var(--ember-text);
+    }
+
+    .admin-description {
+      font-size: var(--text-md);
+    }
+
+    .admin-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin: var(--space-lg) 0;
+      padding-bottom: var(--space-md);
+      border-bottom: var(--border-thin);
+    }
+
+    .admin-nav a {
+      display: inline-block;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--parchment);
+      color: var(--deep-ink);
+      border-radius: var(--radius-xs);
+      text-decoration: none;
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: var(--transition);
+    }
+
+    .admin-nav a:hover,
+    .admin-nav a:focus {
+      background: var(--amber);
+      color: var(--deep-ink);
+    }
+
+    .admin-panel {
+      margin-bottom: var(--space-lg);
+      padding: clamp(20px, 3vw, 40px);
+      background: var(--warm-white);
+      border: var(--border-thin);
+      border-radius: var(--radius-md);
+    }
+
+    .admin-panel h2 {
+      font-family: var(--font-display);
+      font-size: var(--text-h2);
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--deep-ink);
+      margin: var(--space-xs) 0 var(--space-sm);
+    }
+
+    .admin-panel-intro {
+      font-size: var(--text-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .admin-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    .admin-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      min-width: 0;
+    }
+
+    .admin-field-full {
+      grid-column: 1 / -1;
+    }
+
+    .admin-field label {
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      color: var(--ember-text);
+      text-transform: uppercase;
+    }
+
+    .admin-field input,
+    .admin-field select,
+    .admin-field textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--space-sm) var(--space-md);
+      border: var(--border-thin);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--deep-ink);
+      font-family: var(--font-body);
+      font-size: var(--text-md);
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .admin-field input:focus,
+    .admin-field select:focus,
+    .admin-field textarea:focus {
+      outline: none;
+      border-color: var(--amber);
+      background: var(--warm-white);
+    }
+
+    .admin-field textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .admin-file-note,
+    .admin-muted {
+      font-size: var(--text-sm);
+    }
+    .admin-upload-guidance {
+      display: block;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+    .admin-upload-guidance strong {
+      color: var(--deep-ink);
+      font-weight: 700;
+    }
+    #google-drive-status:empty { display: none; }
+
+    #resource-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .admin-source-dialog {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      width: min(460px, calc(100% - 32px));
+      max-width: 460px;
+      max-height: calc(100% - 32px);
+      overflow-y: auto;
+      padding: 22px;
+      border: 1px solid var(--ember-fog);
+      border-radius: var(--radius-md);
+      background: var(--warm-white);
+      color: var(--deep-ink);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .24);
+    }
+    .admin-source-dialog::backdrop {
+      background: rgba(17, 16, 8, .58);
+      backdrop-filter: blur(2px);
+    }
+    .admin-source-dialog[open] {
+      animation: admin-source-dialog-in .16s ease-out;
+    }
+    @keyframes admin-source-dialog-in {
+      from { opacity: 0; transform: translateY(8px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .admin-batch-confirm-dialog { width: min(520px, calc(100% - 32px)); }
+    .admin-batch-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .admin-batch-edit-fields .admin-field input, .admin-batch-edit-fields .admin-field select { min-height: 44px; }
+    .admin-selected-file-list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .admin-selected-file-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--ember-fog); border-radius: var(--radius-sm); background: var(--warm-white); min-width: 0; }
+    .admin-selected-file-details { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+    .admin-selected-file-details small { color: var(--ember-text); font-size: var(--text-xs); }
+    .admin-selected-file-remove { flex: 0 0 auto; min-height: 38px; padding: 6px 10px; }
+    @media (max-width: 430px) { .admin-batch-edit-fields { grid-template-columns: 1fr; } .admin-selected-file-item { align-items: flex-start; } }
+    .admin-update-success-dialog {
+      width: min(400px, calc(100% - 32px));
+    }
+    .admin-update-success-dialog > p {
+      margin: 16px 0 20px;
+      line-height: 1.55;
+    }
+    .admin-update-success-dialog .admin-actions {
+      justify-content: flex-end;
+    }
+    .admin-batch-confirm-dialog > p {
+      margin: 18px 0 12px;
+      line-height: 1.55;
+    }
+    .admin-batch-confirm-details {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+    }
+    .admin-batch-confirm-details p {
+      margin: 5px 0;
+      color: var(--ember-text);
+      overflow-wrap: anywhere;
+    }
+    .admin-batch-confirm-details strong {
+      color: var(--deep-ink);
+    }
+    .admin-source-dialog-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .admin-source-dialog-header h3 {
+      margin: 4px 0 0;
+      font-family: var(--font-display);
+      font-size: var(--text-h3);
+    }
+    .admin-source-close {
+      min-width: 38px;
+      padding-inline: 10px;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .admin-source-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 20px 0 0;
+      padding: 5px;
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+    }
+    .admin-source-tab {
+      min-height: 44px;
+      padding: 9px 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-xs);
+      background: transparent;
+      color: var(--ember-text);
+      font: inherit;
+      cursor: pointer;
+    }
+    .admin-source-tab[aria-selected="true"] {
+      border-color: var(--ember-fog);
+      background: var(--warm-white);
+      color: var(--deep-ink);
+      font-weight: 700;
+    }
+    .admin-source-panel {
+      padding-top: 18px;
+    }
+    .admin-source-panel p {
+      margin: 0 0 14px;
+      color: var(--ember-text);
+      font-size: var(--text-sm);
+      line-height: 1.55;
+    }
+    .admin-source-panel [hidden] { display: none; }
+    @media (max-width: 430px) {
+      .admin-source-dialog { padding: 18px; }
+      .admin-source-tab { padding-inline: 6px; font-size: var(--text-sm); }
+    }
+
+    .admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+    }
+
+    .admin-button {
+      padding: var(--space-sm) var(--space-md);
+      border: var(--border-amber);
+      border-radius: var(--radius-xs);
+      background: var(--amber);
+      color: var(--deep-ink);
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      font-weight: 400;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .admin-button:hover,
+    .admin-button:focus {
+      background: var(--ember-tint);
+    }
+
+    .admin-button-secondary {
+      background: transparent;
+      border-color: var(--ember-fog);
+      color: var(--deep-ink);
+    }
+
+    .admin-button-secondary:hover,
+    .admin-button-secondary:focus {
+      background: var(--parchment);
+    }
+
+    .admin-button-danger {
+      border: 1px solid #b54736;
+      background: transparent;
+      color: #8f2d20;
+    }
+
+    .admin-button-danger:hover,
+    .admin-button-danger:focus {
+      background: #f8e9e6;
+    }
+
+
+    .admin-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    .admin-stat {
+      padding: var(--space-md);
+      background: var(--parchment);
+      border: var(--border-thin);
+      border-radius: var(--radius-sm);
+    }
+
+    .admin-stat-label {
+      display: block;
+      font-family: var(--font-label);
+      font-size: var(--text-label);
+      letter-spacing: 1px;
+      color: var(--ember-text);
+      text-transform: uppercase;
+    }
+
+    .admin-stat-value {
+      display: block;
+      margin-top: var(--space-xs);
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+      font-size: var(--text-h2);
+      font-weight: 800;
+    }
+
+    .admin-filter-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--space-md);
+      margin: var(--space-lg) 0;
+    }
+
+    .admin-placeholder {
+      padding: var(--space-lg);
+      border: 1px dashed var(--ember-text);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--ember-text);
+      text-align: center;
+    }
+
+    .admin-action-status {
+      margin: var(--space-md) 0;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      background: var(--parchment);
+      color: var(--ember-text);
+      border-left: 3px solid var(--ember-fog);
+    }
+
+    .admin-action-status:empty {
+      display: none;
+    }
+
+    .admin-action-status[data-state="success"] {
+      border-left-color: var(--amber);
+      color: var(--deep-ink);
+    }
+
+    .admin-action-status[data-state="error"] {
+      border-left-color: #b54736;
+      color: #8f2d20;
+    }
+
+    .admin-placeholder strong {
+      display: block;
+      margin-bottom: var(--space-xs);
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+    }
+
+    @media (max-width: 700px) {
+
+      .admin-form-grid,
+      .admin-stat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .admin-field-full {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .admin-filter-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Admin PDF reader — visually aligned with the student Resource Library */
+    .admin-pdf-reader[hidden] { display: none; }
+    .admin-pdf-reader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      background: #171717;
+      color: #fff;
+    }
+    .admin-pdf-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: #242424;
+      border-bottom: 1px solid #444;
+    }
+    .admin-pdf-title {
+      flex: 1 1 180px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .admin-pdf-toolbar button {
+      min-width: 38px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #666;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    .admin-pdf-toolbar button:hover:not(:disabled) {
+      background: #444;
+    }
+    .admin-pdf-toolbar button:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+    .admin-pdf-toolbar button:disabled { opacity: .4; cursor: not-allowed; }
+    .admin-pdf-page-count { min-width: 72px; text-align: center; font-size: 14px; }
+    .admin-pdf-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      text-align: center;
+      overscroll-behavior: contain;
+    }
+    #admin-pdf-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(0,0,0,.35);
+    }
+    .admin-pdf-message {
+      padding: 24px;
+      color: #fff;
+      text-align: center;
+    }
+    body.admin-pdf-open { overflow: hidden; }
+
+    @media (max-width: 600px) {
+      .admin-pdf-toolbar {
+        gap: 10px;
+        padding: 12px 16px;
+      }
+      .admin-pdf-title {
+        flex-basis: 100%;
+      }
+    }
+
+    .admin-stat-grid-wide {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .admin-overview-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-lg);
+      margin-top: var(--space-xl);
+    }
+    .admin-overview-subtitle {
+      margin-bottom: var(--space-sm);
+      color: var(--deep-ink);
+      font-family: var(--font-display);
+      font-size: var(--text-h3);
+    }
+    .admin-breakdown {
+      display: grid;
+      gap: var(--space-sm);
+    }
+    .admin-breakdown-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding: 10px 12px;
+      border: var(--border-thin);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+    }
+    .admin-breakdown-label {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--deep-ink);
+    }
+    .admin-breakdown-value {
+      flex: 0 0 auto;
+      color: var(--ember-text);
+      font-family: var(--font-label);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .admin-latest-activity {
+      margin-bottom: var(--space-md);
+      color: var(--deep-ink);
+    }
+    #admin-overview-refresh {
+      margin-top: var(--space-sm);
+    }
+    @media (max-width: 700px) {
+      .admin-overview-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+      .admin-upload-queue {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .admin-upload-queue-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px 12px;
+      padding: 12px;
+      border: 1px solid var(--parchment);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+    }
+    .admin-upload-queue-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--deep-ink);
+      font-size: var(--text-sm);
+    }
+    .admin-upload-queue-state {
+      color: var(--ember-text);
+      font-size: var(--text-label);
+      white-space: nowrap;
+    }
+    .admin-upload-queue-item progress {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 8px;
+      accent-color: var(--amber);
+    }
+    .admin-network-warning {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #d8a34b;
+      border-radius: var(--radius-sm);
+      background: #fff4d8;
+      color: #65420c;
+      font-size: var(--text-sm);
+    }
+    .admin-network-warning[hidden] { display: none; }
+  </style>
+  <meta name="robots" content="noindex, nofollow">
+<style>
+    #owner-account-table { width:100%; border-collapse:collapse; margin:18px 0; min-width:760px; }
+    #owner-account-table th, #owner-account-table td { padding:12px 10px; border-bottom:1px solid var(--parchment); text-align:left; color:var(--deep-ink); font-size:var(--text-sm); }
+    #owner-account-table th { background:var(--cream); font-family:var(--font-display); font-weight:700; }
+    #owner-account-table td { overflow-wrap:anywhere; }
+    #owner-account-table .owner-role-select { min-width:118px; margin:0 8px 6px 0; padding:8px; border:1px solid var(--parchment); border-radius:var(--radius-sm); background:#fff; color:var(--deep-ink); }
+    #owner-account-table .owner-role-save { padding:8px 12px; }
+    #owner-account-search { width:100%; max-width:440px; margin:8px 0 14px; padding:12px; border:1px solid var(--parchment); border-radius:var(--radius-sm); background:#fff; color:var(--deep-ink); }
+    #owner-controls [data-state="error"] { color:#9b2525; }
+    #owner-controls [data-state="success"] { color:#27643b; }
+    @media (max-width:700px) { #owner-controls .admin-overview-columns { grid-template-columns:1fr; } }
+  </style>
+<style>
+    .owner-daily-views-chart { display:grid; gap:12px; padding:16px; border:1px solid var(--parchment); border-radius:var(--radius-sm); background:var(--cream); }
+    .owner-daily-view-row { display:grid; grid-template-columns:48px minmax(0,1fr) 42px; align-items:center; gap:10px; }
+    .owner-daily-view-label,.owner-daily-view-value { color:var(--deep-ink); font-size:var(--text-sm); font-variant-numeric:tabular-nums; }
+    .owner-daily-view-track { height:12px; overflow:hidden; border-radius:999px; background:var(--parchment); }
+    .owner-daily-view-bar { height:100%; min-width:0; border-radius:999px; background:var(--amber); }
+    .owner-daily-view-value { text-align:right; font-weight:700; }
+  </style>
+</head>
+
+<body class="clariva-dashboard-page">
+  <div id="clariva-page-loader" class="clariva-page-loader" role="status" aria-label="Loading Clariva">
+    <img src="ClarivaTpLetterMark.png" alt="" class="clariva-loader-mark">
+  </div>
+    <header id="header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="clariva-navbar-brand" aria-label="Clariva">
+          <img src="ClarivaTpWordMark.png" alt="Clariva — From Confusion to Confidence"
+            class="clariva-navbar-wordmark">
+        </div>
+        <div class="clariva-header-actions">
+          <button id="clariva-menu-toggle" class="clariva-header-control" type="button"
+            aria-label="Open dashboard navigation" aria-controls="clariva-nav-menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden>
+            <a href="#resource-management">Resource overview</a>
+            <a href="#upload-resource">Upload resource</a>
+            <a href="#manage-resources">Manage resources</a>
+            <a href="#user-overview">User overview</a>
+            <a href="#platform-overview">Platform overview</a>
+            <a href="#owner-controls">Owner controls</a>
+            <a href="#owner-activity">Owner activity</a>
+          </nav>
+          <button id="clariva-profile-toggle" class="clariva-header-control clariva-profile-trigger"
+            type="button" aria-label="Open account menu" aria-controls="clariva-profile-menu" aria-expanded="false">
+            <span id="clariva-current-avatar" class="clariva-avatar" data-avatar="avatar-1" aria-hidden="true">🎓</span>
+            <span class="clariva-profile-trigger-label">Account</span>
+          </button>
+          <section id="clariva-profile-menu" class="clariva-menu-panel" aria-label="Account menu" hidden>
+            <h2 class="clariva-menu-heading" id="clariva-profile-name">Your account</h2>
+            <p class="clariva-account-meta" id="clariva-profile-email"></p>
+            <p class="clariva-account-meta"><span id="clariva-profile-role"></span> · <span id="clariva-profile-level"></span></p>
+            <div class="clariva-menu-divider"></div>
+            <p class="clariva-menu-heading">Choose your avatar</p>
+            <div class="clariva-avatar-options" role="group" aria-label="Choose profile avatar">
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-1" data-avatar="avatar-1" aria-label="Scholar avatar" aria-pressed="false">🎓</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-2" data-avatar="avatar-2" aria-label="Books avatar" aria-pressed="false">📚</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-3" data-avatar="avatar-3" aria-label="Ideas avatar" aria-pressed="false">💡</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-4" data-avatar="avatar-4" aria-label="Science avatar" aria-pressed="false">⚛️</button>
+              <button class="clariva-avatar-option" type="button" data-avatar-choice="avatar-5" data-avatar="avatar-5" aria-label="Nature avatar" aria-pressed="false">🌿</button>
+            </div>
+            <p id="clariva-profile-status" class="clariva-profile-status" role="status" aria-live="polite"></p>
+            <div class="clariva-menu-divider"></div>
+            <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
+            <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
+            <a id="clariva-owner-dashboard-link" href="OwnerDashboard.html" hidden>Open Owner Dashboard</a>
+            <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- script.js controls access to this protected dashboard. -->
+  <main class="container admin-main" id="owner-dashboard" hidden>
+    <section class="admin-intro" aria-labelledby="admin-page-title">
+      <p class="admin-kicker">Ownership & administration</p>
+      <h1 class="admin-title" id="admin-page-title">Owner Dashboard</h1>
+      <p class="admin-description">Oversee the platform, manage administrators and monitor Clariva.</p>
+    </section>
+
+    <section class="admin-panel" id="resource-management">
+      <p class="admin-section-kicker">Learning materials</p>
+      <h2>Resource Management</h2>
+      <p class="admin-panel-intro">Manage the student learning library.</p>
+      <div class="admin-stat-grid" aria-label="Resource summary">
+        <div class="admin-stat">
+          <span class="admin-stat-label">Total resources</span>
+          <span class="admin-stat-value" id="resource-total">—</span>
+        </div>
+        <div class="admin-stat">
+          <span class="admin-stat-label">Featured resources</span>
+          <span class="admin-stat-value" id="resource-featured-total">—</span>
+        </div>
+        <div class="admin-stat">
+          <span class="admin-stat-label">Downloads</span>
+          <span class="admin-stat-value" id="resource-download-total">—</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="upload-resource">
+      <p class="admin-section-kicker">Add to library</p>
+      <h2>Upload Resource</h2>
+      <p class="admin-panel-intro">Add a resource to the library.</p>
+      <p class="admin-muted admin-upload-batch-note">
+        <strong>Batch upload rule:</strong> Keep each batch within one department, level, semester, course code and resource type. If any of these differ, upload the files separately. The same details will be applied to every file in the batch.
+      </p>
+
+      <form id="resource-upload-form">
+        <div class="admin-form-grid">
+          <div class="admin-field admin-field-full">
+            <label for="resource-description">Description</label>
+            <textarea id="resource-description" name="description" maxlength="1000"
+              placeholder="Briefly describe this resource"></textarea>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-department">Department</label>
+            <input id="resource-department" name="department" type="text"
+              placeholder="e.g. Electrical and Electronics Engineering">
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-level">Level</label>
+            <select id="resource-level" name="level" required>
+              <option value="">Select level</option>
+              <option value="100">100 Level</option>
+              <option value="200">200 Level</option>
+              <option value="300">300 Level</option>
+              <option value="400">400 Level</option>
+              <option value="500">500 Level</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-semester">Semester</label>
+            <select id="resource-semester" name="semester" required>
+              <option value="">Select semester</option>
+              <option value="1">First semester</option>
+              <option value="2">Second semester</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-course-code">Course code</label>
+            <input id="resource-course-code" name="course_code" type="text" maxlength="30" placeholder="e.g. EEE 101">
+          </div>
+
+          <div class="admin-field admin-field-full">
+            <label for="resource-course-title">Course title</label>
+            <input id="resource-course-title" name="course_title" type="text" maxlength="160"
+              placeholder="e.g. Introduction to Electrical Engineering">
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-type">Resource type</label>
+            <select id="resource-type" name="resource_type" required>
+              <option value="">Select resource type</option>
+              <option value="Lecture Note">Lecture note</option>
+              <option value="Handout">Handout</option>
+              <option value="Past Questions">Past questions</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Textbook">Textbook</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="admin-field">
+            <label for="resource-file">Document files</label>
+            <input id="resource-file" name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" multiple>
+            <button class="admin-button admin-button-secondary" id="resource-source-open" type="button" aria-haspopup="dialog">Choose files</button>
+            <span class="admin-file-note admin-upload-guidance">PDF · DOC · DOCX · PPT · PPTX <strong>50 MB max each</strong></span>
+            <span class="admin-file-note admin-upload-guidance">PDFs over 15 MB are optimised when possible.</span>
+            <dialog id="resource-source-dialog" class="admin-source-dialog" aria-labelledby="resource-source-title">
+              <div class="admin-source-dialog-header">
+                <div>
+                  <p class="admin-section-kicker">File selection</p>
+                  <h3 id="resource-source-title">Choose a source</h3>
+                </div>
+                <button class="admin-button admin-button-secondary admin-source-close" id="resource-source-close" type="button" aria-label="Close file selection">×</button>
+              </div>
+              <div class="admin-source-tabs" role="tablist" aria-label="File source">
+                <button class="admin-source-tab" type="button" role="tab" id="resource-source-tab-device"
+                  data-resource-source-tab="device" aria-controls="resource-source-panel-device" aria-selected="true">Device storage</button>
+                <button class="admin-source-tab" type="button" role="tab" id="resource-source-tab-drive"
+                  data-resource-source-tab="drive" aria-controls="resource-source-panel-drive" aria-selected="false">Google Drive</button>
+              </div>
+              <section class="admin-source-panel" id="resource-source-panel-device" role="tabpanel"
+                aria-labelledby="resource-source-tab-device" data-resource-source-panel="device">
+                <p>Choose files from your device.</p>
+                <button class="admin-button" id="device-file-picker-button" type="button">Browse device storage</button>
+              </section>
+              <section class="admin-source-panel" id="resource-source-panel-drive" role="tabpanel"
+                aria-labelledby="resource-source-tab-drive" data-resource-source-panel="drive" hidden>
+                <p>Choose files from Google Drive. Multi-select is enabled; select each required file in the Picker before confirming.</p>
+                <button class="admin-button" id="google-drive-picker-button" type="button">Browse Google Drive</button>
+                <p class="admin-muted" id="google-drive-status" role="status" aria-live="polite"></p>
+              </section>
+            </dialog>
+            <dialog id="resource-batch-confirm-dialog" class="admin-source-dialog admin-batch-confirm-dialog"
+              aria-labelledby="resource-batch-confirm-title" aria-describedby="resource-batch-confirm-description">
+              <div class="admin-source-dialog-header">
+                <div>
+                  <p class="admin-section-kicker">Before upload</p>
+                  <h3 id="resource-batch-confirm-title">Confirm batch details</h3>
+                </div>
+              </div>
+              <p id="resource-batch-confirm-description" class="admin-muted">
+                Review and correct the shared details before continuing. Every selected file will use these values.
+              </p>
+              <div class="admin-batch-edit-fields">
+                <div class="admin-field"><label for="batch-edit-level">Level</label><select id="batch-edit-level">
+                  <option value="">Select level</option><option value="100">100 Level</option><option value="200">200 Level</option><option value="300">300 Level</option><option value="400">400 Level</option><option value="500">500 Level</option>
+                </select></div>
+                <div class="admin-field"><label for="batch-edit-semester">Semester</label><select id="batch-edit-semester">
+                  <option value="">Select semester</option><option value="1">First semester</option><option value="2">Second semester</option>
+                </select></div>
+                <div class="admin-field admin-field-full"><label for="batch-edit-course-code">Course code</label><input id="batch-edit-course-code" type="text" maxlength="30" placeholder="e.g. EEE 101"></div>
+                <div class="admin-field admin-field-full"><label for="batch-edit-resource-type">Resource type</label><select id="batch-edit-resource-type">
+                  <option value="">Select resource type</option><option value="Lecture Note">Lecture note</option><option value="Handout">Handout</option><option value="Past Questions">Past questions</option><option value="Assignment">Assignment</option><option value="Textbook">Textbook</option><option value="Other">Other</option>
+                </select></div>
+              </div>
+              <div class="admin-actions">
+                <button class="admin-button" id="resource-batch-confirm" type="button">Save details and continue</button>
+                <button class="admin-button admin-button-secondary" id="resource-batch-cancel" type="button">Cancel</button>
+              </div>
+            </dialog>
+            <dialog id="resource-update-success-dialog" class="admin-source-dialog admin-update-success-dialog"
+              aria-labelledby="resource-update-success-title" aria-describedby="resource-update-success-message">
+              <div class="admin-source-dialog-header">
+                <h3 id="resource-update-success-title">Changes saved</h3>
+              </div>
+              <p id="resource-update-success-message" class="admin-muted">The resource was updated successfully.</p>
+              <div class="admin-actions">
+                <button class="admin-button" id="resource-update-success-ok" type="button">OK</button>
+              </div>
+            </dialog>
+            <p class="admin-muted" id="resource-file-selection" aria-live="polite">No files selected</p>
+            <ul id="resource-selected-file-list" class="admin-selected-file-list" aria-label="Selected files"></ul>
+            <div id="resource-upload-queue" class="admin-upload-queue" aria-live="polite"></div>
+            <p id="resource-network-warning" class="admin-network-warning" role="status" aria-live="polite" hidden></p>
+          </div>
+        </div>
+
+        <div class="admin-actions">
+          <button class="admin-button" type="submit" id="resource-upload-button">Upload Resource</button>
+          <button class="admin-button admin-button-secondary" type="reset">Clear Form</button>
+        </div>
+        <p class="admin-muted" id="resource-upload-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="admin-panel" id="manage-resources">
+      <p class="admin-section-kicker">Library administration</p>
+      <h2>Manage Resources</h2>
+      <p class="admin-panel-intro">Search and manage library resources.</p>
+      <p id="resource-action-status" class="admin-action-status" role="status" aria-live="polite"></p>
+
+      <div class="admin-filter-row">
+        <div class="admin-field">
+          <label for="resource-search">Search resources</label>
+          <div class="admin-search-controls">
+            <input id="resource-search" type="search" placeholder="Search title or course">
+            <button class="admin-button" type="button" id="resource-search-button">
+              Search
+            </button>
+          </div>
+        </div>
+        <div class="admin-field">
+          <label for="filter-level">Level</label>
+          <select id="filter-level">
+            <option value="">All levels</option>
+            <option value="100">100 Level</option>
+            <option value="200">200 Level</option>
+            <option value="300">300 Level</option>
+            <option value="400">400 Level</option>
+            <option value="500">500 Level</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <label for="filter-semester">Semester</label>
+          <select id="filter-semester">
+            <option value="">All semesters</option>
+            <option value="1">First semester</option>
+            <option value="2">Second semester</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <label for="filter-type">Resource type</label>
+          <select id="filter-type">
+            <option value="">All types</option>
+            <option value="Lecture Note">Lecture note</option>
+            <option value="Handout">Handout</option>
+            <option value="Past Questions">Past questions</option>
+            <option value="Assignment">Assignment</option>
+            <option value="Textbook">Textbook</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="resource-list" class="admin-placeholder" aria-live="polite">
+        <strong>Loading resources...</strong>
+        Your resource library will appear here.
+      </div>
+    </section>
+
+    <section class="admin-panel" id="user-overview" aria-labelledby="user-overview-title">
+      <p class="admin-section-kicker">Accounts</p>
+      <h2 id="user-overview-title">User Overview</h2>
+      <p class="admin-panel-intro">Account totals and role distribution. Contact details are kept private.</p>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="User statistics">
+        <div class="admin-stat"><span class="admin-stat-label">Registered accounts</span><span class="admin-stat-value" id="admin-total-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Student accounts</span><span class="admin-stat-value" id="admin-total-students">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="admin-verified-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Pending verification</span><span class="admin-stat-value" id="admin-pending-users">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">New accounts · 7 days</span><span class="admin-stat-value" id="admin-new-users">—</span></div>
+      </div>
+      <div class="admin-overview-columns">
+        <div>
+          <h3 class="admin-overview-subtitle">Accounts by role</h3>
+          <div class="admin-breakdown" id="admin-role-breakdown"><p class="admin-muted">Loading role distribution...</p></div>
+        </div>
+        <div>
+          <h3 class="admin-overview-subtitle">Accounts by academic level</h3>
+          <div class="admin-breakdown" id="admin-level-breakdown"><p class="admin-muted">Loading level distribution...</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="platform-overview" aria-labelledby="platform-overview-title">
+      <p class="admin-section-kicker">Platform activity</p>
+      <h2 id="platform-overview-title">Platform Overview</h2>
+      <p class="admin-panel-intro">Library totals and recent activity.</p>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform statistics">
+        <div class="admin-stat"><span class="admin-stat-label">All resources</span><span class="admin-stat-value" id="admin-total-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Published resources</span><span class="admin-stat-value" id="admin-published-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Featured resources</span><span class="admin-stat-value" id="admin-featured-resources">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Resource views</span><span class="admin-stat-value" id="admin-total-views">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Recorded downloads</span><span class="admin-stat-value" id="admin-total-downloads">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Added · 7 days</span><span class="admin-stat-value" id="admin-new-resources">—</span></div>
+      </div>
+      <div class="admin-overview-columns">
+        <div>
+          <h3 class="admin-overview-subtitle">Resources by type</h3>
+          <div class="admin-breakdown" id="admin-resource-type-breakdown"><p class="admin-muted">Loading resource types...</p></div>
+        </div>
+        <div>
+          <h3 class="admin-overview-subtitle">Latest library update</h3>
+          <p class="admin-latest-activity" id="admin-latest-resource">—</p>
+          <button class="admin-button admin-button-secondary" type="button" id="admin-overview-refresh">Refresh overview</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="owner-controls">
+      <p class="admin-section-kicker">Platform ownership</p>
+      <h2>Owner Controls</h2>
+      <p class="admin-panel-intro">Manage account roles and review platform-wide account activity. Owner accounts are protected from role changes here.</p>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Owner account summary">
+        <div class="admin-stat"><span class="admin-stat-label">Total accounts</span><span class="admin-stat-value" id="owner-total-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Students</span><span class="admin-stat-value" id="owner-student-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Administrators</span><span class="admin-stat-value" id="owner-admin-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Owners</span><span class="admin-stat-value" id="owner-owner-accounts">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Verified accounts</span><span class="admin-stat-value" id="owner-verified-accounts">—</span></div>
+      </div>
+      <div class="admin-overview-columns">
+        <div>
+          <h3 class="admin-overview-subtitle">Account directory</h3>
+          <label class="admin-muted" for="owner-account-search">Search by name or email</label>
+          <input id="owner-account-search" type="search" class="admin-input" placeholder="Search accounts..." autocomplete="off">
+          <p id="owner-account-status" class="admin-muted" role="status" aria-live="polite">Loading account directory…</p>
+        </div>
+        <div>
+          <h3 class="admin-overview-subtitle">Role management</h3>
+          <p class="admin-muted">Assign Student or Administrator access. Owner accounts cannot be changed here, and your own role is protected.</p>
+          <p id="owner-role-status" class="admin-muted" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="admin-resource-list-wrap" style="overflow-x:auto">
+        <table class="admin-resource-table" id="owner-account-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Verified</th><th>Joined</th><th>Action</th></tr></thead>
+          <tbody id="owner-account-list"><tr><td colspan="7">Loading accounts…</td></tr></tbody>
+        </table>
+      </div>
+      <button class="admin-button admin-button-secondary" id="owner-refresh-accounts" type="button">Refresh account directory</button>
+    </section>
+
+
+    <section class="admin-panel" id="owner-activity">
+      <p class="admin-section-kicker">Engagement monitoring</p>
+      <h2>Platform Activity</h2>
+      <p class="admin-panel-intro">Aggregate resource-view activity across Clariva. This view shows totals and daily trends without exposing individual student activity records.</p>
+      <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform activity summary">
+        <div class="admin-stat"><span class="admin-stat-label">Views · last 7 days</span><span class="admin-stat-value" id="owner-views-7d">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Views · last 30 days</span><span class="admin-stat-value" id="owner-views-30d">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label">Unique viewers · last 7 days</span><span class="admin-stat-value" id="owner-unique-viewers-7d">—</span></div>
+      </div>
+      <div class="admin-overview-columns">
+        <div>
+          <h3 class="admin-overview-subtitle">Daily resource views</h3>
+          <div id="owner-daily-views-chart" class="owner-daily-views-chart" role="img" aria-label="Daily resource views over the last seven days">
+            <p class="admin-muted">Loading activity…</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="admin-overview-subtitle">Activity data</h3>
+          <p id="owner-activity-status" class="admin-muted" role="status" aria-live="polite">Loading aggregate activity…</p>
+          <button class="admin-button admin-button-secondary" id="owner-refresh-activity" type="button">Refresh activity</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <section id="admin-pdf-reader" class="admin-pdf-reader" role="dialog"
+    aria-modal="true" aria-label="PDF resource viewer" hidden>
+    <div class="admin-pdf-toolbar">
+      <span id="admin-pdf-title" class="admin-pdf-title">Resource viewer</span>
+      <button id="admin-pdf-prev" type="button" aria-label="Previous page">Previous</button>
+      <span id="admin-pdf-page-count" class="admin-pdf-page-count">Page — / —</span>
+      <button id="admin-pdf-next" type="button" aria-label="Next page">Next</button>
+      <button id="admin-pdf-zoom-out" type="button" aria-label="Zoom out">−</button>
+      <button id="admin-pdf-zoom-in" type="button" aria-label="Zoom in">+</button>
+      <button id="admin-pdf-close" type="button" aria-label="Close resource viewer">Close</button>
+    </div>
+    <div id="admin-pdf-viewport" class="admin-pdf-viewport">
+      <p id="admin-pdf-message" class="admin-pdf-message" role="status">Preparing document…</p>
+      <canvas id="admin-pdf-canvas" hidden></canvas>
+    </div>
+  </section>
+
+</body>
+
+</html>

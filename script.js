@@ -174,11 +174,12 @@ if (emailConfirmationLoginBtn) {
 
   const isUndergraduatesPage = currentPage === 'Undergraduates.html';
   const isAdminDashboard = currentPage === 'AdminDashboard.html';
+  const isOwnerDashboard = currentPage === 'OwnerDashboard.html';
 
-  if (isUndergraduatesPage || isAdminDashboard) {
+  if (isUndergraduatesPage || isAdminDashboard || isOwnerDashboard) {
     const dashboard = isAdminDashboard
       ? document.getElementById('admin-dashboard')
-      : null;
+      : isOwnerDashboard ? document.getElementById('owner-dashboard') : null;
 
     if (!supabaseClient) {
       console.error('Supabase client is unavailable.');
@@ -219,7 +220,13 @@ if (emailConfirmationLoginBtn) {
 
       const role = String(profile.Role || '').toLowerCase();
 
-      if (isAdminDashboard) {
+      if (isOwnerDashboard) {
+        if (role !== 'owner') {
+          window.location.replace(role === 'admin' ? 'AdminDashboard.html' : role === 'student' ? 'Undergraduates.html' : 'index.html#step-1');
+          return;
+        }
+        if (dashboard) dashboard.hidden = false;
+      } else if (isAdminDashboard) {
         if (!['admin', 'owner'].includes(role)) {
           if (role === 'student') {
             window.location.replace('Undergraduates.html');
@@ -247,7 +254,7 @@ if (emailConfirmationLoginBtn) {
   }
 
   // Initialize the shared account menu on both protected dashboards.
-  if ((isUndergraduatesPage || isAdminDashboard) &&
+  if ((isUndergraduatesPage || isAdminDashboard || isOwnerDashboard) &&
       typeof window.initializeClarivaProfileMenu === 'function') {
     window.initializeClarivaProfileMenu();
   }
