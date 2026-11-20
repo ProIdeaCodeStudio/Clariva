@@ -59,7 +59,7 @@
       .single();
 
     if (error || !profile) {
-      setStatus('Unable to load account details. Refresh to try again.', 'error');
+      setStatus(window.clarivaFriendlyError?.(error, 'Unable to load account details. Refresh and try again.') || 'Unable to load account details. Refresh and try again.', 'error');
       return;
     }
 
@@ -114,7 +114,7 @@
         button.disabled = false;
         if (updateError) {
           console.error('Avatar preference update failed:', updateError);
-          setStatus('Could not save this avatar. Please try again.', 'error');
+          setStatus(window.clarivaFriendlyError?.(updateError, 'Could not save this avatar. Try again.') || 'Could not save this avatar. Try again.', 'error');
           return;
         }
         setAvatar(choice);
@@ -130,7 +130,7 @@
       if (signOutError) {
         button.disabled = false;
         button.textContent = 'Sign out';
-        setStatus('Sign-out failed. Please try again.', 'error');
+        setStatus(window.clarivaFriendlyError?.(signOutError, 'Sign-out failed. Try again.') || 'Sign-out failed. Try again.', 'error');
         return;
       }
       window.location.replace('index.html#step-1');
