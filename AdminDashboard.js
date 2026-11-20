@@ -1136,7 +1136,7 @@
         window.clarivaFriendlyError?.(error, 'Unable to update this resource. Try again.') || 'Unable to update this resource. Try again.',
         'error'
       );
-      alert('Unable to update this resource: ' + (error.message || 'Unknown error'));
+      // The inline status already gives the user a concise, actionable message.
       button.disabled = false;
       button.textContent = originalText;
     }
@@ -1507,7 +1507,7 @@
       }
     } catch (error) {
       console.error('Clariva file retrieval error:', error);
-      alert(`Unable to open this resource: ${error.message}`);
+      alert(window.clarivaFriendlyError?.(error, 'Unable to open this resource. Try again.') || 'Unable to open this resource. Try again.');
     } finally {
       button.disabled = false;
       button.textContent = originalText;
@@ -1769,7 +1769,7 @@
         } catch (error) {
           console.error(`Upload failed for ${file.name}:`, error);
           updateQueueItem(index, 'Failed', 0);
-          failures.push(`${originalFile.name}: ${error.message || 'Upload failed'}`);
+          failures.push(`${originalFile.name}: ${window.clarivaFriendlyError?.(error, 'Upload failed.') || 'Upload failed.'}`);
           failedFiles.push(originalFile);
         }
       }
