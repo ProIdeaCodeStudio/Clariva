@@ -28,7 +28,7 @@
     style.id = 'clariva-connectivity-styles';
     style.textContent = [
       '#clariva-connectivity-notice{position:fixed;z-index:2147483000;top:10px;left:12px;right:12px;max-width:720px;margin:0 auto;display:none;align-items:center;gap:12px;padding:13px 15px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#17150f;color:#f5edd8;box-shadow:0 8px 28px rgba(0,0,0,.28);font:500 14px/1.45 Arial,sans-serif}',
-      '#clariva-connectivity-notice[data-state="offline"],#clariva-connectivity-notice[data-state="error"]{border-color:#a84a3d}',
+      '#clariva-connectivity-notice[data-state="offline"],#clariva-connectivity-notice[data-state="error"],#clariva-connectivity-notice[data-state="unavailable"],#clariva-connectivity-notice[data-state="service-degraded"]{border-color:#a84a3d}',
       '#clariva-connectivity-notice[data-state="slow"]{border-color:#e8941a}',
       '#clariva-connectivity-notice[data-state="online"]{border-color:#6e9a70}',
       '#clariva-connectivity-notice .clariva-connectivity-copy{flex:1;min-width:0}',
@@ -260,7 +260,9 @@
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && navigator.onLine !== false) checkConnection();
+      if (document.visibilityState === 'visible' && navigator.onLine !== false) {
+        checkConnection({ recovered: offlineTransitionSeen });
+      }
     });
     if (navigator.onLine === false) {
       handleOffline();
