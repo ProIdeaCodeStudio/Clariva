@@ -174,12 +174,14 @@
     if (!result) return { state: lastState };
 
     if (!result.reachable) {
+      offlineTransitionSeen = true;
       publishState('unavailable', result);
       notify('Your device reports a connection, but Clariva’s service cannot be reached yet. We’ll check again automatically.', 'error', '', null, 9000);
       return { state: 'unavailable', ...result };
     }
 
     if (!result.healthy) {
+      offlineTransitionSeen = true;
       publishState('service-degraded', result);
       notify('Clariva’s service is responding slowly or temporarily unavailable. Please try again shortly.', 'error', '', null, 9000);
       return { state: 'service-degraded', ...result };
@@ -196,6 +198,7 @@
         : 'Network connection restored.';
       notify(message, slow ? 'slow' : 'online', '', null, 0);
       reloadAfterRecovery();
+      offlineTransitionSeen = false;
     } else if (slow) {
       notify(
         verySlow
@@ -221,10 +224,12 @@
 
   async function handleOnline() {
     const wasOffline = offlineTransitionSeen;
-    const result = await checkConnection({ recovered: wasOffline });
-    if (wasOffline && result.state !== 'offline' && result.state !== 'unavailable' && result.state !== 'service-degraded') {
-      offlineTransitionSeen = false;
-    } else if (wasOffline && result.state === 'unavailable') {
+    const result = await checkConnection({ recovered: offlineTransitionSeen });
+    if (!result) {
+      if (offlineTransitionSeen) window.setTimeout(handleOnline, 3000);
+      return;
+    }
+    if (offlineTransitionSeen && ['unavailable', 'service-degraded'].includes(result.state)) {
       window.setTimeout(handleOnline, 10000);
     }
   }
@@ -233,7 +238,7 @@
     if (intervalId) window.clearInterval(intervalId);
     intervalId = window.setInterval(() => {
       if (document.visibilityState === 'visible' && navigator.onLine !== false) {
-        checkConnection();
+        checkConnection({ recovered: offlineTransitionSeen });
       }
     }, CHECK_INTERVAL_MS);
   }
