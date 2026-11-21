@@ -155,15 +155,36 @@ function showNotification(
   };
 }
 
+function isClarivaConnectivityError(error) {
+  const message = String(error?.message || error || '');
+  const rawStatus = error?.status ?? error?.statusCode;
+  const hasStatus = rawStatus !== undefined && rawStatus !== null;
+  const status = hasStatus ? Number(rawStatus) : NaN;
+  return navigator.onLine === false ||
+    error?.name === 'TypeError' ||
+    error?.name === 'AbortError' ||
+    (hasStatus && status === 0) ||
+    (hasStatus && status >= 500) ||
+    /failed to fetch|fetch failed|network|timed? ?out|connection (was )?lost|load failed|request aborted/i.test(message);
+}
+window.clarivaIsConnectivityError = isClarivaConnectivityError;
+
 async function getCurrentUser() {
-  if (!supabaseClient) return null;
-  try {
-    const resp = await supabaseClient.auth.getUser();
-    return resp?.data?.user || null;
-  } catch (e) {
-    console.warn('getCurrentUser failed', e);
-    return null;
+  if (!supabaseClient) {
+    throw new Error('Authentication service is not available yet.');
   }
+
+  const resp = await supabaseClient.auth.getUser();
+  if (resp?.error) {
+    const code = String(resp.error.code || '').toLowerCase();
+    const name = String(resp.error.name || '').toLowerCase();
+    if (code === 'auth_session_missing' || name === 'authsessionmissingerror') {
+      return null;
+    }
+    throw resp.error;
+  }
+
+  return resp?.data?.user || null;
 }
 
 async function initializeClarivaPage() {
@@ -200,8 +221,14 @@ if (emailConfirmationLoginBtn) {
       : isOwnerDashboard ? document.getElementById('owner-dashboard') : null;
 
     if (!supabaseClient) {
-      console.error('Supabase client is unavailable.');
-      window.location.replace('index.html#step-1');
+      console.error('Supabase client is unavailable; protected access cannot be verified.');
+      window.ClarivaConnectivity?.notify(
+        'Clariva cannot verify your account right now. Check your connection and refresh when the service is available.',
+        'error',
+        'Retry',
+        () => window.location.reload(),
+        0
+      );
       return;
     }
 
@@ -220,8 +247,14 @@ if (emailConfirmationLoginBtn) {
           .eq('user_id', user.id)
           .single();
 
-      if (profileError || !profile) {
+      if (profileError) {
+        if (isClarivaConnectivityError(profileError)) throw profileError;
         console.error('Unable to verify account permissions:', profileError);
+        window.location.replace('index.html#step-1');
+        return;
+      }
+
+      if (!profile) {
         window.location.replace('index.html#step-1');
         return;
       }
@@ -266,6 +299,16 @@ if (emailConfirmationLoginBtn) {
       }
     } catch (error) {
       console.error('Dashboard access check failed:', error);
+      if (isClarivaConnectivityError(error)) {
+        window.ClarivaConnectivity?.notify(
+          'Your sign-in could not be verified because Clariva cannot reach its services. You have not been signed out. Reconnect to continue; protected actions remain unavailable until verification succeeds.',
+          'offline',
+          'Retry',
+          () => window.location.reload(),
+          0
+        );
+        return;
+      }
       window.location.replace('index.html#step-1');
       return;
     }
@@ -360,12 +403,15 @@ window.clarivaPageReady = initializeClarivaPage();
 let clarivaInitializationSettled = false;
 const clarivaInitializationTimeout = window.setTimeout(() => {
   if (clarivaInitializationSettled) return;
-  console.error('Clariva initialization exceeded 15 seconds.');
-  if (protectedClarivaPage) {
-    window.location.replace('index.html#step-1');
-  } else {
-    hideClarivaPageLoader();
-  }
+  console.warn('Clariva initialization is taking longer than expected.');
+  window.ClarivaConnectivity?.notify(
+    'Clariva is taking longer than expected to connect. A slow connection or delayed service response may be responsible. Please wait or retry.',
+    'warning',
+    'Retry',
+    () => window.location.reload(),
+    0
+  );
+  hideClarivaPageLoader();
 }, 15000);
 
 window.clarivaPageReady
@@ -378,6 +424,17 @@ window.clarivaPageReady
     clarivaInitializationSettled = true;
     window.clearTimeout(clarivaInitializationTimeout);
     console.error('Clariva page initialization failed:', error);
+    if (isClarivaConnectivityError(error)) {
+      window.ClarivaConnectivity?.notify(
+        'Clariva could not finish connecting. Check your internet connection and retry. You have not been signed out.',
+        'offline',
+        'Retry',
+        () => window.location.reload(),
+        0
+      );
+      hideClarivaPageLoader();
+      return;
+    }
     if (protectedClarivaPage) {
       window.location.replace('index.html#step-1');
     } else {
