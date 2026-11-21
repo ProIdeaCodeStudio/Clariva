@@ -157,12 +157,14 @@ function showNotification(
 
 function isClarivaConnectivityError(error) {
   const message = String(error?.message || error || '');
-  const status = Number(error?.status || error?.statusCode || 0);
+  const rawStatus = error?.status ?? error?.statusCode;
+  const hasStatus = rawStatus !== undefined && rawStatus !== null;
+  const status = hasStatus ? Number(rawStatus) : NaN;
   return navigator.onLine === false ||
     error?.name === 'TypeError' ||
     error?.name === 'AbortError' ||
-    status === 0 ||
-    status >= 500 ||
+    (hasStatus && status === 0) ||
+    (hasStatus && status >= 500) ||
     /failed to fetch|fetch failed|network|timed? ?out|connection (was )?lost|load failed|request aborted/i.test(message);
 }
 window.clarivaIsConnectivityError = isClarivaConnectivityError;
