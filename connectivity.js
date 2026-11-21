@@ -223,7 +223,6 @@
   }
 
   async function handleOnline() {
-    const wasOffline = offlineTransitionSeen;
     const result = await checkConnection({ recovered: offlineTransitionSeen });
     if (!result) {
       if (offlineTransitionSeen) window.setTimeout(handleOnline, 3000);
