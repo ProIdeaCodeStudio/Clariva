@@ -43,22 +43,32 @@
     if (PAGE === 'Undergraduates.html') {
       return [
         { title: 'Welcome to Clariva', text: 'This short guided tour explains the controls on this page. You will move through the available dashboards linked to your account. There is no skip option; your progress is saved so you can continue if you leave.', info: true },
-        { title: 'Dashboard navigation', text: 'Open this menu to move between the dashboards your account is permitted to use. The sign-out control is intentionally not part of the tour.', target: '#clariva-menu-toggle' },
-        { title: 'Your account menu', text: 'Open your account menu to see your account details and profile settings.', target: '#clariva-profile-toggle' },
+        { title: 'Your account menu', text: 'Open your account menu to review your account details and profile settings.', target: '#clariva-profile-toggle' },
         { title: 'Choose an avatar', text: 'Select an avatar to personalise your Clariva account. The selection is saved to your profile.', target: '[data-avatar-choice]' },
+        { title: 'Dashboard navigation', text: 'Open this menu to move between the dashboards your account is permitted to use. The sign-out control is intentionally not part of the tour.', target: '#clariva-menu-toggle' },
+        { title: 'Close dashboard navigation', text: 'Close the navigation menu to return to your resource library.', target: '#clariva-menu-toggle' },
         { title: 'Choose an academic level', text: 'The library lists your current academic level and earlier levels that have published resources. Select a level to continue.', target: '#student-level-grid [data-level-choice]', optional: true },
         { title: 'Choose a semester', text: 'Each level is organised into First Semester and Second Semester. Choose the semester whose materials you want to browse.', target: '#semester-picker-panel [data-semester-choice]', optional: true },
         { title: 'Search the collection', text: 'Search by resource title, course code, or course title to narrow the displayed materials.', target: '#resource-search', optional: true },
         { title: 'Filter by resource type', text: 'Use this filter to show only a particular type of material, such as lecture notes, handouts, or past questions.', target: '#resource-type-filter', optional: true },
+        { title: 'Featured resources', text: 'Featured materials are highlighted for quick access. They are also included in the full resource list below.', target: '#featured-resources', optional: true },
         { title: 'Offline Saves', text: 'Use “Save for offline” on a resource card to store an app-managed copy on this device for later reading without an internet connection. This is separate from Downloads. Saved copies use this device’s storage and remain associated with your account. Clearing browser storage removes them.', info: true },
         { title: 'Open a resource', text: 'Open a learning resource to read it in Clariva’s in-page PDF viewer. The viewer includes page navigation and zoom controls.', target: '#all-resources .student-resource-open', optional: true },
-        { title: 'Close the viewer', text: 'Close the viewer to return to the resource list. You can then go back to the semester chooser and select another semester or level.', target: '#pdf-reader-close', optional: true }
+        { title: 'Previous page', text: 'Move to the previous page of the open PDF. This control is unavailable when you are already on the first page.', target: '#pdf-reader-prev', optional: true },
+        { title: 'Next page', text: 'Move to the next page of the open PDF. This control is unavailable when you are already on the last page.', target: '#pdf-reader-next', optional: true },
+        { title: 'Zoom out', text: 'Reduce the PDF page size for a more compact view.', target: '#pdf-reader-zoom-out', optional: true },
+        { title: 'Zoom in', text: 'Increase the PDF page size when you need to inspect text or diagrams more closely.', target: '#pdf-reader-zoom-in', optional: true },
+        { title: 'Close the viewer', text: 'Close the viewer to return to the resource list.', target: '#pdf-reader-close', optional: true },
+        { title: 'Back to semesters', text: 'Return to the semester chooser for the academic level you selected.', target: '#semester-overlay-back', optional: true },
+        { title: 'Back to academic levels', text: 'Return to the list of available academic levels. Choose another level whenever you need to revisit earlier course materials.', target: '#semester-overlay-back', optional: true }
       ];
     }
 
     if (PAGE === 'AdminDashboard.html') {
       return [
         { title: 'Welcome to the Admin Dashboard', text: 'This tour explains the administrator tools. You will see how to navigate resource management, uploads, user overview, and platform statistics. It will not submit uploads or execute account-changing actions.', info: true },
+        { title: 'Your account menu', text: 'Open your account menu to review your account details and avatar settings.', target: '#clariva-profile-toggle' },
+        { title: 'Choose an avatar', text: 'Select an avatar to personalise your Clariva account. The selection is saved to your profile.', target: '[data-avatar-choice]' },
         { title: 'Dashboard navigation', text: 'Open the navigation menu to move between the administrator sections and any other dashboard available to your account.', target: '#clariva-menu-toggle' },
         { title: 'Resource overview', text: 'This section summarises the resource library, including total resources, featured resources, and the existing Downloads metric. Offline Saves is tracked separately in Platform Overview.', target: '#clariva-nav-menu a[href="#resource-management"]' },
         { title: 'Open the upload workspace', text: 'The upload workspace is where verified administrators add learning materials and assign their academic metadata.', target: '#clariva-menu-toggle' },
@@ -67,7 +77,8 @@
         { title: 'Department', text: 'Enter the department associated with the resource.', target: '#resource-department' },
         { title: 'Academic level', text: 'Choose the level for which the resource is intended. Students at that level and higher can access it, subject to verification and publication rules.', target: '#resource-level' },
         { title: 'Semester', text: 'Choose First or Second Semester. This determines where the resource appears in the student library.', target: '#resource-semester' },
-        { title: 'Course details', text: 'Enter the course code and course title so students can identify the material.', target: '#resource-course-code' },
+        { title: 'Course code', text: 'Enter the course code students use to identify this course.', target: '#resource-course-code' },
+        { title: 'Course title', text: 'Enter the full course title to make the resource easier to recognise.', target: '#resource-course-title' },
         { title: 'Resource type', text: 'Choose the correct resource type to keep the library organised and make filtering useful.', target: '#resource-type' },
         { title: 'Choose document files', text: 'Select one or more supported documents from device storage or Google Drive. The batch confirmation step checks that shared metadata is appropriate for all selected files.', target: '#resource-source-open' },
         { title: 'File source options', text: 'The source dialog lets you choose files from your device or Google Drive. The tour will close the dialog without selecting or uploading anything.', target: '#resource-source-close' },
@@ -76,21 +87,33 @@
         { title: 'Resource management tools', text: 'Open the resource list. Use its search and filters to find materials; each resource card contains its own management actions.', target: '#clariva-nav-menu a[href="#manage-resources"]' },
         { title: 'Search resources', text: 'Search by title or course to locate a particular item in the library.', target: '#resource-search' },
         { title: 'Filter by level', text: 'Limit the resource list to a selected academic level.', target: '#filter-level' },
+        { title: 'Filter by semester', text: 'Narrow the resource list to First or Second Semester.', target: '#filter-semester' },
+        { title: 'Filter by resource type', text: 'Narrow the list by lecture note, handout, past questions, assignment, textbook, or another resource type.', target: '#filter-type' },
+        { title: 'Resource actions', text: 'Each resource card provides preview, edit, visibility, featured status, and delete actions. Deletion and other changes are not performed during this tour.', target: '#resource-list' },
         { title: 'User overview', text: 'This section presents account totals and role and academic-level distributions. It does not expose individual student contact details.', target: '#clariva-menu-toggle' },
         { title: 'Open user overview', text: 'View the account summary and the breakdowns by role and academic level.', target: '#clariva-nav-menu a[href="#user-overview"]' },
+        { title: 'Accounts by role', text: 'This breakdown shows how many accounts belong to each role.', target: '#admin-role-breakdown' },
+        { title: 'Accounts by academic level', text: 'This breakdown shows how student accounts are distributed across academic levels.', target: '#admin-level-breakdown' },
         { title: 'Platform overview', text: 'This section presents library-wide totals, recent additions, resource-type distribution, views, Downloads, and the distinct Offline Saves metric.', target: '#clariva-menu-toggle' },
-        { title: 'Open platform overview', text: 'Review aggregate platform activity and use Refresh overview to request the latest summary.', target: '#clariva-nav-menu a[href="#platform-overview"]' }
+        { title: 'Open platform overview', text: 'Review aggregate platform activity and use Refresh overview to request the latest summary.', target: '#clariva-nav-menu a[href="#platform-overview"]' },
+        { title: 'Resource types', text: 'See how the published library is distributed across resource types.', target: '#admin-resource-type-breakdown' },
+        { title: 'Latest library update', text: 'This area shows when the most recent resource was added.', target: '#admin-latest-resource' },
+        { title: 'Refresh platform overview', text: 'Use this control to refresh the latest platform totals and activity summary.', target: '#admin-overview-refresh' }
       ];
     }
 
     return [
       { title: 'Welcome to the Owner Dashboard', text: 'This tour explains the owner controls, activity summaries, resource administration, and the other dashboards available to your account. It will not change account roles, verification, or delete accounts.', info: true },
+      { title: 'Your account menu', text: 'Open your account menu to review your account details and avatar settings.', target: '#clariva-profile-toggle' },
+      { title: 'Choose an avatar', text: 'Select an avatar to personalise your Clariva account. The selection is saved to your profile.', target: '[data-avatar-choice]' },
       { title: 'Dashboard navigation', text: 'Open this menu to move between owner sections and the other dashboards your account can access.', target: '#clariva-menu-toggle' },
       { title: 'User management', text: 'Open the account directory to search for users and review account roles, academic levels, verification status, join dates, and last login.', target: '#clariva-nav-menu a[href="#owner-controls"]' },
       { title: 'Find an account', text: 'Search the account directory by name, email, role, or level.', target: '#owner-account-search' },
       { title: 'Account actions', text: 'This table shows account privileges and status. Role changes, verification changes, and permanent account removal are sensitive actions; the tour explains them but will not execute them.', target: '#owner-account-table' },
       { title: 'Owner activity', text: 'Open the activity section to review aggregate resource views, unique viewers, daily trends, and Offline Saves. Individual student activity records are not exposed here.', target: '#clariva-menu-toggle' },
       { title: 'Open owner activity', text: 'Review the aggregate activity chart and refresh the summary when needed.', target: '#clariva-nav-menu a[href="#owner-activity"]' },
+      { title: 'Daily resource views', text: 'The chart shows the number of resource views recorded on each of the last seven days.', target: '#owner-daily-views-chart' },
+      { title: 'Refresh owner activity', text: 'Use this button to refresh the owner activity summary.', target: '#owner-refresh-activity' },
       { title: 'Upload resources', text: 'The owner dashboard also includes the resource upload workflow. The form and file-selection process are explained in the Admin Dashboard tour.', target: '#clariva-menu-toggle' },
       { title: 'Open upload workspace', text: 'Navigate to the upload section shared with administrators.', target: '#clariva-nav-menu a[href="#upload-resource"]' },
       { title: 'Manage resources', text: 'The resource manager supports searching, filtering, previewing, editing, publishing, featuring, and deleting resources. Destructive actions are not performed during this tour.', target: '#clariva-menu-toggle' },
@@ -98,7 +121,10 @@
       { title: 'User overview', text: 'Review account totals and role and level distributions.', target: '#clariva-menu-toggle' },
       { title: 'Open user overview', text: 'View the account overview section.', target: '#clariva-nav-menu a[href="#user-overview"]' },
       { title: 'Platform overview', text: 'Review platform totals, recorded Downloads, distinct Offline Saves, views, and recent library changes.', target: '#clariva-menu-toggle' },
-      { title: 'Open platform overview', text: 'Open the aggregate platform statistics.', target: '#clariva-nav-menu a[href="#platform-overview"]' }
+      { title: 'Open platform overview', text: 'Open the aggregate platform statistics.', target: '#clariva-nav-menu a[href="#platform-overview"]' },
+      { title: 'Resource types', text: 'Review how resources are distributed across the available types.', target: '#admin-resource-type-breakdown' },
+      { title: 'Latest library update', text: 'See the date and time of the latest library addition.', target: '#admin-latest-resource' },
+      { title: 'Refresh platform overview', text: 'Refresh the aggregate statistics when you need an updated snapshot.', target: '#admin-overview-refresh' }
     ];
   }
 
@@ -151,6 +177,21 @@
     if (expected && (expected === event.target || expected.contains(event.target))) {
       if (!step.info && !step._clicked) {
         step._clicked = true;
+        if (step.advanceSequenceOnClick) {
+          session.index += 1;
+          session.stepIndex = 0;
+          writeJson(SESSION_PREFIX + userId, session);
+          return;
+        }
+        if (step.completeSequenceOnClick) {
+          try {
+            localStorage.setItem(STORAGE_PREFIX + userId, 'complete');
+            localStorage.removeItem(SESSION_PREFIX + userId);
+          } catch (error) {
+            console.warn('Clariva tour completion could not be saved:', error);
+          }
+          return;
+        }
         const button = card?.querySelector('.clariva-tour-continue');
         if (button) button.disabled = false;
         if (advanceTimer) clearTimeout(advanceTimer);
@@ -251,14 +292,6 @@
     document.removeEventListener('click', blockOutsideClicks, true);
     isActive = false;
 
-    session.index += 1;
-    if (session.index < session.sequence.length) {
-      session.stepIndex = 0;
-      writeJson(SESSION_PREFIX + userId, session);
-      window.location.assign(pageUrl(session.sequence[session.index]));
-      return;
-    }
-
     const startPage = session.startPage;
     try {
       localStorage.setItem(STORAGE_PREFIX + userId, 'complete');
@@ -324,6 +357,28 @@
     }
 
     steps = getStepSet();
+    const nextPage = session.sequence[session.index + 1];
+    if (nextPage) {
+      const nextLink = nextPage === 'AdminDashboard.html'
+        ? '#clariva-admin-dashboard-link'
+        : nextPage === 'OwnerDashboard.html'
+          ? '#clariva-owner-dashboard-link'
+          : '#clariva-student-dashboard-link';
+      steps.push(
+        { title: 'Move to your next dashboard', text: 'Open the navigation menu to continue the guided tour on the next dashboard available to your account.', target: '#clariva-menu-toggle' },
+        { title: 'Open ' + pageNames[nextPage], text: 'Select this dashboard link. The tour will continue there automatically.', target: nextLink, advanceSequenceOnClick: true }
+      );
+    } else if (session.startPage !== PAGE) {
+      const returnLink = session.startPage === 'AdminDashboard.html'
+        ? '#clariva-admin-dashboard-link'
+        : session.startPage === 'OwnerDashboard.html'
+          ? '#clariva-owner-dashboard-link'
+          : '#clariva-student-dashboard-link';
+      steps.push(
+        { title: 'Return to your starting dashboard', text: 'Open the navigation menu to return to the dashboard where your guided tour began.', target: '#clariva-menu-toggle' },
+        { title: 'Return to ' + pageNames[session.startPage], text: 'Select this dashboard link to finish the tour and return to your starting dashboard.', target: returnLink, completeSequenceOnClick: true }
+      );
+    }
     stepIndex = Math.max(0, Math.min(Number(session.stepIndex || 0), steps.length - 1));
     isActive = true;
     document.addEventListener('click', blockOutsideClicks, true);
