@@ -382,6 +382,7 @@ returns table (
   daily_views jsonb
 )
 language sql
+security definer
 set search_path to ''
 as $function$
   select * from private.owner_activity_overview();
