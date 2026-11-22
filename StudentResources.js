@@ -151,26 +151,6 @@
     });
   }
 
-  async function clearOfflineDocumentsForUser(userId) {
-    if (!userId || !('indexedDB' in window)) return;
-    const database = await openOfflineDatabase();
-    await new Promise((resolve, reject) => {
-      const transaction = database.transaction(OFFLINE_STORE_NAME, 'readwrite');
-      const store = transaction.objectStore(OFFLINE_STORE_NAME);
-      const request = store.openCursor();
-      request.onsuccess = () => {
-        const cursor = request.result;
-        if (!cursor) return;
-        if (cursor.value?.userId === userId) cursor.delete();
-        cursor.continue();
-      };
-      transaction.oncomplete = resolve;
-      transaction.onerror = () => reject(transaction.error || new Error('Offline files could not be cleared.'));
-    });
-  }
-
-  window.clarivaClearOfflineSaves = clearOfflineDocumentsForUser;
-
   async function saveResourceOffline(resource, button) {
     if (!currentUserId || currentUserRole !== 'student') {
       setLibraryStatus('Offline Saves are available to verified student accounts.', 'error');
@@ -340,8 +320,10 @@
       });
       getOfflineDocument(resource.id).then(saved => {
         offlineButton.dataset.saved = saved ? 'true' : 'false';
-        offlineButton.textContent = saved ? 'Saved offline · Remove' : 'Save for offline';
-        offlineButton.disabled = false;
+        offlineButton.textContent = saved
+          ? (navigator.onLine ? 'Saved offline · Remove' : 'Saved offline')
+          : 'Save for offline';
+        offlineButton.disabled = !navigator.onLine;
       }).catch(() => {
         offlineButton.textContent = 'Offline save unavailable';
         offlineButton.disabled = true;
