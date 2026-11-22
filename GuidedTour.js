@@ -186,7 +186,7 @@
       return;
     }
 
-    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    targetElement.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
     window.requestAnimationFrame(() => {
       if (!card || !targetElement || !isActive) return;
       const target = targetElement.getBoundingClientRect();
