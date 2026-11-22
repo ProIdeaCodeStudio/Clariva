@@ -7,10 +7,16 @@
 
   const BUCKET_NAME = 'clariva-resources';
   const SIGNED_URL_TTL_SECONDS = 300;
+  const OFFLINE_DB_NAME = 'clariva-offline-library-v1';
+  const OFFLINE_STORE_NAME = 'documents';
 
   let client = null;
   let resources = [];
   let currentUserId = null;
+  let currentUserRole = '';
+  let activeLevel = null;
+  let offlineDbPromise = null;
+  let activePdfObjectUrl = null;
   let activePdf = null;
   let activePdfPage = 1;
   let pdfScale = 1;
@@ -32,6 +38,158 @@
     if (className) element.className = className;
     element.textContent = text || '';
     return element;
+  }
+
+  function openOfflineDatabase() {
+    if (!('indexedDB' in window)) {
+      return Promise.reject(new Error('This browser does not support offline library storage.'));
+    }
+    if (!offlineDbPromise) {
+      offlineDbPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open(OFFLINE_DB_NAME, 1);
+        request.onupgradeneeded = () => {
+          const database = request.result;
+          if (!database.objectStoreNames.contains(OFFLINE_STORE_NAME)) {
+            database.createObjectStore(OFFLINE_STORE_NAME, { keyPath: 'key' });
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('Offline storage could not be opened.'));
+      }).catch(error => {
+        offlineDbPromise = null;
+        throw error;
+      });
+    }
+    return offlineDbPromise;
+  }
+
+  function offlineDocumentKey(resourceId) {
+    return String(currentUserId || '') + ':' + String(resourceId || '');
+  }
+
+  async function getOfflineDocument(resourceId) {
+    if (!currentUserId || !resourceId) return null;
+    const database = await openOfflineDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(OFFLINE_STORE_NAME, 'readonly');
+      const request = transaction.objectStore(OFFLINE_STORE_NAME).get(offlineDocumentKey(resourceId));
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error || new Error('Offline save could not be checked.'));
+    });
+  }
+
+  async function writeOfflineDocument(resource, blob) {
+    const database = await openOfflineDatabase();
+    const record = {
+      key: offlineDocumentKey(resource.id),
+      userId: currentUserId,
+      resourceId: resource.id,
+      title: resource.title || resource.file_name || 'Learning resource',
+      fileName: resource.file_name || 'resource.pdf',
+      blob,
+      savedAt: new Date().toISOString()
+    };
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(OFFLINE_STORE_NAME, 'readwrite');
+      transaction.objectStore(OFFLINE_STORE_NAME).put(record);
+      transaction.oncomplete = () => resolve(record);
+      transaction.onerror = () => reject(transaction.error || new Error('The document could not be saved on this device.'));
+      transaction.onabort = () => reject(transaction.error || new Error('The offline save was interrupted.'));
+    });
+  }
+
+  async function deleteOfflineDocument(resourceId) {
+    const database = await openOfflineDatabase();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(OFFLINE_STORE_NAME, 'readwrite');
+      transaction.objectStore(OFFLINE_STORE_NAME).delete(offlineDocumentKey(resourceId));
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error || new Error('The offline copy could not be removed.'));
+    });
+  }
+
+  async function clearOfflineDocumentsForUser(userId) {
+    if (!userId || !('indexedDB' in window)) return;
+    const database = await openOfflineDatabase();
+    await new Promise((resolve, reject) => {
+      const transaction = database.transaction(OFFLINE_STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(OFFLINE_STORE_NAME);
+      const request = store.openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return;
+        if (cursor.value?.userId === userId) cursor.delete();
+        cursor.continue();
+      };
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error || new Error('Offline files could not be cleared.'));
+    });
+  }
+
+  window.clarivaClearOfflineSaves = clearOfflineDocumentsForUser;
+
+  async function saveResourceOffline(resource, button) {
+    if (!currentUserId || currentUserRole !== 'student') {
+      setLibraryStatus('Offline Saves are available to verified student accounts.', 'error');
+      return;
+    }
+    if (!navigator.onLine) {
+      setLibraryStatus('Connect to the internet before saving this resource for offline reading.', 'error');
+      return;
+    }
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Saving…';
+    try {
+      const { data, error } = await client.storage.from(BUCKET_NAME)
+        .createSignedUrl(resource.file_url, SIGNED_URL_TTL_SECONDS);
+      if (error) throw error;
+      if (!data?.signedUrl) throw new Error('A secure file link could not be created.');
+      const response = await fetch(data.signedUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error('The document could not be retrieved. Try again.');
+      const blob = await response.blob();
+      if (!blob.size) throw new Error('The document returned an empty file.');
+      await writeOfflineDocument(resource, blob);
+      const { error: saveError } = await client.rpc('save_offline_resource', {
+        resource_id_input: resource.id
+      });
+      if (saveError) {
+        await deleteOfflineDocument(resource.id);
+        throw saveError;
+      }
+      button.dataset.saved = 'true';
+      button.textContent = 'Saved offline · Remove';
+      setLibraryStatus('Saved for offline reading on this device. It is available while you remain signed in to this account. Browser storage can be cleared by your device settings.', 'success');
+    } catch (error) {
+      console.error('Clariva offline save failed:', error);
+      button.textContent = originalText;
+      setLibraryStatus(window.clarivaFriendlyError?.(error, 'Unable to save this document offline. Check your connection and device storage.') || 'Unable to save this document offline. Check your connection and device storage.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function removeOfflineSave(resource, button) {
+    if (!navigator.onLine) {
+      setLibraryStatus('Connect to the internet before removing an offline save.', 'error');
+      return;
+    }
+    button.disabled = true;
+    try {
+      const { error } = await client.rpc('remove_offline_resource_save', {
+        resource_id_input: resource.id
+      });
+      if (error) throw error;
+      await deleteOfflineDocument(resource.id);
+      button.dataset.saved = 'false';
+      button.textContent = 'Save for offline';
+      setLibraryStatus('Offline save removed from this device.', 'success');
+    } catch (error) {
+      console.error('Clariva offline save removal failed:', error);
+      setLibraryStatus(window.clarivaFriendlyError?.(error, 'Unable to remove this offline save. Try again.') || 'Unable to remove this offline save. Try again.', 'error');
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function getResourceSearchText(resource) {
@@ -122,6 +280,30 @@
     openButton.addEventListener('click', () => openResource(resource, openButton));
 
     card.appendChild(openButton);
+
+    if (currentUserRole === 'student') {
+      const offlineButton = document.createElement('button');
+      offlineButton.type = 'button';
+      offlineButton.className = 'student-resource-open student-resource-offline';
+      offlineButton.textContent = 'Checking offline status…';
+      offlineButton.disabled = true;
+      offlineButton.addEventListener('click', () => {
+        if (offlineButton.dataset.saved === 'true') {
+          void removeOfflineSave(resource, offlineButton);
+        } else {
+          void saveResourceOffline(resource, offlineButton);
+        }
+      });
+      getOfflineDocument(resource.id).then(saved => {
+        offlineButton.dataset.saved = saved ? 'true' : 'false';
+        offlineButton.textContent = saved ? 'Saved offline · Remove' : 'Save for offline';
+        offlineButton.disabled = false;
+      }).catch(() => {
+        offlineButton.textContent = 'Offline save unavailable';
+        offlineButton.disabled = true;
+      });
+      card.appendChild(offlineButton);
+    }
     return card;
   }
 
@@ -146,17 +328,20 @@
 
   let activeSemester = null;
   let lastSemesterTrigger = null;
+  let lastLevelTrigger = null;
 
   function getFilteredResources() {
     const search = (getElement('resource-search')?.value || '').trim().toLowerCase();
     const type = getElement('resource-type-filter')?.value || '';
 
     return resources.filter(resource => {
+      const matchesLevel = activeLevel !== null &&
+        Number(resource.level) === Number(activeLevel);
       const matchesSemester = activeSemester !== null &&
         Number(resource.semester) === Number(activeSemester);
       const matchesSearch = !search || getResourceSearchText(resource).includes(search);
       const matchesType = !type || resource.resource_type === type;
-      return matchesSemester && matchesSearch && matchesType;
+      return matchesLevel && matchesSemester && matchesSearch && matchesType;
     });
   }
 
@@ -191,6 +376,7 @@
     const featured = filtered.filter(resource => resource.featured === true);
     const semesterLabel = Number(activeSemester) === 1 ? 'First Semester' : 'Second Semester';
     const semesterTotal = resources.filter(resource =>
+      Number(resource.level) === Number(activeLevel) &&
       Number(resource.semester) === Number(activeSemester)
     ).length;
 
@@ -214,49 +400,115 @@
     );
   }
 
+  function updateLevelChoices(studentLevel) {
+    const grid = getElement('student-level-grid');
+    if (!grid) return;
+    grid.replaceChildren();
+    const availableLevels = [...new Set(resources
+      .map(resource => Number(resource.level))
+      .filter(level => Number.isInteger(level) && level >= 100 && level <= studentLevel && level <= 500))]
+      .sort((a, b) => a - b);
+
+    if (!availableLevels.length) {
+      const empty = makeTextElement('p', 'student-library-status', 'No published resources are available for your academic level or earlier levels yet.');
+      grid.appendChild(empty);
+      return;
+    }
+
+    availableLevels.forEach(level => {
+      const count = resources.filter(resource => Number(resource.level) === level).length;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'semester-choice';
+      button.dataset.levelChoice = String(level);
+      button.setAttribute('aria-haspopup', 'dialog');
+      button.append(
+        makeTextElement('span', 'semester-choice-title', level + ' Level Resources'),
+        makeTextElement('span', 'semester-choice-count', count + ' resource' + (count === 1 ? '' : 's') + ' available')
+      );
+      button.addEventListener('click', () => openLevel(level, button));
+      grid.appendChild(button);
+    });
+  }
+
   function updateSemesterCounts() {
     [1, 2].forEach(semester => {
       const count = resources.filter(resource =>
+        Number(resource.level) === Number(activeLevel) &&
         Number(resource.semester) === semester
       ).length;
       const node = getElement('semester-count-' + semester);
-      if (node) {
-        node.textContent = count + ' resource' + (count === 1 ? '' : 's') + ' available';
-      }
+      if (node) node.textContent = count + ' resource' + (count === 1 ? '' : 's') + ' available';
     });
+  }
+
+  function openLevel(level, trigger = null) {
+    const safeLevel = Number(level);
+    if (!resources.some(resource => Number(resource.level) === safeLevel)) return;
+    activeLevel = safeLevel;
+    activeSemester = null;
+    lastLevelTrigger = trigger || lastLevelTrigger;
+    const overlay = getElement('semester-resource-overlay');
+    const title = getElement('semester-overlay-title');
+    if (title) title.textContent = safeLevel + ' Level Resources';
+    getElement('semester-picker-panel').hidden = false;
+    getElement('semester-resource-content').hidden = true;
+    const back = getElement('semester-overlay-back');
+    if (back) back.textContent = '← Back to levels';
+    updateSemesterCounts();
+    overlay.hidden = false;
+    document.body.classList.add('semester-overlay-open');
+    syncSemesterOverlayOffset();
+    back?.focus();
   }
 
   function openSemester(semester, trigger = null) {
     const safeSemester = Number(semester);
-    if (![1, 2].includes(safeSemester)) return;
+    if (![1, 2].includes(safeSemester) || activeLevel === null) return;
 
     activeSemester = safeSemester;
     lastSemesterTrigger = trigger || lastSemesterTrigger;
-    const overlay = getElement('semester-resource-overlay');
     const title = getElement('semester-overlay-title');
     const label = safeSemester === 1 ? 'First Semester' : 'Second Semester';
-
-    if (title) title.textContent = label;
+    if (title) title.textContent = activeLevel + ' Level · ' + label;
+    getElement('semester-picker-panel').hidden = true;
+    getElement('semester-resource-content').hidden = false;
+    const back = getElement('semester-overlay-back');
+    if (back) back.textContent = '← Back to semesters';
     const search = getElement('resource-search');
     const typeFilter = getElement('resource-type-filter');
     if (search) search.value = '';
     if (typeFilter) typeFilter.value = '';
-
-    overlay.hidden = false;
-    document.body.classList.add('semester-overlay-open');
-    syncSemesterOverlayOffset();
     renderResources();
-    getElement('semester-overlay-back')?.focus();
+    back?.focus();
+  }
+
+  function handleSemesterOverlayBack() {
+    if (!getElement('semester-resource-content')?.hidden) {
+      activeSemester = null;
+      getElement('semester-resource-content').hidden = true;
+      getElement('semester-picker-panel').hidden = false;
+      const title = getElement('semester-overlay-title');
+      if (title) title.textContent = activeLevel + ' Level Resources';
+      const back = getElement('semester-overlay-back');
+      if (back) back.textContent = '← Back to levels';
+      updateSemesterCounts();
+      back?.focus();
+      return;
+    }
+    closeSemesterOverlay();
   }
 
   function closeSemesterOverlay() {
     const overlay = getElement('semester-resource-overlay');
     if (!overlay || overlay.hidden) return;
-
     overlay.hidden = true;
+    activeLevel = null;
     activeSemester = null;
+    getElement('semester-picker-panel').hidden = false;
+    getElement('semester-resource-content').hidden = true;
     document.body.classList.remove('semester-overlay-open');
-    lastSemesterTrigger?.focus();
+    lastLevelTrigger?.focus();
   }
 
   function syncSemesterOverlayOffset() {
@@ -283,7 +535,7 @@
       });
     });
 
-    getElement('semester-overlay-back')?.addEventListener('click', closeSemesterOverlay);
+    getElement('semester-overlay-back')?.addEventListener('click', handleSemesterOverlayBack);
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !getElement('semester-resource-overlay')?.hidden) {
         closeSemesterOverlay();
@@ -400,7 +652,10 @@
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       activePdf = await window.pdfjsLib.getDocument({
         url: signedUrl,
-        disableAutoFetch: true
+        disableAutoFetch: false,
+        disableStream: false,
+        disableRange: false,
+        rangeChunkSize: 65536
       }).promise;
       await renderPdfPage();
     } catch (error) {
@@ -421,6 +676,10 @@
     }
     reader.hidden = true;
     document.body.classList.remove('pdf-reader-open');
+    if (activePdfObjectUrl) {
+      URL.revokeObjectURL(activePdfObjectUrl);
+      activePdfObjectUrl = null;
+    }
   }
 
   async function recordResourceView(resourceId) {
@@ -462,18 +721,30 @@
 
     try {
       // Storage RLS independently verifies the signed-in student's level.
-      const { data, error } = await client
-        .storage
-        .from(BUCKET_NAME)
-        .createSignedUrl(resource.file_url, SIGNED_URL_TTL_SECONDS);
-
-      if (error) throw error;
-      if (!data?.signedUrl) {
-        throw new Error('Supabase did not return a secure file link.');
+      let documentUrl = null;
+      if (!navigator.onLine) {
+        const cached = await getOfflineDocument(resource.id);
+        if (!cached?.blob) throw new Error('This resource is not saved for offline reading on this device.');
+        activePdfObjectUrl = URL.createObjectURL(cached.blob);
+        documentUrl = activePdfObjectUrl;
+      } else {
+        try {
+          const { data, error } = await client.storage.from(BUCKET_NAME)
+            .createSignedUrl(resource.file_url, SIGNED_URL_TTL_SECONDS);
+          if (error) throw error;
+          if (!data?.signedUrl) throw new Error('Supabase did not return a secure file link.');
+          documentUrl = data.signedUrl;
+        } catch (onlineError) {
+          const cached = await getOfflineDocument(resource.id);
+          if (!cached?.blob) throw onlineError;
+          activePdfObjectUrl = URL.createObjectURL(cached.blob);
+          documentUrl = activePdfObjectUrl;
+          setLibraryStatus('The connection is unavailable. Opening the saved offline copy.', 'info');
+        }
       }
 
-      await showPdfReader(data.signedUrl, resource.title || fileName);
-      await recordResourceView(resource.id);
+      await showPdfReader(documentUrl, resource.title || fileName);
+      if (navigator.onLine) await recordResourceView(resource.id);
     } catch (error) {
       console.error('Clariva resource opening error:', error);
       setLibraryStatus(
@@ -573,17 +844,18 @@
       }
 
       const studentLevel = Number.parseInt(profile.Level, 10);
+      currentUserRole = role;
       if (!Number.isInteger(studentLevel) || studentLevel <= 0) {
         throw new Error('Your academic level is missing from your profile. Please contact an administrator.');
       }
 
-      // The Undergraduates page is level-scoped for every role. Privileged
-      // cross-level access remains available only in the Admin/Owner dashboards.
-      let resourceQuery = client
+      // Students can revisit their current level and any earlier level.
+      // RLS independently enforces the same rule for both metadata and files.
+      const resourceQuery = client
         .from('Resources')
         .select('id, title, description, department, level, semester, course_code, course_title, resource_type, file_url, file_name, file_size, featured, created_at')
         .eq('visibility', true)
-        .eq('level', studentLevel);
+        .lte('level', studentLevel);
 
       const { data, error } = await resourceQuery
         .order('featured', { ascending: false })
@@ -593,16 +865,12 @@
 
       resources = data || [];
       populateResourceTypeFilter();
-      updateSemesterCounts();
+      updateLevelChoices(studentLevel);
 
       setLibraryStatus(
-        isPrivileged
-          ? (resources.length
-              ? `Administrator view: showing all ${resources.length} published resources.`
-              : 'No published resources are available yet.')
-          : (resources.length
-              ? `Showing ${resources.length} resource${resources.length === 1 ? '' : 's'} for Level ${studentLevel}. Department and semester do not limit your access.`
-              : `No published resources are available for Level ${studentLevel} yet.`)
+        resources.length
+          ? `Showing ${resources.length} published resource${resources.length === 1 ? '' : 's'} from Level 100 through Level ${studentLevel}. Choose an academic level, then a semester.`
+          : `No published resources are available for Level 100 through Level ${studentLevel} yet.`
       );
     } catch (error) {
       console.error('Clariva Resource Library loading error:', error);
