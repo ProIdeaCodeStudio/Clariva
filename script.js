@@ -183,7 +183,10 @@ async function getCurrentUser() {
     }
     if (isClarivaConnectivityError(resp.error)) {
       const sessionResponse = await supabaseClient.auth.getSession();
-      return sessionResponse?.data?.session?.user || null;
+      const session = sessionResponse?.data?.session;
+      if (!session?.user) return null;
+      if (session.expires_at && Number(session.expires_at) <= Math.floor(Date.now() / 1000)) return null;
+      return session.user;
     }
     throw resp.error;
   }
