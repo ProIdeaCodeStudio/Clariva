@@ -255,6 +255,7 @@
       setMetric('owner-views-7d', summary.views_last_7_days);
       setMetric('owner-views-30d', summary.views_last_30_days);
       setMetric('owner-unique-viewers-7d', summary.unique_viewers_last_7_days);
+      setMetric('owner-offline-saves', summary.total_offline_saves);
       const days = Array.isArray(summary.daily_views) ? summary.daily_views : [];
       if (chart) {
         chart.replaceChildren();
