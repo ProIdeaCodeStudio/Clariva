@@ -50,7 +50,7 @@
         { title: 'Choose a semester', text: 'Each level is organised into First Semester and Second Semester. Choose the semester whose materials you want to browse.', target: '#semester-picker-panel [data-semester-choice]', optional: true },
         { title: 'Search the collection', text: 'Search by resource title, course code, or course title to narrow the displayed materials.', target: '#resource-search', optional: true },
         { title: 'Filter by resource type', text: 'Use this filter to show only a particular type of material, such as lecture notes, handouts, or past questions.', target: '#resource-type-filter', optional: true },
-        { title: 'Offline Saves', text: 'Use “Save for offline” on a resource card to store an app-managed copy on this device for later reading without an internet connection. This is separate from Downloads. Saved copies use device storage and are cleared when you sign out.', info: true },
+        { title: 'Offline Saves', text: 'Use “Save for offline” on a resource card to store an app-managed copy on this device for later reading without an internet connection. This is separate from Downloads. Saved copies use this device’s storage and remain associated with your account. Clearing browser storage removes them.', info: true },
         { title: 'Open a resource', text: 'Open a learning resource to read it in Clariva’s in-page PDF viewer. The viewer includes page navigation and zoom controls.', target: '#all-resources .student-resource-open', optional: true },
         { title: 'Close the viewer', text: 'Close the viewer to return to the resource list. You can then go back to the semester chooser and select another semester or level.', target: '#pdf-reader-close', optional: true }
       ];
