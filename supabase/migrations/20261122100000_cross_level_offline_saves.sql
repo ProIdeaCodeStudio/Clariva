@@ -116,6 +116,8 @@ begin
     from public."Resources" r
     where r.id = p_resource_id
       and r.visibility is true
+      and r.file_url is not null
+      and lower(coalesce(r.file_name, '')) like '%.pdf'
       and r.level <= current_level
   ) into allowed;
 
