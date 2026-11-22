@@ -964,6 +964,7 @@
       setOverviewValue('admin-published-resources', data.published_resources);
       setOverviewValue('admin-featured-resources', data.featured_resources);
       setOverviewValue('admin-total-downloads', data.total_downloads);
+      setOverviewValue('admin-total-offline-saves', data.total_offline_saves);
       setOverviewValue('admin-total-views', data.total_views);
       setOverviewValue('admin-new-resources', data.resources_added_7d);
       renderOverviewBreakdown('admin-resource-type-breakdown', data.resources_by_type, 'No resource types to display.');
