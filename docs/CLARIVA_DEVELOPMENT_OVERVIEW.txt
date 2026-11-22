@@ -1,5 +1,5 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.1
+Version: 2.2
 Prepared: 22 November 2026
 Product: Clariva
 Product studio: Pro Idea
@@ -47,7 +47,7 @@ CURRENT PRODUCT AREAS
 DEVELOPMENT POSITION — 22 NOVEMBER 2026
 Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
 
-The next release-preparation work includes offline reading for eligible student resources, clearer guided onboarding for the student and management workspaces, and further real-device verification. These additions remain under development until their release and user-facing behaviour have been verified.
+Offline reading for eligible student resources, broader academic-resource discovery and guided onboarding for the student and management workspaces have now been merged into the main application branch. Their live availability and user-facing behaviour are still awaiting deployment confirmation and real-device verification.
 
 Structured course-representative coordination remains a future product consideration.
 
