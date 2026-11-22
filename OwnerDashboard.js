@@ -58,7 +58,7 @@
     if (!filtered.length) {
       const row = document.createElement('tr');
       const cell = makeCell(query ? 'No matching accounts.' : 'No accounts were returned.');
-      cell.colSpan = 7;
+      cell.colSpan = 8;
       row.appendChild(cell);
       body.appendChild(row);
       return;
@@ -74,6 +74,9 @@
       const created = account.created_at ? new Date(account.created_at) : null;
       row.appendChild(makeCell(created && !Number.isNaN(created.getTime())
         ? created.toLocaleDateString() : '—'));
+      const lastLogin = account.last_login_at ? new Date(account.last_login_at) : null;
+      row.appendChild(makeCell(lastLogin && !Number.isNaN(lastLogin.getTime())
+        ? lastLogin.toLocaleString() : 'Never'));
 
       const actionCell = document.createElement('td');
       const isOwner = String(account.role || '').toLowerCase() === 'owner';
@@ -129,7 +132,7 @@
       if (authError || !authData?.user) throw authError || new Error('Your session has expired.');
       currentUserId = authData.user.id;
 
-      const { data, error } = await supabaseClient.rpc('owner_list_accounts');
+      const { data, error } = await supabaseClient.rpc('owner_list_accounts_with_last_login');
       if (error) throw error;
       accounts = Array.isArray(data) ? data : [];
       updateMetrics();

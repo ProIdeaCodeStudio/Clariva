@@ -339,6 +339,49 @@
       color: #fff;
       text-align: center;
     }
+
+    .pdf-reader, .admin-pdf-reader { position: fixed; }
+    .pdf-reader-overlay-arrow, .admin-pdf-overlay-arrow {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      display: grid;
+      width: 44px;
+      height: 64px;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(30, 30, 30, .16);
+      color: rgba(255, 255, 255, .78);
+      font-size: 42px;
+      line-height: 1;
+      cursor: pointer;
+      transform: translateY(-50%);
+      transition: background .18s ease, color .18s ease, opacity .18s ease;
+    }
+    .pdf-reader-overlay-arrow:hover:not(:disabled),
+    .admin-pdf-overlay-arrow:hover:not(:disabled),
+    .pdf-reader-overlay-arrow:focus-visible,
+    .admin-pdf-overlay-arrow:focus-visible {
+      background: rgba(30, 30, 30, .62);
+      color: #fff;
+      outline: 2px solid rgba(255,255,255,.72);
+      outline-offset: 2px;
+    }
+    .pdf-reader-overlay-arrow:disabled,
+    .admin-pdf-overlay-arrow:disabled {
+      opacity: .18;
+      cursor: not-allowed;
+    }
+    .pdf-reader-overlay-arrow-prev, .admin-pdf-overlay-arrow-prev { left: 10px; }
+    .pdf-reader-overlay-arrow-next, .admin-pdf-overlay-arrow-next { right: 10px; }
+    @media (max-width: 600px) {
+      .pdf-reader-overlay-arrow, .admin-pdf-overlay-arrow { width: 36px; height: 54px; font-size: 36px; }
+      .pdf-reader-overlay-arrow-prev, .admin-pdf-overlay-arrow-prev { left: 5px; }
+      .pdf-reader-overlay-arrow-next, .admin-pdf-overlay-arrow-next { right: 5px; }
+    }
+
     body.pdf-reader-open { overflow: hidden; }
 
     @media (max-width: 600px) {
@@ -478,6 +521,8 @@
       <button id="pdf-reader-zoom-in" type="button" aria-label="Zoom in">+</button>
       <button id="pdf-reader-close" type="button" aria-label="Close resource viewer">Close</button>
     </div>
+      <button class="pdf-reader-overlay-arrow pdf-reader-overlay-arrow-prev" id="pdf-reader-overlay-prev" type="button" aria-label="Previous page" title="Previous page" disabled>‹</button>
+      <button class="pdf-reader-overlay-arrow pdf-reader-overlay-arrow-next" id="pdf-reader-overlay-next" type="button" aria-label="Next page" title="Next page" disabled>›</button>
     <div id="pdf-reader-viewport" class="pdf-reader-viewport">
       <p id="pdf-reader-message" class="pdf-reader-message" role="status">Preparing resource…</p>
       <canvas id="pdf-reader-canvas" hidden></canvas>

@@ -549,6 +549,44 @@
       color: #fff;
       text-align: center;
     }
+
+    .admin-pdf-overlay-arrow {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      display: grid;
+      width: 44px;
+      height: 64px;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(30, 30, 30, .16);
+      color: rgba(255, 255, 255, .78);
+      font-size: 42px;
+      line-height: 1;
+      cursor: pointer;
+      transform: translateY(-50%);
+      transition: background .18s ease, color .18s ease, opacity .18s ease;
+    }
+    .admin-pdf-overlay-arrow:hover:not(:disabled),
+    .admin-pdf-overlay-arrow:focus-visible {
+      background: rgba(30, 30, 30, .62);
+      color: #fff;
+      outline: 2px solid rgba(255,255,255,.72);
+      outline-offset: 2px;
+    }
+    .admin-pdf-overlay-arrow:disabled {
+      opacity: .18;
+      cursor: not-allowed;
+    }
+    .admin-pdf-overlay-arrow-prev { left: 10px; }
+    .admin-pdf-overlay-arrow-next { right: 10px; }
+    @media (max-width: 600px) {
+      .admin-pdf-overlay-arrow { width: 36px; height: 54px; font-size: 36px; }
+      .admin-pdf-overlay-arrow-prev { left: 5px; }
+      .admin-pdf-overlay-arrow-next { right: 5px; }
+    }
     body.admin-pdf-open { overflow: hidden; }
 
     @media (max-width: 600px) {
@@ -1010,6 +1048,8 @@
       <button id="admin-pdf-zoom-in" type="button" aria-label="Zoom in">+</button>
       <button id="admin-pdf-close" type="button" aria-label="Close resource viewer">Close</button>
     </div>
+      <button class="admin-pdf-overlay-arrow admin-pdf-overlay-arrow-prev" id="admin-pdf-overlay-prev" type="button" aria-label="Previous page" title="Previous page" disabled>‹</button>
+      <button class="admin-pdf-overlay-arrow admin-pdf-overlay-arrow-next" id="admin-pdf-overlay-next" type="button" aria-label="Next page" title="Next page" disabled>›</button>
     <div id="admin-pdf-viewport" class="admin-pdf-viewport">
       <p id="admin-pdf-message" class="admin-pdf-message" role="status">Preparing document…</p>
       <canvas id="admin-pdf-canvas" hidden></canvas>

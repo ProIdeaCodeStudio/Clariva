@@ -66,6 +66,10 @@
     if (count) count.textContent = pageCount ? 'Page ' + activePdfPage + ' / ' + pageCount : 'Page — / —';
     if (previous) previous.disabled = !pageCount || activePdfPage <= 1;
     if (next) next.disabled = !pageCount || activePdfPage >= pageCount;
+    const overlayPrevious = getElement('admin-pdf-overlay-prev');
+    const overlayNext = getElement('admin-pdf-overlay-next');
+    if (overlayPrevious) overlayPrevious.disabled = !pageCount || activePdfPage <= 1;
+    if (overlayNext) overlayNext.disabled = !pageCount || activePdfPage >= pageCount;
   }
 
   async function renderAdminPdfPage() {
@@ -162,6 +166,14 @@
 
   function initializeAdminPdfReaderControls() {
     getElement('admin-pdf-close')?.addEventListener('click', closeAdminPdfReader);
+    const goToPreviousAdminPage = async () => {
+      if (activePdf && activePdfPage > 1) { activePdfPage -= 1; await renderAdminPdfPage(); }
+    };
+    const goToNextAdminPage = async () => {
+      if (activePdf && activePdfPage < activePdf.numPages) { activePdfPage += 1; await renderAdminPdfPage(); }
+    };
+    getElement('admin-pdf-overlay-prev')?.addEventListener('click', goToPreviousAdminPage);
+    getElement('admin-pdf-overlay-next')?.addEventListener('click', goToNextAdminPage);
     getElement('admin-pdf-prev')?.addEventListener('click', async () => {
       if (activePdf && activePdfPage > 1) {
         activePdfPage -= 1;

@@ -762,7 +762,7 @@
       <div class="admin-stat-grid admin-stat-grid-wide" aria-label="Platform activity summary">
         <div class="admin-stat"><span class="admin-stat-label">Views · last 7 days</span><span class="admin-stat-value" id="owner-views-7d">—</span></div>
         <div class="admin-stat"><span class="admin-stat-label">Views · last 30 days</span><span class="admin-stat-value" id="owner-views-30d">—</span></div>
-        <div class="admin-stat"><span class="admin-stat-label">Unique viewers · last 7 days</span><span class="admin-stat-value" id="owner-unique-viewers-7d">—</span></div>
+        <div class="admin-stat"><span class="admin-stat-label" title="Distinct signed-in accounts that viewed at least one resource during the last 7 days. Repeat views by the same account count once.">Unique viewers · last 7 days ⓘ</span><span class="admin-stat-value" id="owner-unique-viewers-7d">—</span></div>
       </div>
     
       <h3 class="admin-overview-subtitle">Resource library</h3>
@@ -1062,8 +1062,8 @@
       </div>
       <div class="admin-resource-list-wrap" style="overflow-x:auto">
         <table class="admin-resource-table" id="owner-account-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Verification</th><th>Joined</th><th>Action</th></tr></thead>
-          <tbody id="owner-account-list"><tr><td colspan="7">Loading accounts…</td></tr></tbody>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Verification</th><th>Joined</th><th>Last Login</th><th>Action</th></tr></thead>
+          <tbody id="owner-account-list"><tr><td colspan="8">Loading accounts…</td></tr></tbody>
         </table>
       </div>
       <button class="admin-button admin-button-secondary" id="owner-refresh-accounts" type="button">Refresh account directory</button>
