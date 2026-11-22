@@ -29,6 +29,14 @@
   let observer = null;
   let isActive = false;
 
+  function sessionStorageKey() {
+    return `${SESSION_PREFIX}${userId}:${profileRole}`;
+  }
+
+  function completionStorageKey() {
+    return `${STORAGE_PREFIX}${userId}:${profileRole}`;
+  }
+
   function readJson(key) {
     try { return JSON.parse(localStorage.getItem(key) || 'null'); }
     catch (_) { return null; }
@@ -180,13 +188,13 @@
         if (step.advanceSequenceOnClick) {
           session.index += 1;
           session.stepIndex = 0;
-          writeJson(SESSION_PREFIX + userId, session);
+          writeJson(sessionStorageKey(), session);
           return;
         }
         if (step.completeSequenceOnClick) {
           try {
-            localStorage.setItem(STORAGE_PREFIX + userId, 'complete');
-            localStorage.removeItem(SESSION_PREFIX + userId);
+            localStorage.setItem(completionStorageKey(), 'complete');
+            localStorage.removeItem(sessionStorageKey());
           } catch (error) {
             console.warn('Clariva tour completion could not be saved:', error);
           }
@@ -280,7 +288,7 @@
     stepIndex += 1;
     if (session) {
       session.stepIndex = stepIndex;
-      writeJson(SESSION_PREFIX + userId, session);
+      writeJson(sessionStorageKey(), session);
     }
     if (stepIndex >= steps.length) {
       finishSegment();
@@ -298,8 +306,8 @@
 
     const startPage = session.startPage;
     try {
-      localStorage.setItem(STORAGE_PREFIX + userId, 'complete');
-      localStorage.removeItem(SESSION_PREFIX + userId);
+      localStorage.setItem(completionStorageKey(), 'complete');
+      localStorage.removeItem(sessionStorageKey());
     } catch (error) {
       console.warn('Clariva tour completion could not be saved:', error);
     }
@@ -335,9 +343,9 @@
     profileRole = String(profile.Role || 'student').toLowerCase();
     const sequence = PAGE_SEQUENCE[profileRole] || PAGE_SEQUENCE.student;
 
-    if (localStorage.getItem(STORAGE_PREFIX + userId) === 'complete') return;
+    if (localStorage.getItem(completionStorageKey()) === 'complete') return;
 
-    session = readJson(SESSION_PREFIX + userId);
+    session = readJson(sessionStorageKey());
     if (!session || session.userId !== userId || !Array.isArray(session.sequence)) {
       const startPage = PAGE;
       const orderedSequence = [PAGE, ...sequence.filter(item => item !== PAGE)];
@@ -349,7 +357,7 @@
         index: 0,
         stepIndex: 0
       };
-      writeJson(SESSION_PREFIX + userId, session);
+      writeJson(sessionStorageKey(), session);
     }
 
     if (session.sequence[session.index] !== PAGE) {
