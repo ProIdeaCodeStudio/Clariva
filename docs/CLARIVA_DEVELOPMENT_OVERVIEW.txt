@@ -1,6 +1,6 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.0
-Prepared: 20 November 2026
+Version: 2.1
+Prepared: 22 November 2026
 Product: Clariva
 Product studio: Pro Idea
 Public website: https://proideacodestudio.github.io/Clariva/
@@ -26,13 +26,16 @@ The platform's account experience was refined through successive improvements to
 The administrative experience expanded to support the management of learning materials. The project introduced a dedicated administrative workspace and continued refining the relationship between student access and administrative responsibilities.
 
 5. STUDENT LIBRARY AND PLATFORM INSIGHTS — NOVEMBER 2026
-The student resource experience was expanded with improved browsing and document viewing. Administrative overviews were introduced to make key platform and library activity easier to understand. Navigation and resource-management experiences were refined alongside these additions.
+The student resource experience was expanded with semester-led browsing and improved document viewing. Administrative and owner-level overviews were developed to make key platform and library activity easier to understand. Role-aware navigation and account-management experiences were refined alongside these additions.
 
 6. RESOURCE UPLOAD EXPERIENCE — NOVEMBER 2026
 The resource-submission experience was improved to support files selected from device storage and Google Drive. Batch selection and review were refined, and the interface now makes clear that files submitted together should share the same academic and resource details.
 
 7. ACCOUNT RELIABILITY AND RELEASE PREPARATION — NOVEMBER 2026
-Further work concentrated on account recovery, administrative feedback, resource visibility and the reliability of the release experience. The platform is being prepared for feedback from a small group of early users before wider availability.
+Further work concentrated on account recovery, administrative feedback, resource visibility, role-aware navigation and website connectivity feedback. The platform is being prepared for feedback from a small group of early users before wider availability.
+
+8. OFFLINE READING AND GUIDED ONBOARDING — NOVEMBER 2026
+A further development stage introduced work on offline access to selected student learning materials, broader academic-resource discovery and guided tours for the main user workspaces. This work is undergoing release and real-device verification and is not represented here as a completed public release.
 
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
@@ -41,8 +44,12 @@ CURRENT PRODUCT AREAS
 - Platform and library overviews for authorised administrators.
 - Ongoing usability, accessibility and release-readiness improvements.
 
-DIRECTION UNDER DEVELOPMENT
-The next planned stage includes stronger owner-level oversight, clearer role administration, structured course-representative coordination and a semester-led way of browsing undergraduate resources. These items should be considered planned until they have been released and verified.
+DEVELOPMENT POSITION — 22 NOVEMBER 2026
+Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
+
+The next release-preparation work includes offline reading for eligible student resources, clearer guided onboarding for the student and management workspaces, and further real-device verification. These additions remain under development until their release and user-facing behaviour have been verified.
+
+Structured course-representative coordination remains a future product consideration.
 
 PRODUCT OWNERSHIP AND SUPPORT
 Clariva is developed and maintained by Pro Idea. This public document intentionally does not explain how the website is implemented, how its internal services are configured, how access controls are enforced, how privileged operations are performed, or how technical faults are diagnosed.
