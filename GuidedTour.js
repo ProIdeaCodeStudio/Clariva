@@ -4,13 +4,13 @@
   'use strict';
 
   const PAGE = window.location.pathname.split('/').pop();
-  const PAGE_SEQUENCE = {
-    student: ['Undergraduates.html'],
-    admin: ['AdminDashboard.html', 'Undergraduates.html'],
-    owner: ['OwnerDashboard.html', 'AdminDashboard.html', 'Undergraduates.html']
+  const ROLE_DASHBOARD = {
+    student: 'Undergraduates.html',
+    admin: 'AdminDashboard.html',
+    owner: 'OwnerDashboard.html'
   };
-  const STORAGE_PREFIX = 'clariva-guided-tour-v1:';
-  const SESSION_PREFIX = 'clariva-guided-tour-session-v1:';
+  const STORAGE_PREFIX = 'clariva-guided-tour-v2:';
+  const SESSION_PREFIX = 'clariva-guided-tour-session-v2:';
   const pageNames = {
     'Undergraduates.html': 'Student Resource Library',
     'AdminDashboard.html': 'Admin Dashboard',
@@ -118,10 +118,6 @@
     ];
   }
 
-  function pageUrl(page) {
-    return page;
-  }
-
   function getCurrentStep() {
     return steps[stepIndex] || null;
   }
@@ -167,21 +163,6 @@
     if (expected && (expected === event.target || expected.contains(event.target))) {
       if (!step.info && !step._clicked) {
         step._clicked = true;
-        if (step.advanceSequenceOnClick) {
-          session.index += 1;
-          session.stepIndex = 0;
-          writeJson(sessionStorageKey(), session);
-          return;
-        }
-        if (step.completeSequenceOnClick) {
-          try {
-            localStorage.setItem(completionStorageKey(), 'complete');
-            localStorage.removeItem(sessionStorageKey());
-          } catch (error) {
-            console.warn('Clariva tour completion could not be saved:', error);
-          }
-          return;
-        }
         const button = card?.querySelector('.clariva-tour-continue');
         if (button) button.disabled = false;
         if (advanceTimer) clearTimeout(advanceTimer);
@@ -291,16 +272,11 @@
     document.removeEventListener('click', blockOutsideClicks, true);
     isActive = false;
 
-    const startPage = session.startPage;
     try {
       localStorage.setItem(completionStorageKey(), 'complete');
       localStorage.removeItem(sessionStorageKey());
     } catch (error) {
       console.warn('Clariva tour completion could not be saved:', error);
-    }
-    if (startPage !== PAGE) {
-      window.location.assign(pageUrl(startPage));
-      return;
     }
     showCompletionMessage();
   }
@@ -309,7 +285,7 @@
     const completion = document.createElement('section');
     completion.className = 'clariva-tour-complete';
     completion.setAttribute('role', 'status');
-    completion.innerHTML = '<h2>Tour completed</h2><p>You have completed the guided tour for every dashboard available to your account.</p><button type="button">Return to Clariva</button>';
+    completion.innerHTML = '<h2>Tour completed</h2><p>You have completed the guided tour for this dashboard.</p><button type="button">Return to Clariva</button>';
     document.body.appendChild(completion);
     completion.querySelector('button').addEventListener('click', () => completion.remove());
   }
@@ -328,57 +304,26 @@
       .single();
     if (error || !profile || profile.Verified !== true) return;
     profileRole = String(profile.Role || 'student').toLowerCase();
-    const sequence = PAGE_SEQUENCE[profileRole] || PAGE_SEQUENCE.student;
+    const roleDashboard = ROLE_DASHBOARD[profileRole] || ROLE_DASHBOARD.student;
 
+    // Each role receives its tour only on its own dashboard. Other accessible
+    // pages do not start or extend a tour for a different dashboard.
+    if (PAGE !== roleDashboard) return;
     if (localStorage.getItem(completionStorageKey()) === 'complete') return;
 
     session = readJson(sessionStorageKey());
-    if (!session || session.userId !== userId || !Array.isArray(session.sequence)) {
-      const startPage = PAGE;
-      const orderedSequence = [PAGE, ...sequence.filter(item => item !== PAGE)];
+    if (!session || session.userId !== userId || session.role !== profileRole ||
+        session.page !== PAGE || !Number.isInteger(session.stepIndex)) {
       session = {
         userId,
         role: profileRole,
-        startPage,
-        sequence: orderedSequence,
-        index: 0,
+        page: PAGE,
         stepIndex: 0
       };
       writeJson(sessionStorageKey(), session);
     }
 
-    if (session.sequence[session.index] !== PAGE) {
-      const expectedPage = session.sequence[session.index];
-      if (expectedPage && expectedPage !== PAGE) {
-        window.location.assign(pageUrl(expectedPage));
-        return;
-      }
-      return;
-    }
-
     steps = getStepSet();
-    const nextPage = session.sequence[session.index + 1];
-    if (nextPage) {
-      const nextLink = nextPage === 'AdminDashboard.html'
-        ? '#clariva-admin-dashboard-link'
-        : nextPage === 'OwnerDashboard.html'
-          ? '#clariva-owner-dashboard-link'
-          : '#clariva-student-dashboard-link';
-      steps.push(
-        { title: 'Move to your next dashboard', text: 'Open the navigation menu to continue the guided tour on the next dashboard available to your account.', target: '#clariva-menu-toggle' },
-        { title: 'Open ' + pageNames[nextPage], text: 'Select this dashboard link. The tour will continue there automatically.', target: nextLink, advanceSequenceOnClick: true }
-      );
-    } else if (session.startPage !== PAGE) {
-      const returnLink = session.startPage === 'AdminDashboard.html'
-        ? '#clariva-admin-dashboard-link'
-        : session.startPage === 'OwnerDashboard.html'
-          ? '#clariva-owner-dashboard-link'
-          : '#clariva-student-dashboard-link';
-      steps.push(
-        { title: 'Return to your starting dashboard', text: 'Open the navigation menu to return to the dashboard where your guided tour began.', target: '#clariva-menu-toggle' },
-        { title: 'Return to ' + pageNames[session.startPage], text: 'Select this dashboard link to finish the tour and return to your starting dashboard.', target: returnLink, completeSequenceOnClick: true }
-      );
-    }
     stepIndex = Math.max(0, Math.min(Number(session.stepIndex || 0), steps.length - 1));
     isActive = true;
     document.addEventListener('click', blockOutsideClicks, true);

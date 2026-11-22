@@ -8,7 +8,7 @@ const APP_SHELL = [
   './ProfileMenu.js?v=20261120-2',
   './StudentResources.js?v=20261122-3',
   './GuidedTour.css?v=20261122-1',
-  './GuidedTour.js?v=20261122-7',
+  './GuidedTour.js?v=20261122-8',
   './connectivity.js?v=20261121-2',
   './ClarivaTpLetterMark.png',
   './ClarivaTpWordMark.png'
