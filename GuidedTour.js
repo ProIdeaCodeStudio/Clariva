@@ -249,6 +249,10 @@
       if (!isActive || getCurrentStep() !== step) return;
       const target = findTarget(step.target);
       if (target && !target.closest('[hidden]')) {
+        if (step.optional && target.disabled) {
+          advance();
+          return;
+        }
         targetElement = target;
         target.classList.add('clariva-tour-target');
         positionCard();
@@ -336,12 +340,13 @@
     session = readJson(SESSION_PREFIX + userId);
     if (!session || session.userId !== userId || !Array.isArray(session.sequence)) {
       const startPage = PAGE;
+      const orderedSequence = [PAGE, ...sequence.filter(item => item !== PAGE)];
       session = {
         userId,
         role: profileRole,
         startPage,
-        sequence: sequence.slice(),
-        index: Math.max(0, sequence.indexOf(PAGE)),
+        sequence: orderedSequence,
+        index: 0,
         stepIndex: 0
       };
       writeJson(SESSION_PREFIX + userId, session);
