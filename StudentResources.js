@@ -86,6 +86,22 @@
       resourceId: resource.id,
       title: resource.title || resource.file_name || 'Learning resource',
       fileName: resource.file_name || 'resource.pdf',
+      metadata: {
+        id: resource.id,
+        title: resource.title,
+        description: resource.description,
+        department: resource.department,
+        level: resource.level,
+        semester: resource.semester,
+        course_code: resource.course_code,
+        course_title: resource.course_title,
+        resource_type: resource.resource_type,
+        file_url: resource.file_url,
+        file_name: resource.file_name,
+        file_size: resource.file_size,
+        featured: resource.featured,
+        created_at: resource.created_at
+      },
       blob,
       savedAt: new Date().toISOString()
     };
@@ -105,6 +121,26 @@
       transaction.objectStore(OFFLINE_STORE_NAME).delete(offlineDocumentKey(resourceId));
       transaction.oncomplete = resolve;
       transaction.onerror = () => reject(transaction.error || new Error('The offline copy could not be removed.'));
+    });
+  }
+
+  async function getOfflineResourcesForUser(userId) {
+    if (!userId) return [];
+    const database = await openOfflineDatabase();
+    return new Promise((resolve, reject) => {
+      const records = [];
+      const transaction = database.transaction(OFFLINE_STORE_NAME, 'readonly');
+      const request = transaction.objectStore(OFFLINE_STORE_NAME).openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return;
+        if (cursor.value?.userId === userId && cursor.value?.metadata) {
+          records.push(cursor.value.metadata);
+        }
+        cursor.continue();
+      };
+      transaction.oncomplete = () => resolve(records);
+      transaction.onerror = () => reject(transaction.error || new Error('Saved offline resources could not be loaded.'));
     });
   }
 
@@ -281,7 +317,8 @@
 
     card.appendChild(openButton);
 
-    if (currentUserRole === 'student') {
+    const isPdfResource = String(resource.file_name || '').toLowerCase().endsWith('.pdf');
+    if (currentUserRole === 'student' && isPdfResource && resource.file_url) {
       const offlineButton = document.createElement('button');
       offlineButton.type = 'button';
       offlineButton.className = 'student-resource-open student-resource-offline';
@@ -815,6 +852,30 @@
       }
 
       client = supabaseClient;
+
+      if (window.clarivaOfflineMode === true) {
+        const { data: sessionData, error: sessionError } = await client.auth.getSession();
+        if (sessionError) throw sessionError;
+        const offlineUser = sessionData?.session?.user;
+        const cachedProfile = window.clarivaCachedProfile;
+        if (!offlineUser || !cachedProfile || cachedProfile.Verified !== true ||
+            String(cachedProfile.Role || '').toLowerCase() !== 'student') {
+          throw new Error('Offline access is available only for a previously verified student account on this device.');
+        }
+        currentUserId = offlineUser.id;
+        currentUserRole = 'student';
+        const offlineLevel = Number.parseInt(cachedProfile.Level, 10);
+        if (!Number.isInteger(offlineLevel) || offlineLevel <= 0) {
+          throw new Error('Your saved academic profile is unavailable for offline access.');
+        }
+        resources = await getOfflineResourcesForUser(currentUserId);
+        populateResourceTypeFilter();
+        updateLevelChoices(offlineLevel);
+        setLibraryStatus(resources.length
+          ? 'Offline library: showing ' + resources.length + ' PDF resource' + (resources.length === 1 ? '' : 's') + ' saved for this account on this device.'
+          : 'No PDF resources have been saved for offline reading on this device yet.');
+        return;
+      }
 
       const { data: userData, error: userError } = await client.auth.getUser();
       if (userError) throw userError;
