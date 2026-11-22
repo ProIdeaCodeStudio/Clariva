@@ -56,8 +56,11 @@ self.addEventListener('fetch', event => {
         return response;
       } catch (_) {
         const cache = await caches.open(CACHE_NAME);
+        const fallbackPath = url.pathname.endsWith('/Undergraduates.html')
+          ? './Undergraduates.html'
+          : './index.html';
         return (await cache.match(request)) ||
-          (await cache.match(new URL('./Undergraduates.html', self.registration.scope))) ||
+          (await cache.match(new URL(fallbackPath, self.registration.scope))) ||
           Response.error();
       }
     })());
