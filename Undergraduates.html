@@ -12,9 +12,11 @@
   <link rel="stylesheet" href="ProfileMenu.css?v=20261120-2">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
-  <script src="script.js?v=20261121-1" defer></script>
+  <script src="script.js?v=20261122-3" defer></script>
   <script src="ProfileMenu.js?v=20261120-2" defer></script>
-  <script src="StudentResources.js" defer></script>
+  <script src="StudentResources.js?v=20261122-3" defer></script>
+  <link rel="stylesheet" href="GuidedTour.css?v=20261122-1">
+  <script src="GuidedTour.js?v=20261122-6" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
 
   <style>
@@ -259,6 +261,22 @@
       opacity: .55;
     }
 
+    .student-resource-offline {
+      margin-top: 0;
+      border: 1px solid var(--amber);
+      background: transparent;
+      color: var(--deep-ink);
+    }
+
+    .student-resource-offline:hover:not(:disabled) {
+      background: var(--amber-10);
+      color: var(--deep-ink);
+    }
+
+    .student-resource-offline:disabled {
+      opacity: .6;
+    }
+
     .student-library-status {
       padding: var(--space-md);
       color: var(--ember-text);
@@ -454,18 +472,11 @@
       </div>
 
       <section aria-labelledby="semester-choice-title">
-        <p class="features-label">Browse by semester</p>
-        <h2 class="features-title student-library-heading" id="semester-choice-title">Choose a Semester</h2>
-        <p class="student-library-intro">Select a semester to view its available learning materials.</p>
-        <div class="semester-choice-grid">
-          <button class="semester-choice" type="button" data-semester-choice="1" aria-haspopup="dialog">
-            <span class="semester-choice-title">First Semester</span>
-            <span class="semester-choice-count" id="semester-count-1">Loading resources…</span>
-          </button>
-          <button class="semester-choice" type="button" data-semester-choice="2" aria-haspopup="dialog">
-            <span class="semester-choice-title">Second Semester</span>
-            <span class="semester-choice-count" id="semester-count-2">Loading resources…</span>
-          </button>
+        <p class="features-label">Browse by academic level</p>
+        <h2 class="features-title student-library-heading" id="semester-choice-title">Choose an Academic Level</h2>
+        <p class="student-library-intro">Your current level and all earlier levels with published resources are available here.</p>
+        <div id="student-level-grid" class="semester-choice-grid" aria-label="Available academic levels">
+          <p class="student-library-status">Loading available academic levels…</p>
         </div>
       </section>
     </section>
@@ -480,9 +491,26 @@
           <h2 class="features-title" id="semester-overlay-title">First Semester</h2>
           <p class="student-library-intro" id="semester-overlay-count"></p>
         </div>
-        <button class="semester-overlay-back" id="semester-overlay-back" type="button">← Back to semesters</button>
+        <button class="semester-overlay-back" id="semester-overlay-back" type="button">← Back to levels</button>
       </div>
 
+      <section id="semester-picker-panel" aria-labelledby="semester-picker-title">
+        <p class="features-label">Browse by semester</p>
+        <h3 class="features-title student-library-heading" id="semester-picker-title">Choose a Semester</h3>
+        <p class="student-library-intro">Select a semester to view the learning materials for this level.</p>
+        <div class="semester-choice-grid">
+          <button class="semester-choice" type="button" data-semester-choice="1" aria-haspopup="dialog">
+            <span class="semester-choice-title">First Semester</span>
+            <span class="semester-choice-count" id="semester-count-1">Loading resources…</span>
+          </button>
+          <button class="semester-choice" type="button" data-semester-choice="2" aria-haspopup="dialog">
+            <span class="semester-choice-title">Second Semester</span>
+            <span class="semester-choice-count" id="semester-count-2">Loading resources…</span>
+          </button>
+        </div>
+      </section>
+
+      <div id="semester-resource-content" hidden>
       <section aria-labelledby="featured-title">
         <p class="features-label">Handpicked Materials</p>
         <h3 class="features-title student-library-heading" id="featured-title">Featured Resources</h3>
@@ -507,6 +535,7 @@
         </div>
         <div id="all-resources" class="student-library-grid"></div>
       </section>
+      </div>
     </div>
   </section>
 
