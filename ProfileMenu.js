@@ -125,6 +125,11 @@
       const button = byId('clariva-sign-out');
       button.disabled = true;
       button.textContent = 'Signing out…';
+      try {
+        await window.clarivaClearOfflineSaves?.(user.id);
+      } catch (cacheError) {
+        console.warn('Clariva could not clear this account’s local offline copies during sign-out:', cacheError);
+      }
       const { error: signOutError } = await supabaseClient.auth.signOut();
       if (signOutError) {
         button.disabled = false;
