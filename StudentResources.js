@@ -321,6 +321,10 @@
     if (pageCount) pageCount.textContent = count ? `Page ${activePdfPage} / ${count}` : 'Page — / —';
     if (previous) previous.disabled = !count || activePdfPage <= 1;
     if (next) next.disabled = !count || activePdfPage >= count;
+    const overlayPrevious = getElement('pdf-reader-overlay-prev');
+    const overlayNext = getElement('pdf-reader-overlay-next');
+    if (overlayPrevious) overlayPrevious.disabled = !count || activePdfPage <= 1;
+    if (overlayNext) overlayNext.disabled = !count || activePdfPage >= count;
   }
 
   async function renderPdfPage() {
@@ -484,6 +488,14 @@
 
   function initializePdfReaderControls() {
     getElement('pdf-reader-close')?.addEventListener('click', closePdfReader);
+    const goToPreviousPage = async () => {
+      if (activePdf && activePdfPage > 1) { activePdfPage -= 1; await renderPdfPage(); }
+    };
+    const goToNextPage = async () => {
+      if (activePdf && activePdfPage < activePdf.numPages) { activePdfPage += 1; await renderPdfPage(); }
+    };
+    getElement('pdf-reader-overlay-prev')?.addEventListener('click', goToPreviousPage);
+    getElement('pdf-reader-overlay-next')?.addEventListener('click', goToNextPage);
     getElement('pdf-reader-prev')?.addEventListener('click', async () => {
       if (activePdf && activePdfPage > 1) {
         activePdfPage -= 1;
