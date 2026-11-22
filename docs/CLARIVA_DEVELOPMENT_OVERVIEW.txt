@@ -1,5 +1,5 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.2
+Version: 2.3
 Prepared: 22 November 2026
 Product: Clariva
 Product studio: Pro Idea
@@ -37,6 +37,9 @@ Further work concentrated on account recovery, administrative feedback, resource
 8. OFFLINE READING AND GUIDED ONBOARDING — NOVEMBER 2026
 A further development stage introduced work on offline access to selected student learning materials, broader academic-resource discovery and guided tours for the main user workspaces. This work is undergoing release and real-device verification and is not represented here as a completed public release.
 
+9. SIMPLIFIED DASHBOARD ONBOARDING — NOVEMBER 2026
+The guided tours were subsequently simplified to focus on locating the main dashboard sections and moving between them. Detailed explanations of individual metrics, form fields, filters, PDF controls and routine actions were removed from the tours so that onboarding remains brief and easy to follow.
+
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
 - A student library for discovering and viewing available learning materials.
@@ -47,7 +50,7 @@ CURRENT PRODUCT AREAS
 DEVELOPMENT POSITION — 22 NOVEMBER 2026
 Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
 
-Offline reading for eligible student resources, broader academic-resource discovery and guided onboarding for the student and management workspaces have now been merged into the main application branch. Their live availability and user-facing behaviour are still awaiting deployment confirmation and real-device verification.
+Offline reading for eligible student resources and broader academic-resource discovery have been merged into the main application branch. The student, Admin and Owner guided tours have also been simplified to provide section-level navigation orientation rather than control-by-control instruction. The latest tour changes are merged; live availability and user-facing behaviour still require deployment confirmation and real-device verification.
 
 Structured course-representative coordination remains a future product consideration.
 
