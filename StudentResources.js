@@ -139,7 +139,14 @@
         }
         cursor.continue();
       };
-      transaction.oncomplete = () => resolve(records);
+      transaction.oncomplete = () => {
+        records.sort((left, right) =>
+          Number(left.level) - Number(right.level) ||
+          Number(left.semester) - Number(right.semester) ||
+          String(left.title || '').localeCompare(String(right.title || ''))
+        );
+        resolve(records);
+      };
       transaction.onerror = () => reject(transaction.error || new Error('Saved offline resources could not be loaded.'));
     });
   }
