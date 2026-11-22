@@ -1,5 +1,5 @@
 /* Clariva app-shell cache. Private resource PDFs are never cached by the service worker. */
-const CACHE_NAME = 'clariva-app-shell-v6';
+const CACHE_NAME = 'clariva-app-shell-v7';
 const APP_SHELL = [
   './Undergraduates.html',
   './Stylesheet.css',
@@ -7,8 +7,8 @@ const APP_SHELL = [
   './script.js?v=20261122-3',
   './ProfileMenu.js?v=20261120-2',
   './StudentResources.js?v=20261122-3',
-  './GuidedTour.css?v=20261122-1',
-  './GuidedTour.js?v=20261122-8',
+  './GuidedTour.css?v=20261122-2',
+  './GuidedTour.js?v=20261122-9',
   './connectivity.js?v=20261121-2',
   './ClarivaTpLetterMark.png',
   './ClarivaTpWordMark.png'
