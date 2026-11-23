@@ -304,7 +304,8 @@
 
     card.appendChild(openButton);
 
-    const isPdfResource = String(resource.file_name || '').toLowerCase().endsWith('.pdf');
+    const isPdfResource = String(resource.file_name || '').toLowerCase().endsWith('.pdf') ||
+      String(resource.resource_type || '').toLowerCase().includes('pdf');
     if (currentUserRole === 'student' && isPdfResource && resource.file_url) {
       const offlineButton = document.createElement('button');
       offlineButton.type = 'button';
