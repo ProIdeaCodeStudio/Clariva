@@ -12,11 +12,11 @@
   <link rel="stylesheet" href="ProfileMenu.css?v=20261120-2">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
-  <script src="script.js?v=20261122-3" defer></script>
-  <script src="ProfileMenu.js?v=20261120-2" defer></script>
-  <script src="StudentResources.js?v=20261123-1" defer></script>
+  <script src="script.js?v=20261124-1" defer></script>
+  <script src="ProfileMenu.js?v=20261124-1" defer></script>
+  <script src="StudentResources.js?v=20261124-1" defer></script>
   <link rel="stylesheet" href="GuidedTour.css?v=20261122-2">
-  <script src="GuidedTour.js?v=20261122-9" defer></script>
+  <script src="GuidedTour.js?v=20261124-1" defer></script>
   <link rel="icon" type="image/png" href="ClarivaTpLetterMark.png">
 
   <style>
@@ -449,6 +449,7 @@
           <nav id="clariva-nav-menu" class="clariva-menu-panel" aria-label="Dashboard navigation" hidden>
             <a id="clariva-admin-dashboard-link" href="AdminDashboard.html" hidden>Open Admin Dashboard</a>
             <a id="clariva-owner-dashboard-link" href="OwnerDashboard.html" hidden>Open Owner Dashboard</a>
+            <a id="clariva-saved-offline-link" href="Undergraduates.html?saved=1">Saved Offline Resources</a>
             <button id="clariva-start-tour" class="menu-action" type="button">Website Tour</button>
             <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
           </nav>
@@ -492,6 +493,14 @@
           <p class="student-library-status">Loading available academic levels…</p>
         </div>
       </section>
+    </section>
+    <section id="saved-offline-section" class="student-library-section" aria-labelledby="saved-offline-title" hidden>
+      <p class="features-label">Your device library</p>
+      <h1 class="features-title" id="saved-offline-title">Saved Offline Resources</h1>
+      <p class="student-library-intro">Open PDFs saved on this device. These files remain available without an internet connection.</p>
+      <div id="saved-offline-status" class="student-library-status" role="status" aria-live="polite">Loading saved resources…</div>
+      <div id="saved-offline-resources" class="student-library-grid"></div>
+      <p><a href="Undergraduates.html">Return to Resource Library</a></p>
     </section>
   </main>
 
@@ -568,6 +577,7 @@
     <div id="pdf-reader-viewport" class="pdf-reader-viewport">
       <p id="pdf-reader-message" class="pdf-reader-message" role="status">Preparing resource…</p>
       <canvas id="pdf-reader-canvas" hidden></canvas>
+      <iframe id="pdf-reader-offline-frame" title="Saved offline PDF" hidden style="width:100%;height:100%;min-height:70vh;border:0;background:#fff"></iframe>
     </div>
   </section>
 

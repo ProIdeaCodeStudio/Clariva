@@ -25,7 +25,9 @@
   const getElement = id => document.getElementById(id);
 
   function setLibraryStatus(message, state = 'info') {
-    const status = getElement('student-library-status');
+    const savedStatus = getElement('saved-offline-section') && !getElement('saved-offline-section').hidden
+      ? getElement('saved-offline-status') : null;
+    const status = savedStatus || getElement('student-library-status');
     if (!status) return;
 
     status.textContent = message;
@@ -152,8 +154,8 @@
   }
 
   async function saveResourceOffline(resource, button) {
-    if (!currentUserId || currentUserRole !== 'student') {
-      setLibraryStatus('Offline Saves are available to verified student accounts.', 'error');
+    if (!currentUserId || !['student', 'admin', 'owner'].includes(currentUserRole)) {
+      setLibraryStatus('Offline Saves are available to verified accounts.', 'error');
       return;
     }
     if (!navigator.onLine) {
@@ -173,12 +175,14 @@
       const blob = await response.blob();
       if (!blob.size) throw new Error('The document returned an empty file.');
       await writeOfflineDocument(resource, blob);
-      const { error: saveError } = await client.rpc('save_offline_resource', {
-        resource_id_input: resource.id
-      });
-      if (saveError) {
-        await deleteOfflineDocument(resource.id);
-        throw saveError;
+      if (currentUserRole === 'student') {
+        const { error: saveError } = await client.rpc('save_offline_resource', {
+          resource_id_input: resource.id
+        });
+        if (saveError) {
+          await deleteOfflineDocument(resource.id);
+          throw saveError;
+        }
       }
       button.dataset.saved = 'true';
       button.textContent = 'Saved offline · Remove';
@@ -199,10 +203,12 @@
     }
     button.disabled = true;
     try {
-      const { error } = await client.rpc('remove_offline_resource_save', {
-        resource_id_input: resource.id
-      });
-      if (error) throw error;
+      if (currentUserRole === 'student') {
+        const { error } = await client.rpc('remove_offline_resource_save', {
+          resource_id_input: resource.id
+        });
+        if (error) throw error;
+      }
       await deleteOfflineDocument(resource.id);
       button.dataset.saved = 'false';
       button.textContent = 'Save for offline';
@@ -306,7 +312,7 @@
 
     const isPdfResource = String(resource.file_name || '').toLowerCase().endsWith('.pdf') ||
       String(resource.resource_type || '').toLowerCase().includes('pdf');
-    if (currentUserRole === 'student' && isPdfResource && resource.file_url) {
+    if (['student', 'admin', 'owner'].includes(currentUserRole) && isPdfResource && resource.file_url) {
       const offlineButton = document.createElement('button');
       offlineButton.type = 'button';
       offlineButton.className = 'student-resource-open student-resource-offline';
@@ -658,6 +664,23 @@
     const reader = getElement('pdf-reader');
     const message = getElement('pdf-reader-message');
     const canvas = getElement('pdf-reader-canvas');
+    const offlineFrame = getElement('pdf-reader-offline-frame');
+
+    if (String(signedUrl).startsWith('blob:')) {
+      reader.hidden = false;
+      document.body.classList.add('pdf-reader-open');
+      getElement('pdf-reader-title').textContent = title || 'Learning resource';
+      message.hidden = true;
+      canvas.hidden = true;
+      offlineFrame.hidden = false;
+      offlineFrame.src = signedUrl;
+      activePdf = null;
+      activePdfPage = 1;
+      updatePdfControls();
+      return;
+    }
+    offlineFrame.hidden = true;
+    offlineFrame.removeAttribute('src');
 
     if (!window.pdfjsLib) {
       throw new Error('The document viewer could not be loaded. Please refresh and try again.');
@@ -702,6 +725,8 @@
       activePdf = null;
     }
     reader.hidden = true;
+    const offlineFrame = getElement('pdf-reader-offline-frame');
+    if (offlineFrame) { offlineFrame.hidden = true; offlineFrame.removeAttribute('src'); }
     document.body.classList.remove('pdf-reader-open');
     if (activePdfObjectUrl) {
       URL.revokeObjectURL(activePdfObjectUrl);
@@ -728,12 +753,12 @@
   }
 
   async function openResource(resource, button) {
-    if (!resource.file_url) {
+    const fileName = resource.file_name || '';
+    const cachedCopy = await getOfflineDocument(resource.id).catch(() => null);
+    if (!resource.file_url && !cachedCopy?.blob) {
       setLibraryStatus('This resource does not have an attached file.', 'error');
       return;
     }
-
-    const fileName = resource.file_name || '';
     const isPdf = fileName.toLowerCase().endsWith('.pdf') ||
       String(resource.resource_type || '').toLowerCase().includes('pdf');
 
@@ -749,11 +774,11 @@
     try {
       // Storage RLS independently verifies the signed-in student's level.
       let documentUrl = null;
-      if (!navigator.onLine) {
-        const cached = await getOfflineDocument(resource.id);
-        if (!cached?.blob) throw new Error('This resource is not saved for offline reading on this device.');
-        activePdfObjectUrl = URL.createObjectURL(cached.blob);
+      if (cachedCopy?.blob) {
+        activePdfObjectUrl = URL.createObjectURL(cachedCopy.blob);
         documentUrl = activePdfObjectUrl;
+      } else if (!navigator.onLine) {
+        throw new Error('This resource is not saved for offline reading on this device.');
       } else {
         try {
           const { data, error } = await client.storage.from(BUCKET_NAME)
@@ -771,7 +796,7 @@
       }
 
       await showPdfReader(documentUrl, resource.title || fileName);
-      if (navigator.onLine) await recordResourceView(resource.id);
+      if (navigator.onLine && !cachedCopy?.blob) await recordResourceView(resource.id);
     } catch (error) {
       console.error('Clariva resource opening error:', error);
       setLibraryStatus(
@@ -837,36 +862,30 @@
     try {
       // Reuse the shared client initialized by script.js. Creating another
       // client with the same auth storage key can trigger GoTrueClient warnings.
-      if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-        throw new Error('The shared authentication service is unavailable. Please refresh the page.');
-      }
-
-      client = supabaseClient;
-
+      const savedView = new URLSearchParams(window.location.search).get('saved') === '1';
       if (window.clarivaOfflineMode === true) {
-        const { data: sessionData, error: sessionError } = await client.auth.getSession();
-        if (sessionError) throw sessionError;
-        const offlineUser = sessionData?.session?.user;
+        const offlineUser = window.clarivaOfflineUser;
         const cachedProfile = window.clarivaCachedProfile;
-        if (!offlineUser || !cachedProfile || cachedProfile.Verified !== true ||
-            String(cachedProfile.Role || '').toLowerCase() !== 'student') {
-          throw new Error('Offline access is available only for a previously verified student account on this device.');
+        const role = String(cachedProfile?.Role || '').toLowerCase();
+        if (!offlineUser?.id || cachedProfile?.Verified !== true || !['student', 'admin', 'owner'].includes(role)) {
+          throw new Error('Offline access requires a previously verified account on this device.');
         }
         currentUserId = offlineUser.id;
-        currentUserRole = 'student';
-        const offlineLevel = Number.parseInt(cachedProfile.Level, 10);
-        if (!Number.isInteger(offlineLevel) || offlineLevel <= 0) {
-          throw new Error('Your saved academic profile is unavailable for offline access.');
-        }
+        currentUserRole = role;
+        document.querySelector('.student-library-section')?.setAttribute('hidden', '');
+        getElement('saved-offline-section').hidden = false;
         resources = await getOfflineResourcesForUser(currentUserId);
-        populateResourceTypeFilter();
-        updateLevelChoices(offlineLevel);
-        setLibraryStatus(resources.length
-          ? 'Offline library: showing ' + resources.length + ' PDF resource' + (resources.length === 1 ? '' : 's') + ' saved for this account on this device.'
-          : 'No PDF resources have been saved for offline reading on this device yet.');
+        renderResourceCards(getElement('saved-offline-resources'), resources, 'No PDF resources have been saved on this device yet.');
+        getElement('saved-offline-status').textContent = resources.length
+          ? resources.length + ' saved PDF resource' + (resources.length === 1 ? '' : 's') + ' available offline.'
+          : 'No PDF resources have been saved for offline reading on this device yet.';
         return;
       }
 
+      if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+        throw new Error('The shared authentication service is unavailable. Please refresh the page.');
+      }
+      client = supabaseClient;
       const { data: userData, error: userError } = await client.auth.getUser();
       if (userError) throw userError;
 
@@ -894,8 +913,18 @@
         return;
       }
 
-      const studentLevel = Number.parseInt(profile.Level, 10);
       currentUserRole = role;
+      if (savedView) {
+        document.querySelector('.student-library-section')?.setAttribute('hidden', '');
+        getElement('saved-offline-section').hidden = false;
+        resources = await getOfflineResourcesForUser(currentUserId);
+        renderResourceCards(getElement('saved-offline-resources'), resources, 'No PDF resources have been saved on this device yet.');
+        getElement('saved-offline-status').textContent = resources.length
+          ? resources.length + ' saved PDF resource' + (resources.length === 1 ? '' : 's') + ' stored on this device.'
+          : 'No PDF resources have been saved for offline reading on this device yet.';
+        return;
+      }
+      const studentLevel = isPrivileged ? 500 : Number.parseInt(profile.Level, 10);
       if (!Number.isInteger(studentLevel) || studentLevel <= 0) {
         throw new Error('Your academic level is missing from your profile. Please contact an administrator.');
       }

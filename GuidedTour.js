@@ -28,6 +28,11 @@
   let observer = null;
   let isActive = false;
   let isOptionalReplay = false;
+  let activeFeatureTourId = null;
+  // Register each new feature here; completed users receive each short tour once per role/device.
+  const FEATURE_TOURS = [
+    { id: 'offline-saves-v1', title: 'Saved Offline Resources', text: 'A new device library is available. Open the menu to find your saved PDFs and read them without an internet connection.' }
+  ];
 
   function sessionStorageKey() {
     return `${SESSION_PREFIX}${userId}:${profileRole}`;
@@ -87,7 +92,9 @@
           text: 'Your selected semester’s resources appear in this area.',
           target: '#all-resources',
           optional: true
-        }
+        },
+        { title: 'Find saved offline resources', text: 'Open the menu and choose Saved Offline Resources to see PDFs stored on this device.', target: '#clariva-menu-toggle' },
+        { title: 'Saved Offline Resources', text: 'This menu item opens your device library, where saved PDFs remain available without an internet connection.', target: '#clariva-saved-offline-link' }
       ];
     }
 
@@ -100,7 +107,9 @@
           { id: 'manage-resources', title: 'Manage resources', text: 'Find and manage resources that have already been added.' },
           { id: 'user-overview', title: 'User overview', text: 'View the account summary and user breakdowns.' },
           { id: 'platform-overview', title: 'Platform overview', text: 'View the wider platform and library activity summary.' }
-        ])
+        ]),
+        { title: 'Find saved offline resources', text: 'Open the menu and choose Saved Offline Resources to view PDFs stored on this device.', target: '#clariva-menu-toggle' },
+        { title: 'Saved Offline Resources', text: 'This opens your device library of saved PDFs, available without an internet connection.', target: '#clariva-saved-offline-link' }
       ];
     }
 
@@ -114,7 +123,9 @@
         { id: 'manage-resources', title: 'Manage resources', text: 'Find and manage resources already in the library.' },
         { id: 'user-overview', title: 'User overview', text: 'View the account summary and user breakdowns.' },
         { id: 'platform-overview', title: 'Platform overview', text: 'View the wider platform and library activity summary.' }
-      ])
+      ]),
+      { title: 'Find saved offline resources', text: 'Open the menu and choose Saved Offline Resources to view PDFs stored on this device.', target: '#clariva-menu-toggle' },
+      { title: 'Saved Offline Resources', text: 'This opens your device library of saved PDFs, available without an internet connection.', target: '#clariva-saved-offline-link' }
     ];
   }
 
@@ -309,7 +320,12 @@
     isActive = false;
 
     try {
-      localStorage.setItem(completionStorageKey(), 'complete');
+      if (activeFeatureTourId) {
+        localStorage.setItem('clariva-feature-tour:' + activeFeatureTourId + ':' + userId + ':' + profileRole, 'complete');
+        activeFeatureTourId = null;
+      } else {
+        localStorage.setItem(completionStorageKey(), 'complete');
+      }
       localStorage.removeItem(sessionStorageKey());
     } catch (error) {
       console.warn('Clariva tour completion could not be saved:', error);
@@ -337,14 +353,16 @@
     document.removeEventListener('click', blockOutsideClicks, true);
     isActive = false;
     isOptionalReplay = false;
+    activeFeatureTourId = null;
     try { localStorage.removeItem(sessionStorageKey()); }
     catch (error) { console.warn('Clariva tour session could not be cleared:', error); }
   }
 
-  function startTour(optionalReplay) {
+  function startTour(optionalReplay, customSteps = null, featureTourId = null) {
     if (isActive) return;
     isOptionalReplay = Boolean(optionalReplay);
-    steps = getStepSet();
+    activeFeatureTourId = featureTourId;
+    steps = customSteps || getStepSet();
     stepIndex = 0;
     session = { userId, role: profileRole, page: PAGE, stepIndex: 0 };
     writeJson(sessionStorageKey(), session);
@@ -385,7 +403,15 @@
       });
     }
 
-    if (localStorage.getItem(completionStorageKey()) === 'complete') return;
+    if (localStorage.getItem(completionStorageKey()) === 'complete') {
+      const pendingFeature = FEATURE_TOURS.find(feature =>
+        localStorage.getItem('clariva-feature-tour:' + feature.id + ':' + userId + ':' + profileRole) !== 'complete'
+      );
+      if (pendingFeature) {
+        startTour(true, [{ title: pendingFeature.title, text: pendingFeature.text, target: '#clariva-menu-toggle' }], pendingFeature.id);
+      }
+      return;
+    }
 
     session = readJson(sessionStorageKey());
     if (!session || session.userId !== userId || session.role !== profileRole ||

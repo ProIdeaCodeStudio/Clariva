@@ -185,13 +185,20 @@ async function getCurrentUser() {
       const sessionResponse = await supabaseClient.auth.getSession();
       const session = sessionResponse?.data?.session;
       if (!session?.user) return null;
-      if (session.expires_at && Number(session.expires_at) <= Math.floor(Date.now() / 1000)) return null;
+      if (session.expires_at && Number(session.expires_at) <= Math.floor(Date.now() / 1000) && navigator.onLine !== false) return null;
       return session.user;
     }
     throw resp.error;
   }
 
   return resp?.data?.user || null;
+}
+
+function getClarivaStoredAuthUser() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('sb-euadmjyyjtbbdyjgnoqg-auth-token') || 'null');
+    return stored?.user?.id ? stored.user : null;
+  } catch (_) { return null; }
 }
 
 async function initializeClarivaPage() {
@@ -222,14 +229,54 @@ if (emailConfirmationLoginBtn) {
   const isAdminDashboard = currentPage === 'AdminDashboard.html';
   const isOwnerDashboard = currentPage === 'OwnerDashboard.html';
 
+  if (!isUndergraduatesPage && !isAdminDashboard && !isOwnerDashboard && (navigator.onLine === false || !supabaseClient)) {
+    const offlineUser = getClarivaStoredAuthUser();
+    if (offlineUser?.id) {
+      try {
+        const cached = JSON.parse(localStorage.getItem('clariva-offline-profile-v1:' + offlineUser.id) || 'null');
+        if (cached && cached.Verified === true && ['student', 'admin', 'owner'].includes(String(cached.Role || '').toLowerCase()) && cached.password_reset_required !== true) {
+          if (!cached.cachedAt) { cached.cachedAt = Date.now(); localStorage.setItem('clariva-offline-profile-v1:' + offlineUser.id, JSON.stringify(cached)); }
+          if (Number(cached.cachedAt) > Date.now() - 7 * 24 * 60 * 60 * 1000) {
+            const entry = document.getElementById('clariva-offline-entry');
+            const continueButton = document.getElementById('clariva-offline-continue');
+            if (entry && continueButton) {
+              entry.hidden = false;
+              continueButton.addEventListener('click', () => window.location.replace('Undergraduates.html?saved=1'), { once: true });
+            }
+          }
+        }
+      } catch (offlineEntryError) {
+        console.warn('Clariva could not prepare offline continuation:', offlineEntryError);
+      }
+    }
+  }
+
   if (isUndergraduatesPage || isAdminDashboard || isOwnerDashboard) {
     window.clarivaOfflineMode = false;
     window.clarivaCachedProfile = null;
+    window.clarivaOfflineUser = null;
+    let offlineStoredUser = null;
+    if (navigator.onLine === false || !supabaseClient) {
+      offlineStoredUser = getClarivaStoredAuthUser();
+      if (offlineStoredUser?.id) {
+        try {
+          const cached = JSON.parse(localStorage.getItem('clariva-offline-profile-v1:' + offlineStoredUser.id) || 'null');
+          if (cached && cached.Verified === true && ['student', 'admin', 'owner'].includes(String(cached.Role || '').toLowerCase()) && cached.password_reset_required !== true) {
+            if (!cached.cachedAt) { cached.cachedAt = Date.now(); localStorage.setItem('clariva-offline-profile-v1:' + offlineStoredUser.id, JSON.stringify(cached)); }
+            if (Number(cached.cachedAt) > Date.now() - 7 * 24 * 60 * 60 * 1000) {
+              window.clarivaOfflineMode = true;
+              window.clarivaCachedProfile = cached;
+              window.clarivaOfflineUser = offlineStoredUser;
+            }
+          }
+        } catch (offlineError) { console.warn('Clariva could not restore the saved offline profile:', offlineError); }
+      }
+    }
     const dashboard = isAdminDashboard
       ? document.getElementById('admin-dashboard')
       : isOwnerDashboard ? document.getElementById('owner-dashboard') : null;
 
-    if (!supabaseClient) {
+    if (!supabaseClient && !offlineStoredUser) {
       console.error('Supabase client is unavailable; protected access cannot be verified.');
       window.ClarivaConnectivity?.notify(
         'Clariva cannot verify your account right now. Check your connection and refresh when the service is available.',
@@ -242,29 +289,34 @@ if (emailConfirmationLoginBtn) {
     }
 
     try {
-      const user = await getCurrentUser();
+      const user = offlineStoredUser || await getCurrentUser();
 
       if (!user) {
         window.location.replace('index.html#step-1');
         return;
       }
 
-      const { data: fetchedProfile, error: profileError } =
-        await supabaseClient
+      let fetchedProfile = null;
+      let profileError = null;
+      if (!window.clarivaOfflineMode) {
+        const profileResult = await supabaseClient
           .from('students')
           .select('Verified, Role, Level, password_reset_required')
           .eq('user_id', user.id)
           .single();
-
-      let profile = fetchedProfile;
+        fetchedProfile = profileResult.data;
+        profileError = profileResult.error;
+      }
+      let profile = window.clarivaOfflineMode ? window.clarivaCachedProfile : fetchedProfile;
       if (profileError) {
-        if (isUndergraduatesPage && isClarivaConnectivityError(profileError)) {
+        if (isClarivaConnectivityError(profileError)) {
           try {
             const cached = JSON.parse(localStorage.getItem('clariva-offline-profile-v1:' + user.id) || 'null');
             if (cached && cached.Verified === true &&
-                String(cached.Role || '').toLowerCase() === 'student' &&
+                ['student', 'admin', 'owner'].includes(String(cached.Role || '').toLowerCase()) &&
                 cached.password_reset_required !== true &&
-                Number.parseInt(cached.Level, 10) > 0) {
+                (!cached.cachedAt || Number(cached.cachedAt) > Date.now() - 7 * 24 * 60 * 60 * 1000)) {
+              if (!cached.cachedAt) { cached.cachedAt = Date.now(); localStorage.setItem('clariva-offline-profile-v1:' + user.id, JSON.stringify(cached)); }
               profile = cached;
               window.clarivaOfflineMode = true;
             }
@@ -286,9 +338,17 @@ if (emailConfirmationLoginBtn) {
       }
 
       window.clarivaCachedProfile = profile;
+      if (window.clarivaOfflineMode) {
+        window.clarivaOfflineUser = user;
+        window.addEventListener('online', () => window.location.reload(), { once: true });
+      }
+      if (window.clarivaOfflineMode && !isUndergraduatesPage) {
+        window.location.replace('Undergraduates.html?saved=1');
+        return;
+      }
       if (!window.clarivaOfflineMode && profile.Verified === true) {
         try {
-          localStorage.setItem('clariva-offline-profile-v1:' + user.id, JSON.stringify(profile));
+          localStorage.setItem('clariva-offline-profile-v1:' + user.id, JSON.stringify({ ...profile, cachedAt: Date.now() }));
         } catch (cacheError) {
           console.warn('Clariva could not cache the account profile for offline reading:', cacheError);
         }
