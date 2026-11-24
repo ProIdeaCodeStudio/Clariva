@@ -922,7 +922,7 @@
           : 'No PDF resources have been saved for offline reading on this device yet.';
         return;
       }
-      const studentLevel = Number.parseInt(profile.Level, 10);
+      const studentLevel = isPrivileged ? 500 : Number.parseInt(profile.Level, 10);
       if (!Number.isInteger(studentLevel) || studentLevel <= 0) {
         throw new Error('Your academic level is missing from your profile. Please contact an administrator.');
       }
