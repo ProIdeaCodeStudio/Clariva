@@ -165,12 +165,22 @@
     card.setAttribute('aria-live', 'polite');
     card.innerHTML = '<p class="clariva-tour-eyebrow"></p><h2 class="clariva-tour-title"></h2><p class="clariva-tour-copy"></p><p class="clariva-tour-instruction"></p><div class="clariva-tour-footer"><span class="clariva-tour-progress"></span><div class="clariva-tour-actions"><button type="button" class="clariva-tour-previous">Previous</button><button type="button" class="clariva-tour-skip">Skip</button><button type="button" class="clariva-tour-next">Next</button></div></div>';
     document.body.appendChild(card);
-    card.querySelector('.clariva-tour-next').addEventListener('click', () => {
-      if (!typingComplete) return;
-      advance();
-    });
-    card.querySelector('.clariva-tour-previous').addEventListener('click', goPrevious);
-    card.querySelector('.clariva-tour-skip').addEventListener('click', skipTour);
+    card.addEventListener('click', event => {
+      const button = event.target && event.target.closest
+        ? event.target.closest('.clariva-tour-actions button')
+        : null;
+      if (!button || !card.contains(button)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      if (button.classList.contains('clariva-tour-next')) {
+        if (typingComplete && !button.disabled) advance();
+      } else if (button.classList.contains('clariva-tour-previous')) {
+        if (!button.disabled) goPrevious();
+      } else if (button.classList.contains('clariva-tour-skip')) {
+        if (isOptionalReplay && !button.hidden) skipTour();
+      }
+    }, true);
     return card;
   }
 
