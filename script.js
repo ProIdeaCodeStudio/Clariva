@@ -294,6 +294,7 @@ if (emailConfirmationLoginBtn) {
                 ['student', 'admin', 'owner'].includes(String(cached.Role || '').toLowerCase()) &&
                 cached.password_reset_required !== true &&
                 (!cached.cachedAt || Number(cached.cachedAt) > Date.now() - 7 * 24 * 60 * 60 * 1000)) {
+              if (!cached.cachedAt) { cached.cachedAt = Date.now(); localStorage.setItem('clariva-offline-profile-v1:' + user.id, JSON.stringify(cached)); }
               profile = cached;
               window.clarivaOfflineMode = true;
             }
@@ -315,7 +316,10 @@ if (emailConfirmationLoginBtn) {
       }
 
       window.clarivaCachedProfile = profile;
-      if (window.clarivaOfflineMode) window.clarivaOfflineUser = user;
+      if (window.clarivaOfflineMode) {
+        window.clarivaOfflineUser = user;
+        window.addEventListener('online', () => window.location.reload(), { once: true });
+      }
       if (window.clarivaOfflineMode && !isUndergraduatesPage) {
         window.location.replace('Undergraduates.html?saved=1');
         return;
