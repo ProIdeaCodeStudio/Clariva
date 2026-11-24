@@ -25,7 +25,9 @@
   const getElement = id => document.getElementById(id);
 
   function setLibraryStatus(message, state = 'info') {
-    const status = getElement('student-library-status');
+    const savedStatus = getElement('saved-offline-section') && !getElement('saved-offline-section').hidden
+      ? getElement('saved-offline-status') : null;
+    const status = savedStatus || getElement('student-library-status');
     if (!status) return;
 
     status.textContent = message;
