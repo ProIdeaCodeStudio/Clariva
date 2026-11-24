@@ -47,7 +47,27 @@
   }
 
   async function initialize() {
-    if (!byId('clariva-profile-toggle') || typeof supabaseClient === 'undefined' || !supabaseClient) return;
+    if (!byId('clariva-profile-toggle')) return;
+    if (window.clarivaOfflineMode === true) {
+      const cached = window.clarivaCachedProfile || {};
+      const user = window.clarivaOfflineUser || {};
+      const role = String(cached.Role || '').toLowerCase();
+      if (byId('clariva-profile-name')) byId('clariva-profile-name').textContent = cached.Name || 'Clariva member';
+      if (byId('clariva-profile-email')) byId('clariva-profile-email').textContent = user.email || 'Offline account';
+      if (byId('clariva-profile-role')) byId('clariva-profile-role').textContent = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Member';
+      if (byId('clariva-profile-level')) byId('clariva-profile-level').textContent = cached.Level ? 'Level ' + cached.Level : 'Offline access';
+      document.querySelectorAll('[data-avatar-choice]').forEach(button => { button.disabled = true; });
+      const toggle = byId('clariva-menu-toggle');
+      toggle?.addEventListener('click', () => {
+        const nav = byId('clariva-nav-menu');
+        const open = nav.hidden;
+        nav.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+      if (byId('clariva-sign-out')) byId('clariva-sign-out').hidden = true;
+      return;
+    }
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) return;
