@@ -41,7 +41,7 @@ A further development stage introduced work on offline access to selected studen
 The guided tours were subsequently simplified to focus on locating the main dashboard sections and moving between them. Detailed explanations of individual metrics, form fields, filters, PDF controls and routine actions were removed from the tours so that onboarding remains brief and easy to follow.
 
 10. SAVED OFFLINE RESOURCES AND FEATURE ONBOARDING — NOVEMBER 2026
-The offline reading experience is being extended to verified student, Admin and Owner accounts. A dedicated Saved Offline Resources destination and a brief introduction for existing users are being added, while online account and management functions remain unavailable offline.
+The offline reading experience now includes a dedicated Saved Offline Resources destination for verified Student, Admin and Owner accounts, with a brief feature introduction for existing users. Online account and management functions remain unavailable offline.
 
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
@@ -53,7 +53,7 @@ CURRENT PRODUCT AREAS
 DEVELOPMENT POSITION — 24 NOVEMBER 2026
 Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
 
-Offline reading is being expanded into a role-inclusive, device-local saved-resource experience, with a dedicated destination and feature-specific onboarding. The implementation is being prepared for review; deployment and real-device verification remain outstanding.
+The role-inclusive, device-local saved-resource experience has been merged and deployed, including a dedicated destination and feature-specific onboarding. Real-device verification remains outstanding.
 
 Structured course-representative coordination remains a future product consideration.
 
