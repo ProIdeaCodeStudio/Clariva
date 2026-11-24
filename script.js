@@ -234,7 +234,7 @@ if (emailConfirmationLoginBtn) {
     window.clarivaCachedProfile = null;
     window.clarivaOfflineUser = null;
     let offlineStoredUser = null;
-    if (navigator.onLine === false) {
+    if (navigator.onLine === false || !supabaseClient) {
       offlineStoredUser = getClarivaStoredAuthUser();
       if (offlineStoredUser?.id) {
         try {
