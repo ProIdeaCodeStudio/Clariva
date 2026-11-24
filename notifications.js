@@ -151,8 +151,11 @@
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       if (subscription) {
-        await invoke('unsubscribe', { endpoint: subscription.endpoint });
-        await subscription.unsubscribe();
+        try {
+          await invoke('unsubscribe', { endpoint: subscription.endpoint });
+        } finally {
+          await subscription.unsubscribe();
+        }
       }
       setStatus('Notifications have been turned off on this device.', 'success');
       await refreshState();
@@ -167,7 +170,7 @@
     testButton.disabled = true;
     try {
       await invoke('test');
-      setStatus('A test notification has been sent to this device.', 'success');
+      setStatus('A test notification request was sent to your connected devices. Check this device.', 'success');
     } catch (error) {
       setStatus(error.message || 'The test notification could not be sent.', 'error');
     } finally {
