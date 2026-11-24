@@ -1,5 +1,5 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.6
+Version: 2.7
 Prepared: 24 November 2026
 Product: Clariva
 Product studio: Pro Idea
@@ -58,7 +58,7 @@ Since the previous revision, the platform build has advanced to include semester
 
 The role-inclusive, device-local saved-resource experience has been merged and deployed, including a dedicated destination and feature-specific onboarding. Real-device verification remains outstanding.
 
-The spotlight guided-tour redesign has also been merged and deployed. Browser and real-device acceptance checks remain outstanding.
+The spotlight guided-tour redesign has also been merged and deployed. A follow-up refinement is being prepared to make the tour navigation controls respond reliably on touch devices. Browser and real-device acceptance checks remain outstanding.
 
 Structured course-representative coordination remains a future product consideration.
 
