@@ -65,6 +65,7 @@
         toggle.setAttribute('aria-expanded', String(open));
       });
       if (byId('clariva-sign-out')) byId('clariva-sign-out').hidden = true;
+      if (byId('clariva-profile-toggle')) byId('clariva-profile-toggle').hidden = true;
       return;
     }
     if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
