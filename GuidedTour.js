@@ -247,6 +247,14 @@
     copy.textContent = '';
     copy.style.visibility = 'visible';
     next.disabled = true;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      copy.textContent = text;
+      typingComplete = true;
+      next.disabled = false;
+      ui.style.minHeight = '';
+      positionCard();
+      return;
+    }
     let index = 0;
     const typeNext = () => {
       if (!isActive || !card || getCurrentStep()?.text !== text) return;
@@ -323,7 +331,7 @@
         }
         targetElement = target;
         target.classList.add('clariva-tour-target');
-        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
         ui.style.visibility = 'visible';
         positionCard();
         typeExplanation(step.text, ui);
