@@ -40,7 +40,6 @@
       title: 'Save PDFs for offline reading',
       text: 'When viewing the Resource Library, choose “Save for offline” on a PDF resource. You can then open it without internet from the hamburger menu under “Saved Offline Resources”. Offline copies stay on this device and are tied to the account that saved them.',
       target: '#clariva-menu-toggle',
-      reveal: '#clariva-nav-menu',
       open: 'dashboard-menu',
       info: false
     }
@@ -75,12 +74,12 @@
       {
         title: 'Open dashboard navigation',
         text: 'The navigation menu is open. The highlighted option takes you to this section.',
-        target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu'
+        target: '#clariva-menu-toggle', open: 'dashboard-menu'
       },
       {
         title: section.title,
         text: section.text,
-        target: '#clariva-nav-menu a[href="#' + section.id + '"]', reveal: '#clariva-nav-menu', open: 'dashboard-menu'
+        target: '#clariva-nav-menu a[href="#' + section.id + '"]', open: 'dashboard-menu'
       }
     ]);
 
@@ -105,8 +104,8 @@
           target: '#all-resources',
           optional: true
         },
-        { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu' },
-        { title: 'Saved Offline Resources', text: 'This menu item opens your device library, where saved PDFs remain available without an internet connection.', target: '#clariva-saved-offline-link', reveal: '#clariva-nav-menu', open: 'dashboard-menu' }
+        { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', open: 'dashboard-menu' },
+        { title: 'Saved Offline Resources', text: 'This menu item opens your device library, where saved PDFs remain available without an internet connection.', target: '#clariva-saved-offline-link', open: 'dashboard-menu' }
       ];
     }
 
@@ -120,8 +119,8 @@
           { id: 'user-overview', title: 'User overview', text: 'View the account summary and user breakdowns.' },
           { id: 'platform-overview', title: 'Platform overview', text: 'View the wider platform and library activity summary.' }
         ]),
-        { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu' },
-        { title: 'Saved Offline Resources', text: 'This opens your device library of saved PDFs, available without an internet connection.', target: '#clariva-saved-offline-link', reveal: '#clariva-nav-menu', open: 'dashboard-menu' }
+        { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', open: 'dashboard-menu' },
+        { title: 'Saved Offline Resources', text: 'This opens your device library of saved PDFs, available without an internet connection.', target: '#clariva-saved-offline-link', open: 'dashboard-menu' }
       ];
     }
 
@@ -136,7 +135,7 @@
         { id: 'user-overview', title: 'User overview', text: 'View the account summary and user breakdowns.' },
         { id: 'platform-overview', title: 'Platform overview', text: 'View the wider platform and library activity summary.' }
       ]),
-      { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu' },
+      { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', open: 'dashboard-menu' },
       { title: 'Saved Offline Resources', text: 'This opens your device library of saved PDFs, available without an internet connection.', target: '#clariva-saved-offline-link' }
     ];
   }
@@ -232,6 +231,22 @@
       const button = event.target && event.target.closest
         ? event.target.closest('.clariva-tour-actions button')
         : null;
+      const copy = event.target && event.target.closest
+        ? event.target.closest('.clariva-tour-copy')
+        : null;
+      if (copy && card.contains(copy) && isOptionalReplay && !typingComplete) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        if (typingTimer) window.clearTimeout(typingTimer);
+        typingTimer = null;
+        copy.textContent = getCurrentStep()?.text || '';
+        typingComplete = true;
+        const next = card.querySelector('.clariva-tour-next');
+        if (next) next.disabled = false;
+        positionCard();
+        return;
+      }
       if (!button || !card.contains(button)) return;
       event.preventDefault();
       event.stopPropagation();
