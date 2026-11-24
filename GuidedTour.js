@@ -166,28 +166,21 @@
     card.innerHTML = '<p class="clariva-tour-eyebrow"></p><h2 class="clariva-tour-title"></h2><p class="clariva-tour-copy"></p><p class="clariva-tour-instruction"></p><div class="clariva-tour-footer"><span class="clariva-tour-progress"></span><div class="clariva-tour-actions"><button type="button" class="clariva-tour-previous">Previous</button><button type="button" class="clariva-tour-skip">Skip</button><button type="button" class="clariva-tour-next">Next</button></div></div>';
     document.body.appendChild(card);
     card.addEventListener('click', event => {
-      // Keep tour-control clicks inside the card; the document-level
-      // outside-click guard must never swallow these actions.
-      if (event.target.closest && event.target.closest('.clariva-tour-actions')) {
-        event.stopPropagation();
+      const button = event.target && event.target.closest
+        ? event.target.closest('.clariva-tour-actions button')
+        : null;
+      if (!button || !card.contains(button)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      if (button.classList.contains('clariva-tour-next')) {
+        if (typingComplete && !button.disabled) advance();
+      } else if (button.classList.contains('clariva-tour-previous')) {
+        if (!button.disabled) goPrevious();
+      } else if (button.classList.contains('clariva-tour-skip')) {
+        if (isOptionalReplay && !button.hidden) skipTour();
       }
-    });
-    card.querySelector('.clariva-tour-next').addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!typingComplete) return;
-      advance();
-    });
-    card.querySelector('.clariva-tour-previous').addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      goPrevious();
-    });
-    card.querySelector('.clariva-tour-skip').addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      skipTour();
-    });
+    }, true);
     return card;
   }
 
