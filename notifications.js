@@ -3,7 +3,7 @@
   'use strict';
 
   const FUNCTION_NAME = 'clariva-push';
-  const PUBLIC_KEY = window.CLARIVA_VAPID_PUBLIC_KEY || '';
+  const PUBLIC_KEY = 'BA1_1_CmYEy0HWPi4IZK02cDwtt9B2I720N3hITbJJrQuhcoUct2Idqbx8hW_5Dalzp_2hQRK1DeVXp8Z7TF8lQ';
   let activeUserId = null;
   let panel = null;
   let statusNode = null;
@@ -72,8 +72,8 @@
   }
 
   async function invoke(action, extra = {}) {
-    if (!window.supabaseClient) throw new Error('Clariva account services are unavailable. Refresh and try again.');
-    const { data, error } = await window.supabaseClient.functions.invoke(FUNCTION_NAME, {
+    if (!supabaseClient) throw new Error('Clariva account services are unavailable. Refresh and try again.');
+    const { data, error } = await supabaseClient.functions.invoke(FUNCTION_NAME, {
       body: { action, ...extra }
     });
     if (error) throw error;
@@ -190,11 +190,11 @@
   }
 
   async function initialize() {
-    if (initialized || !window.supabaseClient || window.clarivaOfflineMode === true) return;
+    if (initialized || !supabaseClient || window.clarivaOfflineMode === true) return;
     initialized = true;
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session?.user?.id) await showForUser(session.user.id);
-    window.supabaseClient.auth.onAuthStateChange((event, sessionNow) => {
+    supabaseClient.auth.onAuthStateChange((event, sessionNow) => {
       if (sessionNow?.user?.id) {
         window.setTimeout(() => showForUser(sessionNow.user.id), 0);
       } else if (event === 'SIGNED_OUT') {
