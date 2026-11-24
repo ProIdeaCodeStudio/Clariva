@@ -189,6 +189,19 @@
     if (panel) panel.hidden = true;
   }
 
+  window.clarivaPrepareForSignOut = async function () {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        try { await invoke('unsubscribe', { endpoint: subscription.endpoint }); }
+        finally { await subscription.unsubscribe(); }
+      }
+    } catch (error) {
+      console.warn('Clariva could not remove the device subscription before sign-out:', error);
+    }
+  };
+
   async function initialize() {
     if (initialized || !supabaseClient || window.clarivaOfflineMode === true) return;
     initialized = true;
