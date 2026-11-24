@@ -1,5 +1,5 @@
 /* Clariva app-shell cache. Private resource PDFs are never cached by the service worker. */
-const CACHE_NAME = 'clariva-app-shell-v13';
+const CACHE_NAME = 'clariva-app-shell-v14';
 const APP_SHELL = [
   './index.html',
   './Undergraduates.html',
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './Stylesheet.css',
   './ProfileMenu.css?v=20261120-2',
   './script.js?v=20261124-1',
+  './notifications.js?v=20261124-1',
   './ProfileMenu.js?v=20261124-1',
   './StudentResources.js?v=20261124-1',
   './GuidedTour.css?v=20261124-5',
@@ -27,7 +28,6 @@ self.addEventListener('install', event => {
         const response = await fetch(request);
         if (response.ok) await cache.put(request, response);
       } catch (error) {
-        // A single unavailable optional asset must not prevent the app shell installing.
         console.warn('Clariva app-shell asset was not cached:', path, error);
       }
     }));
@@ -87,5 +87,39 @@ self.addEventListener('fetch', event => {
     } catch (error) {
       return cached || Response.error();
     }
+  })());
+});
+
+self.addEventListener('push', event => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; }
+  catch (_) { payload = { body: event.data ? event.data.text() : 'You have a new Clariva notification.' }; }
+
+  const title = String(payload.title || 'Clariva');
+  const options = {
+    body: String(payload.body || 'You have a new update.'),
+    icon: new URL('./ClarivaTpLetterMark.png', self.registration.scope).href,
+    badge: new URL('./ClarivaTpLetterMark.png', self.registration.scope).href,
+    tag: String(payload.tag || 'clariva-update'),
+    renotify: Boolean(payload.renotify),
+    data: { url: payload.url || './' }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || './', self.registration.scope);
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin === self.location.origin) {
+        await client.focus();
+        if ('navigate' in client) await client.navigate(target.href);
+        return;
+      }
+    }
+    await self.clients.openWindow(target.href);
   })());
 });
