@@ -1,5 +1,5 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.5
+Version: 2.6
 Prepared: 24 November 2026
 Product: Clariva
 Product studio: Pro Idea
@@ -44,7 +44,7 @@ The guided tours were subsequently simplified to focus on locating the main dash
 The offline reading experience now includes a dedicated Saved Offline Resources destination for verified Student, Admin and Owner accounts, with a brief feature introduction for existing users. Online account and management functions remain unavailable offline.
 
 11. SPOTLIGHT GUIDED TOURS — NOVEMBER 2026
-The guided tour experience is being redesigned around clear, highlighted interface elements, softly blurred surrounding content, nearby explanations that type progressively, and simpler Previous / Next / Skip navigation. First-time onboarding requires each explanation to finish before moving forward; completed users can replay or skip the tour. Deployment and real-device verification are pending.
+The guided tour experience is being redesigned around clear, highlighted interface elements, softly blurred surrounding content, nearby explanations that type progressively, and simpler Previous / Next / Skip navigation. First-time onboarding requires each explanation to finish before moving forward; completed users can replay or skip the tour. The redesign has been merged and deployed through GitHub Pages workflow #312. Browser and real-device verification remain pending.
 
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
@@ -57,6 +57,8 @@ DEVELOPMENT POSITION — 24 NOVEMBER 2026
 Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
 
 The role-inclusive, device-local saved-resource experience has been merged and deployed, including a dedicated destination and feature-specific onboarding. Real-device verification remains outstanding.
+
+The spotlight guided-tour redesign has also been merged and deployed. Browser and real-device acceptance checks remain outstanding.
 
 Structured course-representative coordination remains a future product consideration.
 
