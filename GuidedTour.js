@@ -25,6 +25,9 @@
   let card = null;
   let targetElement = null;
   let advanceTimer = null;
+  let typingTimer = null;
+  let typingComplete = false;
+  let backdrop = null;
   let observer = null;
   let isActive = false;
   let isOptionalReplay = false;
@@ -144,6 +147,15 @@
     catch (_) { return null; }
   }
 
+  function ensureBackdrop() {
+    if (backdrop) return backdrop;
+    backdrop = document.createElement('div');
+    backdrop.className = 'clariva-tour-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(backdrop);
+    return backdrop;
+  }
+
   function ensureCard() {
     if (card) return card;
     card = document.createElement('section');
@@ -151,15 +163,14 @@
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-modal', 'false');
     card.setAttribute('aria-live', 'polite');
-    card.innerHTML = '<p class="clariva-tour-eyebrow"></p><h2 class="clariva-tour-title"></h2><p class="clariva-tour-copy"></p><p class="clariva-tour-instruction"></p><div class="clariva-tour-footer"><span class="clariva-tour-progress"></span><div class="clariva-tour-actions"><button type="button" class="clariva-tour-skip">Skip step</button><button type="button" class="clariva-tour-cancel">End tour</button><button type="button" class="clariva-tour-continue">Continue</button></div></div>';
+    card.innerHTML = '<p class="clariva-tour-eyebrow"></p><h2 class="clariva-tour-title"></h2><p class="clariva-tour-copy"></p><p class="clariva-tour-instruction"></p><div class="clariva-tour-footer"><span class="clariva-tour-progress"></span><div class="clariva-tour-actions"><button type="button" class="clariva-tour-previous">Previous</button><button type="button" class="clariva-tour-skip">Skip</button><button type="button" class="clariva-tour-next">Next</button></div></div>';
     document.body.appendChild(card);
-    card.querySelector('.clariva-tour-continue').addEventListener('click', () => {
-      const step = getCurrentStep();
-      if (step?.target && !step.info) return;
+    card.querySelector('.clariva-tour-next').addEventListener('click', () => {
+      if (!typingComplete) return;
       advance();
     });
-    card.querySelector('.clariva-tour-skip').addEventListener('click', advance);
-    card.querySelector('.clariva-tour-cancel').addEventListener('click', cancelTour);
+    card.querySelector('.clariva-tour-previous').addEventListener('click', goPrevious);
+    card.querySelector('.clariva-tour-skip').addEventListener('click', skipTour);
     return card;
   }
 
@@ -175,19 +186,10 @@
   function blockOutsideClicks(event) {
     if (!isActive) return;
     const step = getCurrentStep();
-    const expected = step?.target ? findTarget(step.target) : null;
+    const expected = step && step.target ? findTarget(step.target) : null;
     const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
     if (card && (path.includes(card) || card.contains(event.target))) return;
-    if (expected && (expected === event.target || expected.contains(event.target))) {
-      if (!step.info && !step._clicked) {
-        step._clicked = true;
-        const button = card?.querySelector('.clariva-tour-continue');
-        if (button) button.disabled = false;
-        if (advanceTimer) clearTimeout(advanceTimer);
-        advanceTimer = window.setTimeout(() => advance(), 280);
-      }
-      return;
-    }
+    if (expected && (expected === event.target || expected.contains(event.target))) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -197,73 +199,119 @@
     if (!card) return;
     card.style.left = '';
     card.style.top = '';
+    const edge = 12;
+    const gap = 14;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const panel = card.getBoundingClientRect();
     if (!targetElement) {
-      card.classList.remove('clariva-tour-card-above');
+      card.style.left = Math.max(edge, (vw - panel.width) / 2) + 'px';
+      card.style.top = Math.max(edge, (vh - panel.height) / 2) + 'px';
       return;
     }
+    const target = targetElement.getBoundingClientRect();
+    const candidates = [
+      { left: target.right + gap, top: target.top + (target.height - panel.height) / 2 },
+      { left: target.left - panel.width - gap, top: target.top + (target.height - panel.height) / 2 },
+      { left: target.left + (target.width - panel.width) / 2, top: target.bottom + gap },
+      { left: target.left + (target.width - panel.width) / 2, top: target.top - panel.height - gap }
+    ];
+    const fits = p => p.left >= edge && p.top >= edge &&
+      p.left + panel.width <= vw - edge && p.top + panel.height <= vh - edge;
+    let chosen = candidates.find(fits);
+    if (!chosen) {
+      const belowSpace = vh - target.bottom - gap;
+      const aboveSpace = target.top - gap;
+      const placeBelow = belowSpace >= aboveSpace;
+      const top = placeBelow
+        ? Math.min(vh - panel.height - edge, target.bottom + gap)
+        : Math.max(edge, target.top - panel.height - gap);
+      const left = Math.max(edge, Math.min(vw - panel.width - edge,
+        target.left + target.width / 2 - panel.width / 2));
+      chosen = { left, top };
+    }
+    card.style.left = Math.round(chosen.left) + 'px';
+    card.style.top = Math.round(chosen.top) + 'px';
+  }
 
-    targetElement.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
-    window.requestAnimationFrame(() => {
-      if (!card || !targetElement || !isActive) return;
-      const target = targetElement.getBoundingClientRect();
-      const panel = card.getBoundingClientRect();
-      const gap = 16;
-      const edge = 12;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const candidates = [
-        { left: target.right + gap, top: target.top + (target.height - panel.height) / 2 },
-        { left: target.left - panel.width - gap, top: target.top + (target.height - panel.height) / 2 },
-        { left: target.left + (target.width - panel.width) / 2, top: target.bottom + gap },
-        { left: target.left + (target.width - panel.width) / 2, top: target.top - panel.height - gap }
-      ];
-      const fits = p => p.left >= edge && p.top >= edge &&
-        p.left + panel.width <= vw - edge && p.top + panel.height <= vh - edge;
-      const chosen = candidates.find(fits);
-      if (chosen) {
-        card.style.left = Math.round(chosen.left) + 'px';
-        card.style.top = Math.round(chosen.top) + 'px';
+  function typeExplanation(text, ui) {
+    if (typingTimer) window.clearTimeout(typingTimer);
+    typingComplete = false;
+    const copy = ui.querySelector('.clariva-tour-copy');
+    const next = ui.querySelector('.clariva-tour-next');
+    copy.textContent = text;
+    copy.style.visibility = 'hidden';
+    ui.style.minHeight = '';
+    const reservedHeight = ui.offsetHeight;
+    ui.style.minHeight = reservedHeight + 'px';
+    copy.textContent = '';
+    copy.style.visibility = 'visible';
+    next.disabled = true;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      copy.textContent = text;
+      typingComplete = true;
+      next.disabled = false;
+      ui.style.minHeight = '';
+      positionCard();
+      return;
+    }
+    let index = 0;
+    const typeNext = () => {
+      if (!isActive || !card || getCurrentStep()?.text !== text) return;
+      index += 1;
+      copy.textContent = text.slice(0, index);
+      if (index < text.length) {
+        typingTimer = window.setTimeout(typeNext, 24);
       } else {
-        // On narrow screens or near viewport edges, keep the panel in view
-        // and place it at the side of the highlighted target where possible.
-        const left = Math.max(edge, Math.min(vw - panel.width - edge,
-          target.left + target.width / 2 - panel.width / 2));
-        const below = target.bottom + gap + panel.height <= vh - edge;
-        const top = below ? target.bottom + gap : Math.max(edge, target.top - panel.height - gap);
-        card.style.left = Math.round(left) + 'px';
-        card.style.top = Math.round(top) + 'px';
+        typingComplete = true;
+        next.disabled = false;
+        next.textContent = stepIndex === steps.length - 1 ? 'Finish' : 'Next';
+        ui.style.minHeight = '';
+        positionCard();
       }
-    });
+    };
+    if (!text) {
+      typingComplete = true;
+      next.disabled = false;
+      return;
+    }
+    typingTimer = window.setTimeout(typeNext, 24);
   }
 
   function showStep() {
     if (!isActive) return;
     clearTarget();
+    if (typingTimer) window.clearTimeout(typingTimer);
+    typingTimer = null;
     const step = getCurrentStep();
     if (!step) return finishSegment();
 
+    ensureBackdrop();
     const ui = ensureCard();
     ui.querySelector('.clariva-tour-eyebrow').textContent =
       (pageNames[PAGE] || 'Clariva') + ' · Guided tour';
     ui.querySelector('.clariva-tour-title').textContent = step.title;
-    ui.querySelector('.clariva-tour-copy').textContent = step.text;
     ui.querySelector('.clariva-tour-progress').textContent =
       'Step ' + (stepIndex + 1) + ' of ' + steps.length;
     const instruction = ui.querySelector('.clariva-tour-instruction');
-    const button = ui.querySelector('.clariva-tour-continue');
-    const skipButton = ui.querySelector('.clariva-tour-skip');
-    const cancelButton = ui.querySelector('.clariva-tour-cancel');
-    button.disabled = Boolean(step.target && !step.info);
-    button.textContent = stepIndex === steps.length - 1 ? 'Finish tour' : 'Continue';
-    skipButton.hidden = !isOptionalReplay;
-    cancelButton.hidden = !isOptionalReplay;
-    instruction.textContent = step.target && !step.info
-      ? (isOptionalReplay ? 'Select the highlighted item, or skip this step.' : 'Select the highlighted item to continue.')
-      : 'Read this while looking at the highlighted area, then continue.';
+    const previous = ui.querySelector('.clariva-tour-previous');
+    const next = ui.querySelector('.clariva-tour-next');
+    const skip = ui.querySelector('.clariva-tour-skip');
+    previous.disabled = stepIndex === 0;
+    skip.hidden = !isOptionalReplay;
+    next.disabled = true;
+    next.textContent = stepIndex === steps.length - 1 ? 'Finish' : 'Next';
+    instruction.textContent = step.target
+      ? 'Follow the highlighted area, then select Next.'
+      : 'Read this introduction, then select Next.';
     ui.classList.add('is-visible');
+    ui.style.visibility = 'hidden';
 
     if (!step.target || step.info) {
+      targetElement = null;
+      ui.style.visibility = 'visible';
       positionCard();
+      typeExplanation(step.text, ui);
       return;
     }
 
@@ -278,22 +326,25 @@
         target.getClientRects().length > 0;
       if (targetIsVisible) {
         if (step.optional && target.disabled) {
-          advance();
+          skipUnavailableStep();
           return;
         }
         targetElement = target;
         target.classList.add('clariva-tour-target');
+        target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+        ui.style.visibility = 'visible';
         positionCard();
+        typeExplanation(step.text, ui);
         return;
       }
       if (step.optional && Date.now() - startedAt > 6500) {
-        advance();
+        skipUnavailableStep();
         return;
       }
       if (Date.now() - startedAt > 15000) {
-        instruction.textContent = 'This control is not currently available. Continue to the next explanation.';
-        button.disabled = false;
-        button.textContent = 'Continue';
+        ui.style.visibility = 'visible';
+        instruction.textContent = 'This area is not currently available. Select Next after reading.';
+        typeExplanation(step.text, ui);
         return;
       }
       window.setTimeout(seek, 250);
@@ -302,7 +353,7 @@
   }
 
   function advance() {
-    if (!isActive) return;
+    if (!isActive || !typingComplete) return;
     if (advanceTimer) clearTimeout(advanceTimer);
     advanceTimer = null;
     stepIndex += 1;
@@ -317,8 +368,40 @@
     showStep();
   }
 
-  function finishSegment() {
+  function skipUnavailableStep() {
+    if (!isActive) return;
+    stepIndex += 1;
+    if (session) {
+      session.stepIndex = stepIndex;
+      writeJson(sessionStorageKey(), session);
+    }
+    if (stepIndex >= steps.length) finishSegment();
+    else showStep();
+  }
+
+  function goPrevious() {
+    if (!isActive || stepIndex <= 0) return;
+    if (advanceTimer) clearTimeout(advanceTimer);
+    advanceTimer = null;
+    stepIndex -= 1;
+    if (session) {
+      session.stepIndex = stepIndex;
+      writeJson(sessionStorageKey(), session);
+    }
+    showStep();
+  }
+
+  function skipTour() {
+    if (!isActive || !isOptionalReplay) return;
+    finishSegment(false);
+  }
+
+  function finishSegment(showNotice = true) {
+    if (typingTimer) window.clearTimeout(typingTimer);
+    typingTimer = null;
     clearTarget();
+    if (backdrop) backdrop.remove();
+    backdrop = null;
     if (card) card.remove();
     card = null;
     document.removeEventListener('click', blockOutsideClicks, true);
@@ -336,7 +419,7 @@
       console.warn('Clariva tour completion could not be saved:', error);
     }
     isOptionalReplay = false;
-    showCompletionMessage();
+    if (showNotice) showCompletionMessage();
   }
 
   function showCompletionMessage() {
@@ -350,6 +433,10 @@
 
   function cancelTour() {
     if (!isActive || !isOptionalReplay) return;
+    if (typingTimer) window.clearTimeout(typingTimer);
+    typingTimer = null;
+    if (backdrop) backdrop.remove();
+    backdrop = null;
     if (advanceTimer) clearTimeout(advanceTimer);
     advanceTimer = null;
     clearTarget();
