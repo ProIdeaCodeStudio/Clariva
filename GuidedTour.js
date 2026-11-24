@@ -39,7 +39,9 @@
       id: 'offline-saves-v1',
       title: 'Save PDFs for offline reading',
       text: 'When viewing the Resource Library, choose “Save for offline” on a PDF resource. You can then open it without internet from the hamburger menu under “Saved Offline Resources”. Offline copies stay on this device and are tied to the account that saved them.',
-      info: true
+      target: '#clariva-menu-toggle',
+      reveal: '#clariva-nav-menu',
+      open: 'dashboard-menu'
     }
   ];
 
@@ -71,7 +73,7 @@
     const menuSteps = sections => sections.flatMap(section => [
       {
         title: 'Open dashboard navigation',
-        text: 'Open the menu to move to the next section.',
+        text: 'The navigation menu is open. The highlighted option takes you to this section.',
         target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu'
       },
       {
@@ -285,7 +287,8 @@
       card.style.top = Math.max(edge, (vh - panel.height) / 2) + 'px';
       return;
     }
-    const target = targetElement.getBoundingClientRect();
+    const anchorElement = revealElement || targetElement;
+    const target = anchorElement.getBoundingClientRect();
     const candidates = [
       { left: target.right + gap, top: target.top + (target.height - panel.height) / 2 },
       { left: target.left - panel.width - gap, top: target.top + (target.height - panel.height) / 2 },
@@ -590,7 +593,7 @@
         localStorage.getItem('clariva-feature-tour:' + feature.id + ':' + userId + ':' + profileRole) !== 'complete'
       );
       if (pendingFeature) {
-        startTour(true, [{ title: pendingFeature.title, text: pendingFeature.text, info: pendingFeature.info !== false, ...(pendingFeature.target ? { target: pendingFeature.target } : {}) }], pendingFeature.id);
+        startTour(true, [{ title: pendingFeature.title, text: pendingFeature.text, info: pendingFeature.info !== false, ...(pendingFeature.target ? { target: pendingFeature.target } : {}), ...(pendingFeature.reveal ? { reveal: pendingFeature.reveal } : {}), ...(pendingFeature.open ? { open: pendingFeature.open } : {}) }], pendingFeature.id);
       }
       return;
     }
@@ -612,6 +615,8 @@
     isOptionalReplay = false;
     isActive = true;
     document.addEventListener('click', blockOutsideClicks, true);
+    window.addEventListener('resize', refreshTourLayout);
+    window.addEventListener('scroll', refreshTourLayout, true);
     showStep();
   }
 
