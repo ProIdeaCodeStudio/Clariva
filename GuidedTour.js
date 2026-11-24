@@ -318,7 +318,7 @@
         target.getClientRects().length > 0;
       if (targetIsVisible) {
         if (step.optional && target.disabled) {
-          advance();
+          skipUnavailableStep();
           return;
         }
         targetElement = target;
@@ -330,7 +330,7 @@
         return;
       }
       if (step.optional && Date.now() - startedAt > 6500) {
-        advance();
+        skipUnavailableStep();
         return;
       }
       if (Date.now() - startedAt > 15000) {
@@ -360,6 +360,17 @@
     showStep();
   }
 
+  function skipUnavailableStep() {
+    if (!isActive) return;
+    stepIndex += 1;
+    if (session) {
+      session.stepIndex = stepIndex;
+      writeJson(sessionStorageKey(), session);
+    }
+    if (stepIndex >= steps.length) finishSegment();
+    else showStep();
+  }
+
   function goPrevious() {
     if (!isActive || stepIndex <= 0) return;
     if (advanceTimer) clearTimeout(advanceTimer);
@@ -374,10 +385,10 @@
 
   function skipTour() {
     if (!isActive || !isOptionalReplay) return;
-    finishSegment();
+    finishSegment(false);
   }
 
-  function finishSegment() {
+  function finishSegment(showNotice = true) {
     if (typingTimer) window.clearTimeout(typingTimer);
     typingTimer = null;
     clearTarget();
@@ -400,7 +411,7 @@
       console.warn('Clariva tour completion could not be saved:', error);
     }
     isOptionalReplay = false;
-    showCompletionMessage();
+    if (showNotice) showCompletionMessage();
   }
 
   function showCompletionMessage() {
