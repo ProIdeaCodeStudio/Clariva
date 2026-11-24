@@ -41,7 +41,8 @@
       text: 'When viewing the Resource Library, choose “Save for offline” on a PDF resource. You can then open it without internet from the hamburger menu under “Saved Offline Resources”. Offline copies stay on this device and are tied to the account that saved them.',
       target: '#clariva-menu-toggle',
       reveal: '#clariva-nav-menu',
-      open: 'dashboard-menu'
+      open: 'dashboard-menu',
+      info: false
     }
   ];
 
@@ -135,7 +136,7 @@
         { id: 'user-overview', title: 'User overview', text: 'View the account summary and user breakdowns.' },
         { id: 'platform-overview', title: 'Platform overview', text: 'View the wider platform and library activity summary.' }
       ]),
-      { title: 'Find saved offline resources', text: 'Open the menu and choose Saved Offline Resources to view PDFs stored on this device.', target: '#clariva-menu-toggle' },
+      { title: 'Find saved offline resources', text: 'The navigation menu is open. The Saved Offline Resources option is highlighted below.', target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu' },
       { title: 'Saved Offline Resources', text: 'This opens your device library of saved PDFs, available without an internet connection.', target: '#clariva-saved-offline-link' }
     ];
   }
