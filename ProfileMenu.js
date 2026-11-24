@@ -146,6 +146,7 @@
       const button = byId('clariva-sign-out');
       button.disabled = true;
       button.textContent = 'Signing out…';
+      await window.clarivaPrepareForSignOut?.();
       const { error: signOutError } = await supabaseClient.auth.signOut();
       if (signOutError) {
         button.disabled = false;
