@@ -44,7 +44,7 @@ The guided tours were subsequently simplified to focus on locating the main dash
 The offline reading experience now includes a dedicated Saved Offline Resources destination for verified Student, Admin and Owner accounts, with a brief feature introduction for existing users. Online account and management functions remain unavailable offline.
 
 11. SPOTLIGHT GUIDED TOURS — NOVEMBER 2026
-The guided tour experience now uses a clear spotlight around the item being explained, with the surrounding page softly blurred. Explanations type progressively in a nearby card. When a step refers to dashboard navigation, the relevant menu opens automatically so the item being discussed is visible. First-time onboarding requires each explanation to finish before moving forward; completed users can replay or skip the tour. The updated experience is prepared for release; deployment and real-device verification remain pending.
+The guided tour experience now uses a clear spotlight around the item being explained, with the surrounding page softly blurred. Explanations type progressively in a nearby card. When a step refers to dashboard navigation, the relevant menu opens automatically so the item being discussed is visible. First-time onboarding requires each explanation to finish before moving forward; completed users can replay or skip the tour. The updated experience is deployed; browser and real-device verification remain pending.
 
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
@@ -58,7 +58,7 @@ Since the previous revision, the platform build has advanced to include semester
 
 The role-inclusive, device-local saved-resource experience has been merged and deployed, including a dedicated destination and feature-specific onboarding. Real-device verification remains outstanding.
 
-The spotlight guided-tour experience has been refined to keep the highlighted interface and any revealed menu clear of the blur, automatically reveal dashboard navigation when a step refers to it, and remove duplicate guided-tour asset loading from the dashboards. The latest spotlight refinements are awaiting deployment; real-device acceptance checks remain outstanding.
+The spotlight guided-tour experience has been refined to keep the highlighted interface and any revealed menu clear of the blur, automatically reveal dashboard navigation when a step refers to it, and remove duplicate guided-tour asset loading from the dashboards. The latest spotlight refinements are deployed; real-device acceptance checks remain outstanding.
 
 Structured course-representative coordination remains a future product consideration.
 
