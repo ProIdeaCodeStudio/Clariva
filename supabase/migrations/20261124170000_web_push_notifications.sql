@@ -15,3 +15,13 @@ create index if not exists push_subscriptions_user_id_idx
 alter table public.push_subscriptions enable row level security;
 revoke all on table public.push_subscriptions from anon, authenticated;
 grant all on table public.push_subscriptions to service_role;
+
+-- Explicit deny policy documents that browser roles must never access
+-- subscription endpoints or encryption keys directly.
+drop policy if exists "No direct client access to push subscriptions" on public.push_subscriptions;
+create policy "No direct client access to push subscriptions"
+  on public.push_subscriptions
+  for all
+  to anon, authenticated
+  using (false)
+  with check (false);
