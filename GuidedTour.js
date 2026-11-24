@@ -165,12 +165,29 @@
     card.setAttribute('aria-live', 'polite');
     card.innerHTML = '<p class="clariva-tour-eyebrow"></p><h2 class="clariva-tour-title"></h2><p class="clariva-tour-copy"></p><p class="clariva-tour-instruction"></p><div class="clariva-tour-footer"><span class="clariva-tour-progress"></span><div class="clariva-tour-actions"><button type="button" class="clariva-tour-previous">Previous</button><button type="button" class="clariva-tour-skip">Skip</button><button type="button" class="clariva-tour-next">Next</button></div></div>';
     document.body.appendChild(card);
-    card.querySelector('.clariva-tour-next').addEventListener('click', () => {
+    card.addEventListener('click', event => {
+      // Keep tour-control clicks inside the card; the document-level
+      // outside-click guard must never swallow these actions.
+      if (event.target.closest && event.target.closest('.clariva-tour-actions')) {
+        event.stopPropagation();
+      }
+    });
+    card.querySelector('.clariva-tour-next').addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
       if (!typingComplete) return;
       advance();
     });
-    card.querySelector('.clariva-tour-previous').addEventListener('click', goPrevious);
-    card.querySelector('.clariva-tour-skip').addEventListener('click', skipTour);
+    card.querySelector('.clariva-tour-previous').addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      goPrevious();
+    });
+    card.querySelector('.clariva-tour-skip').addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      skipTour();
+    });
     return card;
   }
 
@@ -188,7 +205,11 @@
     const step = getCurrentStep();
     const expected = step && step.target ? findTarget(step.target) : null;
     const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-    if (card && (path.includes(card) || card.contains(event.target))) return;
+    const clickedInsideTour = path.some(node =>
+      node === card || (node && node.classList && node.classList.contains('clariva-tour-card'))
+    ) || (event.target && event.target.closest &&
+      event.target.closest('.clariva-tour-card'));
+    if (clickedInsideTour) return;
     if (expected && (expected === event.target || expected.contains(event.target))) return;
     event.preventDefault();
     event.stopPropagation();
