@@ -1,6 +1,6 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
 Version: 2.4
-Prepared: 22 November 2026
+Prepared: 24 November 2026
 Product: Clariva
 Product studio: Pro Idea
 Public website: https://proideacodestudio.github.io/Clariva/
@@ -37,11 +37,11 @@ Further work concentrated on account recovery, administrative feedback, resource
 8. OFFLINE READING AND GUIDED ONBOARDING — NOVEMBER 2026
 A further development stage introduced work on offline access to selected student learning materials, broader academic-resource discovery and guided tours for the main user workspaces. This work is undergoing release and real-device verification and is not represented here as a completed public release.
 
-10. SAVED OFFLINE RESOURCES AND FEATURE ONBOARDING — NOVEMBER 2026
-The offline reading experience is being extended to verified student, Admin and Owner accounts. A dedicated Saved Offline Resources destination and a brief introduction for existing users are being added, while online account and management functions remain unavailable offline.
-
 9. SIMPLIFIED DASHBOARD ONBOARDING — NOVEMBER 2026
 The guided tours were subsequently simplified to focus on locating the main dashboard sections and moving between them. Detailed explanations of individual metrics, form fields, filters, PDF controls and routine actions were removed from the tours so that onboarding remains brief and easy to follow.
+
+10. SAVED OFFLINE RESOURCES AND FEATURE ONBOARDING — NOVEMBER 2026
+The offline reading experience is being extended to verified student, Admin and Owner accounts. A dedicated Saved Offline Resources destination and a brief introduction for existing users are being added, while online account and management functions remain unavailable offline.
 
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
