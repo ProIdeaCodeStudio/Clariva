@@ -1,5 +1,5 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.3
+Version: 2.4
 Prepared: 22 November 2026
 Product: Clariva
 Product studio: Pro Idea
@@ -37,6 +37,9 @@ Further work concentrated on account recovery, administrative feedback, resource
 8. OFFLINE READING AND GUIDED ONBOARDING — NOVEMBER 2026
 A further development stage introduced work on offline access to selected student learning materials, broader academic-resource discovery and guided tours for the main user workspaces. This work is undergoing release and real-device verification and is not represented here as a completed public release.
 
+10. SAVED OFFLINE RESOURCES AND FEATURE ONBOARDING — NOVEMBER 2026
+The offline reading experience is being extended to verified student, Admin and Owner accounts. A dedicated Saved Offline Resources destination and a brief introduction for existing users are being added, while online account and management functions remain unavailable offline.
+
 9. SIMPLIFIED DASHBOARD ONBOARDING — NOVEMBER 2026
 The guided tours were subsequently simplified to focus on locating the main dashboard sections and moving between them. Detailed explanations of individual metrics, form fields, filters, PDF controls and routine actions were removed from the tours so that onboarding remains brief and easy to follow.
 
@@ -47,10 +50,10 @@ CURRENT PRODUCT AREAS
 - Platform and library overviews for authorised administrators.
 - Ongoing usability, accessibility and release-readiness improvements.
 
-DEVELOPMENT POSITION — 22 NOVEMBER 2026
+DEVELOPMENT POSITION — 24 NOVEMBER 2026
 Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
 
-Offline reading for eligible student resources and broader academic-resource discovery have been merged into the main application branch. The student, Admin and Owner guided tours have also been simplified to provide section-level navigation orientation rather than control-by-control instruction. The latest tour changes are merged; live availability and user-facing behaviour still require deployment confirmation and real-device verification.
+Offline reading is being expanded into a role-inclusive, device-local saved-resource experience, with a dedicated destination and feature-specific onboarding. The implementation is being prepared for review; deployment and real-device verification remain outstanding.
 
 Structured course-representative coordination remains a future product consideration.
 
