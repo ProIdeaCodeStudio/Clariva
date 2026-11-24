@@ -14,6 +14,7 @@ const APP_SHELL = [
   './GuidedTour.js?v=20261124-1',
   './connectivity.js?v=20261121-2',
   './ClarivaTpLetterMark.png',
+  './Clariva-loader-mark.webp',
   './ClarivaTpWordMark.png'
 ];
 
