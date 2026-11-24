@@ -28,6 +28,7 @@
   let typingTimer = null;
   let typingComplete = false;
   let backdrop = null;
+  let revealElement = null;
   let observer = null;
   let isActive = false;
   let isOptionalReplay = false;
@@ -71,12 +72,12 @@
       {
         title: 'Open dashboard navigation',
         text: 'Open the menu to move to the next section.',
-        target: '#clariva-menu-toggle'
+        target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu'
       },
       {
         title: section.title,
         text: section.text,
-        target: '#clariva-nav-menu a[href="#' + section.id + '"]'
+        target: '#clariva-nav-menu a[href="#' + section.id + '"]', reveal: '#clariva-nav-menu', open: 'dashboard-menu'
       }
     ]);
 
@@ -101,8 +102,8 @@
           target: '#all-resources',
           optional: true
         },
-        { title: 'Find saved offline resources', text: 'Open the menu and choose Saved Offline Resources to see PDFs stored on this device.', target: '#clariva-menu-toggle' },
-        { title: 'Saved Offline Resources', text: 'This menu item opens your device library, where saved PDFs remain available without an internet connection.', target: '#clariva-saved-offline-link' }
+        { title: 'Find saved offline resources', text: 'Open the menu and choose Saved Offline Resources to see PDFs stored on this device.', target: '#clariva-menu-toggle', reveal: '#clariva-nav-menu', open: 'dashboard-menu' },
+        { title: 'Saved Offline Resources', text: 'This menu item opens your device library, where saved PDFs remain available without an internet connection.', target: '#clariva-saved-offline-link', reveal: '#clariva-nav-menu', open: 'dashboard-menu' }
       ];
     }
 
@@ -152,10 +153,69 @@
     backdrop = document.createElement('div');
     backdrop.className = 'clariva-tour-backdrop';
     backdrop.setAttribute('aria-hidden', 'true');
+    ['top', 'bottom', 'left', 'right'].forEach(position => {
+      const shade = document.createElement('div');
+      shade.className = 'clariva-tour-shade clariva-tour-shade-' + position;
+      backdrop.appendChild(shade);
+    });
     document.body.appendChild(backdrop);
     return backdrop;
   }
 
+  function setDashboardMenuOpen(open) {
+    const menu = byId('clariva-nav-menu');
+    const toggle = byId('clariva-menu-toggle');
+    if (!menu) return;
+    menu.hidden = !open;
+    if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function updateSpotlight() {
+    if (!backdrop) return;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    let rect = null;
+    [targetElement, revealElement].filter(Boolean).forEach(element => {
+      const r = element.getBoundingClientRect();
+      if (!rect) rect = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+      else {
+        rect.left = Math.min(rect.left, r.left);
+        rect.top = Math.min(rect.top, r.top);
+        rect.right = Math.max(rect.right, r.right);
+        rect.bottom = Math.max(rect.bottom, r.bottom);
+      }
+    });
+    const shades = backdrop.querySelectorAll('.clariva-tour-shade');
+    if (!rect) {
+      shades.forEach(shade => Object.assign(shade.style, {
+        left: '0px', top: '0px', width: width + 'px', height: height + 'px'
+      }));
+      return;
+    }
+    const pad = 9;
+    const left = Math.max(0, rect.left - pad);
+    const top = Math.max(0, rect.top - pad);
+    const right = Math.min(width, rect.right + pad);
+    const bottom = Math.min(height, rect.bottom + pad);
+    const regions = [
+      { left: 0, top: 0, width, height: top },
+      { left: 0, top: bottom, width, height: Math.max(0, height - bottom) },
+      { left: 0, top, width: left, height: Math.max(0, bottom - top) },
+      { left: right, top, width: Math.max(0, width - right), height: Math.max(0, bottom - top) }
+    ];
+    shades.forEach((shade, index) => {
+      const r = regions[index];
+      Object.assign(shade.style, {
+        left: r.left + 'px', top: r.top + 'px',
+        width: r.width + 'px', height: r.height + 'px'
+      });
+    });
+  }
+
+  function refreshTourLayout() {
+    updateSpotlight();
+    positionCard();
+  }
   function ensureCard() {
     if (card) return card;
     card = document.createElement('section');
@@ -187,6 +247,7 @@
   function clearTarget() {
     if (targetElement) targetElement.classList.remove('clariva-tour-target');
     targetElement = null;
+    revealElement = null;
     if (observer) {
       observer.disconnect();
       observer = null;
@@ -203,7 +264,8 @@
     ) || (event.target && event.target.closest &&
       event.target.closest('.clariva-tour-card'));
     if (clickedInsideTour) return;
-    if (expected && (expected === event.target || expected.contains(event.target))) return;
+    if ((expected && (expected === event.target || expected.contains(event.target))) ||
+        (revealElement && (revealElement === event.target || revealElement.contains(event.target)))) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -299,6 +361,10 @@
     typingTimer = null;
     const step = getCurrentStep();
     if (!step) return finishSegment();
+    const menuOpen = step.open === 'dashboard-menu' ||
+      (step.target && step.target.startsWith('#clariva-nav-menu')) ||
+      step.reveal === '#clariva-nav-menu';
+    setDashboardMenuOpen(Boolean(menuOpen));
 
     ensureBackdrop();
     const ui = ensureCard();
@@ -324,7 +390,7 @@
     if (!step.target || step.info) {
       targetElement = null;
       ui.style.visibility = 'visible';
-      positionCard();
+      refreshTourLayout();
       typeExplanation(step.text, ui);
       return;
     }
@@ -344,10 +410,12 @@
           return;
         }
         targetElement = target;
+        revealElement = step.reveal ? findTarget(step.reveal) : null;
         target.classList.add('clariva-tour-target');
         target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
         ui.style.visibility = 'visible';
-        positionCard();
+        refreshTourLayout();
+        window.setTimeout(refreshTourLayout, 80);
         typeExplanation(step.text, ui);
         return;
       }
@@ -419,6 +487,9 @@
     if (card) card.remove();
     card = null;
     document.removeEventListener('click', blockOutsideClicks, true);
+    window.removeEventListener('resize', refreshTourLayout);
+    window.removeEventListener('scroll', refreshTourLayout, true);
+    setDashboardMenuOpen(false);
     isActive = false;
 
     try {
@@ -457,6 +528,9 @@
     if (card) card.remove();
     card = null;
     document.removeEventListener('click', blockOutsideClicks, true);
+    window.removeEventListener('resize', refreshTourLayout);
+    window.removeEventListener('scroll', refreshTourLayout, true);
+    setDashboardMenuOpen(false);
     isActive = false;
     isOptionalReplay = false;
     activeFeatureTourId = null;
@@ -474,6 +548,8 @@
     writeJson(sessionStorageKey(), session);
     isActive = true;
     document.addEventListener('click', blockOutsideClicks, true);
+    window.addEventListener('resize', refreshTourLayout);
+    window.addEventListener('scroll', refreshTourLayout, true);
     showStep();
   }
 
