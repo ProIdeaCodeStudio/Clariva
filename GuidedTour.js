@@ -31,7 +31,12 @@
   let activeFeatureTourId = null;
   // Register each new feature here; completed users receive each short tour once per role/device.
   const FEATURE_TOURS = [
-    { id: 'offline-saves-v1', title: 'Saved Offline Resources', text: 'A new device library is available. Open the menu to find your saved PDFs and read them without an internet connection.' }
+    {
+      id: 'offline-saves-v1',
+      title: 'Save PDFs for offline reading',
+      text: 'When viewing the Resource Library, choose “Save for offline” on a PDF resource. You can then open it without internet from the hamburger menu under “Saved Offline Resources”. Offline copies stay on this device and are tied to the account that saved them.',
+      info: true
+    }
   ];
 
   function sessionStorageKey() {
@@ -408,7 +413,7 @@
         localStorage.getItem('clariva-feature-tour:' + feature.id + ':' + userId + ':' + profileRole) !== 'complete'
       );
       if (pendingFeature) {
-        startTour(true, [{ title: pendingFeature.title, text: pendingFeature.text, target: '#clariva-menu-toggle' }], pendingFeature.id);
+        startTour(true, [{ title: pendingFeature.title, text: pendingFeature.text, info: pendingFeature.info !== false, ...(pendingFeature.target ? { target: pendingFeature.target } : {}) }], pendingFeature.id);
       }
       return;
     }
