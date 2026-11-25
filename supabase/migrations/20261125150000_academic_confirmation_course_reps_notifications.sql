@@ -547,7 +547,13 @@ with check (
         and s."Verified" is true
         and lower(coalesce(s."Role", '')) in ('admin', 'owner')
     )
-    or private.has_active_course_rep_permission(level, department, course_code, 'resource_upload')
+    or (
+      private.has_active_course_rep_permission(level, department, course_code, 'resource_upload')
+      and visibility is true
+      and featured is false
+      and featured_until is null
+      and featured_permanent is false
+    )
   )
 );
 
