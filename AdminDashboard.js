@@ -2171,6 +2171,17 @@
     if (!permissions.has('resource_upload')) {
       const upload = getElement('upload-resource');
       if (upload) upload.hidden = true;
+    } else {
+      const department = getElement('resource-department');
+      if (department) {
+        department.required = true;
+        department.placeholder = 'Enter the department in your appointment';
+      }
+      const level = getElement('resource-level');
+      const registeredLevel = String(window.clarivaCachedProfile?.Level || '');
+      if (level && registeredLevel) level.value = registeredLevel;
+      const intro = getElement('upload-resource')?.querySelector('.admin-panel-intro');
+      if (intro) intro.textContent = 'Upload resources only within your appointed department and academic level. Enter the exact department and, if your appointment is course-specific, the matching course code.';
     }
     const nav = getElement('clariva-nav-menu');
     nav?.querySelectorAll('a[href="#resource-management"],a[href="#user-overview"],a[href="#platform-overview"],a[href="#course-representatives"],a[href="#manual-announcements"]').forEach(link => {
