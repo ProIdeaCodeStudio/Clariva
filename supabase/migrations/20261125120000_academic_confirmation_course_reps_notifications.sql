@@ -279,6 +279,106 @@ using (
   )
 );
 
+-- Dashboard RPCs expose only the course-rep directory fields needed by
+-- administrators; student contact details are deliberately excluded.
+create or replace function public.admin_list_course_rep_candidates(p_search text default null)
+returns table (user_id uuid, display_name text, academic_level text)
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or not private.is_clariva_admin_or_owner() then
+    raise exception 'Administrator access required.' using errcode = '42501';
+  end if;
+
+  return query
+  select s.user_id, coalesce(nullif(s."Name", ''), 'Student') as display_name, s."Level"
+  from public.students s
+  where s.user_id is not null
+    and lower(coalesce(s."Role", '')) = 'student'
+    and s."Verified" is true
+    and s."Level" in ('100', '200', '300', '400', '500')
+    and (
+      nullif(btrim(coalesce(p_search, '')), '') is null
+      or s."Name" ilike '%' || btrim(p_search) || '%'
+    )
+  order by s."Name" nulls last
+  limit 100;
+end;
+$function$;
+
+create or replace function public.admin_list_course_rep_appointments()
+returns table (
+  appointment_id uuid,
+  student_user_id uuid,
+  student_name text,
+  scope_level smallint,
+  scope_department text,
+  scope_course_code text,
+  start_month smallint,
+  start_year smallint,
+  end_month smallint,
+  end_year smallint,
+  permissions text[],
+  created_at timestamptz,
+  revoked_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or not private.is_clariva_admin_or_owner() then
+    raise exception 'Administrator access required.' using errcode = '42501';
+  end if;
+
+  return query
+  select a.id, a.student_user_id, coalesce(nullif(s."Name", ''), 'Student'),
+         a.scope_level, a.scope_department, a.scope_course_code,
+         a.start_month, a.start_year, a.end_month, a.end_year,
+         a.permissions, a.created_at, a.revoked_at
+  from public.course_rep_appointments a
+  left join public.students s on s.user_id = a.student_user_id
+  order by a.created_at desc
+  limit 200;
+end;
+$function$;
+
+create or replace function public.admin_revoke_course_rep_appointment(
+  p_appointment_id uuid,
+  p_reason text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or not private.is_clariva_admin_or_owner() then
+    raise exception 'Administrator access required.' using errcode = '42501';
+  end if;
+
+  update public.course_rep_appointments
+     set revoked_at = pg_catalog.now(),
+         revoked_by = (select auth.uid()),
+         revoke_reason = nullif(left(btrim(coalesce(p_reason, '')), 300), '')
+   where id = p_appointment_id
+     and revoked_at is null;
+
+  if not found then
+    raise exception 'The appointment was not found or has already been revoked.' using errcode = 'P0002';
+  end if;
+end;
+$function$;
+
+revoke all on function public.admin_list_course_rep_candidates(text) from public, anon;
+revoke all on function public.admin_list_course_rep_appointments() from public, anon;
+revoke all on function public.admin_revoke_course_rep_appointment(uuid, text) from public, anon;
+grant execute on function public.admin_list_course_rep_candidates(text) to authenticated;
+grant execute on function public.admin_list_course_rep_appointments() to authenticated;
+grant execute on function public.admin_revoke_course_rep_appointment(uuid, text) to authenticated;
+
 -- In-app notifications. Inserts are trusted-server-only; users can read their
 -- own items and mark only their own items as read.
 create table if not exists public.notifications (
