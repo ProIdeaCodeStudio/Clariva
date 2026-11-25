@@ -148,19 +148,25 @@ create policy "Course representatives can view their appointments"
   on public.course_rep_appointments for select to authenticated
   using (student_user_id = (select auth.uid()) or private.is_clariva_admin_or_owner());
 
-drop policy if exists "Verified admins and owners manage course rep appointments" on public.course_rep_appointments;
-create policy "Verified admins and owners manage course rep appointments"
-  on public.course_rep_appointments for all to authenticated
-  using (private.is_clariva_admin_or_owner())
+drop policy if exists "Verified admins and owners insert course rep appointments" on public.course_rep_appointments;
+create policy "Verified admins and owners insert course rep appointments"
+  on public.course_rep_appointments for insert to authenticated
   with check (
     private.is_clariva_admin_or_owner()
+    and appointed_by = (select auth.uid())
     and exists (
       select 1 from public.students s
       where s.user_id = student_user_id
         and lower(coalesce(s."Role", '')) = 'student'
+        and s."Level" = scope_level::text
     )
-    and appointed_by = (select auth.uid())
   );
+
+drop policy if exists "Verified admins and owners update course rep appointments" on public.course_rep_appointments;
+create policy "Verified admins and owners update course rep appointments"
+  on public.course_rep_appointments for update to authenticated
+  using (private.is_clariva_admin_or_owner())
+  with check (private.is_clariva_admin_or_owner());
 
 create or replace function private.has_active_course_rep_permission(
   p_level smallint,
@@ -251,6 +257,7 @@ using (
 
 -- Existing students must confirm before student resource access. Admins and
 -- owners retain their existing access regardless of this confirmation.
+drop policy if exists "Verified students read visible resources up to their level; adm" on public."Resources";
 drop policy if exists "Verified students read visible resources up to their level; admins and owners read all" on public."Resources";
 create policy "Verified confirmed students read visible resources up to their level; admins and owners read all"
 on public."Resources" for select to authenticated
