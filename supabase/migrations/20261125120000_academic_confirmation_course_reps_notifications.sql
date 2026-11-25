@@ -110,7 +110,7 @@ create table if not exists public.course_rep_appointments (
   id uuid primary key default gen_random_uuid(),
   student_user_id uuid not null references auth.users(id) on delete cascade,
   scope_level smallint not null check (scope_level in (100, 200, 300, 400, 500)),
-  scope_department text,
+  scope_department text not null,
   scope_course_code text,
   start_month smallint not null check (start_month between 1 and 12),
   start_year smallint not null check (start_year between 2020 and 2200),
@@ -128,7 +128,7 @@ create table if not exists public.course_rep_appointments (
     check (permissions <@ array['resource_upload', 'resource_update', 'resource_delete']::text[]),
   constraint course_rep_scope_text
     check (
-      (scope_department is null or length(btrim(scope_department)) between 1 and 160)
+      length(btrim(scope_department)) between 1 and 160
       and (scope_course_code is null or length(btrim(scope_course_code)) between 1 and 40)
     )
 );
@@ -185,10 +185,10 @@ as $function$
     from public.course_rep_appointments a
     where a.student_user_id = (select auth.uid())
       and a.revoked_at is null
-      and pg_catalog.make_date(a.start_year, a.start_month, 1) <= current_date
-      and current_date < (pg_catalog.make_date(a.end_year, a.end_month, 1) + interval '1 month')::date
+      and pg_catalog.make_date(a.start_year, a.start_month, 1) <= (pg_catalog.now() at time zone 'Africa/Lagos')::date
+      and (pg_catalog.now() at time zone 'Africa/Lagos')::date < (pg_catalog.make_date(a.end_year, a.end_month, 1) + interval '1 month')::date
       and a.scope_level = p_level
-      and (a.scope_department is null or lower(btrim(a.scope_department)) = lower(btrim(coalesce(p_department, ''))))
+      and lower(btrim(a.scope_department)) = lower(btrim(coalesce(p_department, '')))
       and (a.scope_course_code is null or lower(btrim(a.scope_course_code)) = lower(btrim(coalesce(p_course_code, ''))))
       and p_permission = any(a.permissions)
       and exists (
