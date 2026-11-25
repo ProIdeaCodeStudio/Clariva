@@ -1090,11 +1090,10 @@ begin
   select ds.decrypted_secret
     into v_service_key
     from vault.decrypted_secrets ds
-   where ds.name = 'clariva_service_role_key'
+   where ds.name = 'clariva_dispatch_secret'
    limit 1;
 
   if coalesce(v_project_url, '') = '' or coalesce(v_service_key, '') = '' then
-    raise warning 'Clariva push dispatch is waiting for its Vault credentials.';
     return;
   end if;
 
@@ -1103,8 +1102,7 @@ begin
     body := '{"action":"dispatch_pending"}'::jsonb,
     headers := pg_catalog.jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || v_service_key,
-      'apikey', v_service_key
+      'x-clariva-dispatch-secret', v_service_key
     ),
     timeout_milliseconds := 10000
   );
