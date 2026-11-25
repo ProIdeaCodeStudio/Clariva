@@ -822,7 +822,7 @@ create table if not exists public.announcements (
 create table if not exists public.announcement_recipients (
   announcement_id uuid not null references public.announcements(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  delivered_at timestamptz,
+  push_sent_at timestamptz,
   primary key (announcement_id, user_id)
 );
 
