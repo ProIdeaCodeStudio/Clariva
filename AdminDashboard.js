@@ -841,35 +841,45 @@
         throw new Error('Supabase is not ready. Refresh the page.');
       }
 
-      const { data, error } = await supabaseClient
-        .from('Resources')
-        .select(`
-          id,
-          title,
-          description,
-          department,
-          level,
-          semester,
-          course_code,
-          course_title,
-          resource_type,
-          file_url,
-          file_name,
-          file_size,
-          visibility,
-          featured,
-          download_count,
-          view_count,
-          created_at
-        `)
-        .order('created_at', { ascending: false })
-        .limit(RESOURCE_LIMIT);
+      let data;
+      let error;
+      if (window.clarivaIsCourseRep === true) {
+        const result = await supabaseClient.rpc('course_rep_list_resources');
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabaseClient
+          .from('Resources')
+          .select(`
+            id,
+            title,
+            description,
+            department,
+            level,
+            semester,
+            course_code,
+            course_title,
+            resource_type,
+            file_url,
+            file_name,
+            file_size,
+            visibility,
+            featured,
+            download_count,
+            view_count,
+            created_at
+          `)
+          .order('created_at', { ascending: false })
+          .limit(RESOURCE_LIMIT);
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         throw error;
       }
 
-      resources = data || [];
+      resources = (data || []).slice(0, RESOURCE_LIMIT);
 
       updateStatistics();
       renderResources();
