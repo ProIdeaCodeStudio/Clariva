@@ -91,10 +91,11 @@
             const { data: courseRepAccess } = await client.rpc('is_active_course_rep');
             window.clarivaIsCourseRep = courseRepAccess === true;
             if (window.clarivaIsCourseRep) {
-              const { data: permissions } = await client.rpc('get_active_course_rep_permissions');
-              window.clarivaCourseRepPermissions = Array.isArray(permissions) ? permissions : [];
+              const { data: permissions, error: permissionsError } = await client.rpc('get_active_course_rep_permissions');
+              window.clarivaCourseRepPermissions = !permissionsError && Array.isArray(permissions) ? permissions : [];
+              window.clarivaIsCourseRep = window.clarivaCourseRepPermissions.length > 0;
               const courseRepLink = getElement('clariva-course-rep-dashboard-link');
-              if (courseRepLink) courseRepLink.hidden = false;
+              if (courseRepLink) courseRepLink.hidden = !window.clarivaIsCourseRep;
             }
           } catch (courseRepError) {
             console.warn('Clariva course representative access refresh failed:', courseRepError);
