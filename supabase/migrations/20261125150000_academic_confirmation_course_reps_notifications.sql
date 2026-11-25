@@ -758,6 +758,7 @@ create table if not exists public.notifications (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   read_at timestamptz,
+  push_attempted_at timestamptz,
   push_sent_at timestamptz,
   constraint notifications_event_type check (
     event_type in ('new_registration', 'resource_uploaded', 'resource_deleted', 'announcement', 'platform')
@@ -1010,3 +1011,137 @@ revoke all on function private.notify_clariva_admins(text, text, text, jsonb) fr
 revoke all on function private.notify_new_student_registration() from public, anon, authenticated;
 revoke all on function private.notify_resource_uploaded() from public, anon, authenticated;
 revoke all on function private.notify_resource_deleted() from public, anon, authenticated;
+
+
+-- 5. Server-side push dispatch for notification events.
+-- pg_net sends asynchronously so resource/auth transactions are not held open.
+create extension if not exists pg_net with schema extensions;
+
+alter table public.notifications
+  add column if not exists push_attempted_at timestamptz;
+
+create index if not exists notifications_push_pending_idx
+  on public.notifications (created_at)
+  where push_sent_at is null
+    and event_type in ('new_registration', 'resource_uploaded', 'resource_deleted', 'platform');
+
+create or replace function public.claim_clariva_push_notifications(p_limit integer default 200)
+returns table (
+  notification_id uuid,
+  user_id uuid,
+  title text,
+  message text,
+  destination text
+)
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if coalesce((select auth.jwt() ->> 'role'), '') <> 'service_role' then
+    raise exception 'Service role required.' using errcode = '42501';
+  end if;
+
+  return query
+  with candidates as (
+    select n.id
+    from public.notifications n
+    where n.event_type in ('new_registration', 'resource_uploaded', 'resource_deleted', 'platform')
+      and n.push_sent_at is null
+      and (
+        n.push_attempted_at is null
+        or n.push_attempted_at < pg_catalog.now() - interval '15 minutes'
+      )
+    order by n.created_at asc
+    for update skip locked
+    limit greatest(1, least(coalesce(p_limit, 200), 500))
+  ),
+  claimed as (
+    update public.notifications n
+       set push_attempted_at = pg_catalog.now()
+      from candidates c
+     where n.id = c.id
+    returning n.id, n.user_id, n.title, n.message, n.destination
+  )
+  select c.id, c.user_id, c.title, c.message, c.destination
+  from claimed c;
+end;
+$function$;
+
+revoke all on function public.claim_clariva_push_notifications(integer) from public, anon, authenticated;
+grant execute on function public.claim_clariva_push_notifications(integer) to service_role;
+
+create or replace function private.request_clariva_push_dispatch()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_project_url text;
+  v_service_key text;
+begin
+  select ds.decrypted_secret
+    into v_project_url
+    from vault.decrypted_secrets ds
+   where ds.name = 'clariva_project_url'
+   limit 1;
+
+  select ds.decrypted_secret
+    into v_service_key
+    from vault.decrypted_secrets ds
+   where ds.name = 'clariva_service_role_key'
+   limit 1;
+
+  if coalesce(v_project_url, '') = '' or coalesce(v_service_key, '') = '' then
+    raise warning 'Clariva push dispatch is waiting for its Vault credentials.';
+    return;
+  end if;
+
+  perform net.http_post(
+    url := pg_catalog.rtrim(v_project_url, '/') || '/functions/v1/clariva-push',
+    body := '{"action":"dispatch_pending"}'::jsonb,
+    headers := pg_catalog.jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || v_service_key,
+      'apikey', v_service_key
+    ),
+    timeout_milliseconds := 10000
+  );
+end;
+$function$;
+
+revoke all on function private.request_clariva_push_dispatch() from public, anon, authenticated;
+
+create or replace function private.enqueue_clariva_push_dispatch()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  perform private.request_clariva_push_dispatch();
+  return null;
+end;
+$function$;
+
+revoke all on function private.enqueue_clariva_push_dispatch() from public, anon, authenticated;
+
+drop trigger if exists clariva_enqueue_push_dispatch on public.notifications;
+create trigger clariva_enqueue_push_dispatch
+after insert on public.notifications
+for each statement execute function private.enqueue_clariva_push_dispatch();
+
+do $schedule$
+begin
+  if not exists (
+    select 1 from cron.job where jobname = 'clariva-push-dispatch'
+  ) then
+    perform cron.schedule(
+      'clariva-push-dispatch',
+      '* * * * *',
+      'select private.request_clariva_push_dispatch();'
+    );
+  end if;
+end;
+$schedule$;
