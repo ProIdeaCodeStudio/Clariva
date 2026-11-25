@@ -1876,7 +1876,8 @@
       const select = getElement(id);
       if (!select || select.dataset.optionsReady === 'true') return;
       const year = new Date().getFullYear();
-      for (let value = year; value <= year + 8; value += 1) appendOption(select, value, String(value));
+      // Allow appointments whose academic term has already begun, as well as future terms.
+      for (let value = 2020; value <= year + 8; value += 1) appendOption(select, value, String(value));
       select.dataset.optionsReady = 'true';
     });
   }
