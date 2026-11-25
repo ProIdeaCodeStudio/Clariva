@@ -305,6 +305,7 @@ create policy "Verified admins and owners insert course rep appointments"
       where s.user_id = student_user_id
         and lower(coalesce(s."Role", '')) = 'student'
         and s."Verified" is true
+        and s.academic_level_confirmed_at is not null
         and s."Level" = scope_level::text
     )
   );
@@ -470,6 +471,7 @@ begin
   where s.user_id is not null
     and lower(coalesce(s."Role", '')) = 'student'
     and s."Verified" is true
+    and s.academic_level_confirmed_at is not null
     and s."Level" in ('100', '200', '300', '400', '500')
     and (
       nullif(btrim(coalesce(p_search, '')), '') is null
@@ -846,7 +848,7 @@ security definer
 set search_path = ''
 as $function$
 declare
-  announcement_id uuid;
+  v_announcement_id uuid;
   recipients integer;
 begin
   if auth.uid() is null or not private.is_clariva_admin_or_owner() then
@@ -877,10 +879,10 @@ begin
 
   insert into public.announcements (title, message, destination, audience_type, audience_value, published_by)
   values (btrim(p_title), btrim(p_message), p_destination, p_audience_type, p_audience_value, (select auth.uid()))
-  returning id into announcement_id;
+  returning id into v_announcement_id;
 
   insert into public.announcement_recipients (announcement_id, user_id)
-  select announcement_id, s.user_id
+  select v_announcement_id, s.user_id
   from public.students s
   where s.user_id is not null
     and s."Verified" is true
@@ -897,15 +899,15 @@ begin
     user_id, event_type, title, message, destination, announcement_id, metadata
   )
   select ar.user_id, 'announcement', btrim(p_title), btrim(p_message), p_destination,
-         announcement_id, jsonb_build_object('announcement_id', announcement_id)
+         v_announcement_id, jsonb_build_object('announcement_id', v_announcement_id)
   from public.announcement_recipients ar
-  where ar.announcement_id = announcement_id;
+  where ar.announcement_id = v_announcement_id;
 
   update public.announcements
      set recipient_count = recipients
-   where id = announcement_id;
+   where id = v_announcement_id;
 
-  return announcement_id;
+  return v_announcement_id;
 end;
 $function$;
 
