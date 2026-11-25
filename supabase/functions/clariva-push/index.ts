@@ -12,6 +12,16 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: corsHeaders });
 
+const constantTimeEqual = (left: string, right: string) => {
+  const encoder = new TextEncoder();
+  const a = encoder.encode(left);
+  const b = encoder.encode(right);
+  if (a.length !== b.length) return false;
+  let difference = 0;
+  for (let i = 0; i < a.length; i++) difference |= a[i] ^ b[i];
+  return difference === 0;
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
@@ -28,22 +38,30 @@ Deno.serve(async (req: Request) => {
   const vapidSubject = Deno.env.get("VAPID_SUBJECT") || "mailto:Proidea2025@gmail.com";
   if (!supabaseUrl || !anonKey || !serviceKey) return json({ error: "Notification service configuration is incomplete." }, 503);
 
-  const isServiceDispatch = token === serviceKey;
-  let userId: string | null = null;
-  if (!isServiceDispatch) {
-    const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: authData, error: authError } = await authClient.auth.getUser(token);
-    if (authError || !authData.user) return json({ error: "Your session is invalid. Sign in again." }, 401);
-    userId = authData.user.id;
-  }
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const action = String(body.action || "");
+  const dispatchSecret = Deno.env.get("CLARIVA_DISPATCH_SECRET") || "";
+  const suppliedDispatchSecret = req.headers.get("x-clariva-dispatch-secret") || "";
+  const isServiceDispatch = action === "dispatch_pending"
+    && constantTimeEqual(suppliedDispatchSecret, dispatchSecret)
+    && dispatchSecret.length >= 32;
+
+  let userId: string | null = null;
+  if (action === "dispatch_pending") {
+    if (!dispatchSecret || dispatchSecret.length < 32) return json({ error: "Server dispatch is not configured." }, 503);
+    if (!isServiceDispatch) return json({ error: "Service authorization is required." }, 403);
+  } else {
+    if (!token) return json({ error: "Sign in to manage device notifications." }, 401);
+    const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: authData, error: authError } = await authClient.auth.getUser(token);
+    if (authError || !authData.user) return json({ error: "Your session is invalid. Sign in again." }, 401);
+    userId = authData.user.id;
+  }
 
   if (action === "dispatch_pending") {
-    if (!isServiceDispatch) return json({ error: "Service authorization is required." }, 403);
     if (!vapidPublic || !vapidPrivate) return json({ error: "The notification delivery keys have not been configured yet." }, 503);
     webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
 
@@ -133,7 +151,6 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  if (isServiceDispatch) return json({ error: "Service credentials cannot perform user actions." }, 403);
   if (!userId) return json({ error: "Sign in to manage device notifications." }, 401);
   let notificationIdForDispatch: string | null = null;
   let announcementIdForDispatch: string | null = null;
