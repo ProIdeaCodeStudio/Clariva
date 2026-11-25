@@ -321,6 +321,7 @@ create policy "Verified admins and owners update course rep appointments"
       where s.user_id = student_user_id
         and lower(coalesce(s."Role", '')) = 'student'
         and s."Verified" is true
+        and s.academic_level_confirmed_at is not null
         and s."Level" = scope_level::text
     )
   );
