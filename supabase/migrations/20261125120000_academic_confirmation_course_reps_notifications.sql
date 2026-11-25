@@ -125,7 +125,7 @@ create table if not exists public.course_rep_appointments (
   constraint course_rep_appointment_term_order
     check (row(start_year, start_month) <= row(end_year, end_month)),
   constraint course_rep_appointment_permissions
-    check (permissions <@ array['resource_upload', 'resource_update', 'resource_delete']::text[]),
+    check (permissions <@ array['resource_upload', 'resource_update']::text[]),
   constraint course_rep_scope_text
     check (
       length(btrim(scope_department)) between 1 and 160
@@ -243,7 +243,7 @@ with check (
 );
 
 drop policy if exists "Admins and owners can delete resources" on public."Resources";
-create policy "Admins owners and scoped course reps can delete resources"
+create policy "Admins and owners can delete resources"
 on public."Resources" for delete to authenticated
 using (
   exists (
@@ -252,8 +252,52 @@ using (
       and s."Verified" is true
       and lower(coalesce(s."Role", '')) in ('admin', 'owner')
   )
-  or private.has_active_course_rep_permission(level, department, course_code, 'resource_delete')
 );
+
+-- Course representatives may edit descriptive resource fields only.
+-- Scope, publication, featured status, ownership, storage paths and counters
+-- remain administrator-controlled.
+create or replace function private.protect_course_rep_resource_updates()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if private.is_clariva_admin_or_owner() then
+    return new;
+  end if;
+
+  if private.has_active_course_rep_permission(old.level, old.department, old.course_code, 'resource_update') then
+    if new.id is distinct from old.id
+       or new.level is distinct from old.level
+       or new.department is distinct from old.department
+       or new.course_code is distinct from old.course_code
+       or new.uploaded_by is distinct from old.uploaded_by
+       or new.visibility is distinct from old.visibility
+       or new.featured is distinct from old.featured
+       or new.featured_until is distinct from old.featured_until
+       or new.featured_permanent is distinct from old.featured_permanent
+       or new.file_url is distinct from old.file_url
+       or new.file_name is distinct from old.file_name
+       or new.file_size is distinct from old.file_size
+       or new.view_count is distinct from old.view_count
+       or new.download_count is distinct from old.download_count
+       or new.created_at is distinct from old.created_at then
+      raise exception 'Course representatives cannot change resource scope, publication, featured status, ownership, or stored files.' using errcode = '42501';
+    end if;
+  end if;
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists protect_course_rep_resource_updates on public."Resources";
+create trigger protect_course_rep_resource_updates
+before update on public."Resources"
+for each row execute function private.protect_course_rep_resource_updates();
+
+revoke all on function private.protect_course_rep_resource_updates() from public, anon, authenticated;
 
 -- Existing students must confirm before student resource access. Admins and
 -- owners retain their existing access regardless of this confirmation.
@@ -679,7 +723,7 @@ revoke all on function private.notify_resource_deleted() from public, anon, auth
             )
             or private.has_active_course_rep_permission(public."Resources".level, public."Resources".department, public."Resources".course_code, 'resource_upload')
             or private.has_active_course_rep_permission(public."Resources".level, public."Resources".department, public."Resources".course_code, 'resource_update')
-            or private.has_active_course_rep_permission(public."Resources".level, public."Resources".department, public."Resources".course_code, 'resource_delete')
+
           )
         )
       )
