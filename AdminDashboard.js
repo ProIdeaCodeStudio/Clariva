@@ -1295,6 +1295,13 @@
       { value: 'Other', label: 'Other' }
     ]);
 
+    if (window.clarivaIsCourseRep === true) {
+      ['department', 'level', 'course_code'].forEach(name => {
+        const control = form.querySelector('[name="' + name + '"]');
+        if (control) control.disabled = true;
+      });
+    }
+
     const actions = document.createElement('div');
     actions.className = 'admin-actions admin-field-full';
 
@@ -1483,8 +1490,17 @@
         deleteResourceRecord(resource, deleteButton);
       });
 
-      actions.append(openButton, editButton, visibilityButton, featuredButton, deleteButton);
-      card.append(actions, editor);
+      if (window.clarivaIsCourseRep === true) {
+        actions.appendChild(openButton);
+        if ((window.clarivaCourseRepPermissions || []).includes('resource_update')) {
+          actions.append(editButton);
+          card.appendChild(editor);
+        }
+      } else {
+        actions.append(openButton, editButton, visibilityButton, featuredButton, deleteButton);
+        card.appendChild(editor);
+      }
+      card.appendChild(actions);
       list.appendChild(card);
     });
   }
@@ -2124,7 +2140,149 @@
     }
   }
 
+  function configureCourseRepDashboard() {
+    if (window.clarivaIsCourseRep !== true) return;
+    const permissions = new Set(window.clarivaCourseRepPermissions || []);
+    const title = getElement('admin-page-title');
+    const description = document.querySelector('.admin-description');
+    if (title) title.textContent = 'Course Representative Dashboard';
+    if (description) description.textContent = 'Manage learning resources only within your appointed department and academic level.';
+    ['resource-management', 'user-overview', 'platform-overview', 'course-representatives', 'manual-announcements'].forEach(id => {
+      const section = getElement(id);
+      if (section) section.hidden = true;
+    });
+    if (!permissions.has('resource_upload')) {
+      const upload = getElement('upload-resource');
+      if (upload) upload.hidden = true;
+    }
+    const nav = getElement('clariva-nav-menu');
+    nav?.querySelectorAll('a[href="#resource-management"],a[href="#user-overview"],a[href="#platform-overview"],a[href="#course-representatives"],a[href="#manual-announcements"]').forEach(link => {
+      link.hidden = true;
+    });
+    const repLink = getElement('clariva-course-rep-dashboard-link');
+    if (repLink) repLink.hidden = true;
+  }
+
   function initializeAdminCommunicationAndCourseRepFeatures() {
+    if (!getElement('course-rep-appointment-form') && !getElement('manual-announcement-form')) return;
+    initializeCourseRepTermSelectors();
+    const studentSelect = getElement('course-rep-student');
+    studentSelect?.addEventListener('change', () => {
+      const level = studentSelect.selectedOptions?.[0]?.dataset.level || '';
+      if (getElement('course-rep-level')) getElement('course-rep-level').value = level;
+    });
+    const appointmentForm = getElement('course-rep-appointment-form');
+    if (appointmentForm && appointmentForm.dataset.handlerAttached !== 'true') {
+      appointmentForm.addEventListener('submit', createCourseRepAppointment);
+      appointmentForm.dataset.handlerAttached = 'true';
+    }
+    getElement('course-rep-refresh')?.addEventListener('click', () => {
+      void loadCourseRepCandidates();
+      void loadCourseRepAppointments();
+    });
+    const announcementForm = getElement('manual-announcement-form');
+    if (announcementForm && announcementForm.dataset.handlerAttached !== 'true') {
+      announcementForm.addEventListener('submit', publishManualAnnouncement);
+      announcementForm.dataset.handlerAttached = 'true';
+    }
+    void loadCourseRepCandidates();
+    void loadCourseRepAppointments();
+    void loadAnnouncementHistory();
+  }
+
+  function initializeAdminDashboard() {
+    initializeAdminPdfReaderControls();
+    configureCourseRepDashboard();
+    if (window.clarivaIsCourseRep !== true) initializeAdminCommunicationAndCourseRepFeatures();
+    const form = getElement('resource-upload-form');
+
+    if (form && form.dataset.uploadHandlerAttached !== 'true') {
+      form.addEventListener('submit', uploadResource);
+      form.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          excludedUploadFiles.clear();
+          renderSelectedFiles();
+          const queue = getElement('resource-upload-queue');
+          if (queue) queue.replaceChildren();
+          setNetworkWarning('');
+        }, 0);
+      });
+      form.dataset.uploadHandlerAttached = 'true';
+    }
+
+    // Handle an explicit tap before the browser's native submit sequence.
+    // uploadResource performs the same form validation itself, then reports
+    // any validation or upload errors in the dashboard status region.
+    const uploadButton = getElement('resource-upload-button');
+    if (uploadButton && uploadButton.dataset.clickHandlerAttached !== 'true') {
+      uploadButton.addEventListener('click', event => {
+        event.preventDefault();
+        void uploadResource(event);
+      });
+      uploadButton.dataset.clickHandlerAttached = 'true';
+    }
+    const fileInput = getElement('resource-file');
+    if (fileInput && fileInput.dataset.selectionHandlerAttached !== 'true') {
+      fileInput.addEventListener('change', renderSelectedFiles);
+      fileInput.dataset.selectionHandlerAttached = 'true';
+    }
+    initializeResourceSourcePicker();
+    initializeGoogleDrivePicker();
+    checkConnectionQuality();
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    connection?.addEventListener?.('change', checkConnectionQuality);
+
+    const search = getElement('resource-search');
+    const searchButton = getElement('resource-search-button');
+
+    function applySearch() {
+      appliedSearch = search?.value || '';
+      renderResources();
+    }
+
+    if (searchButton) {
+      searchButton.addEventListener('click', applySearch);
+    }
+
+    if (search) {
+      search.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          applySearch();
+        }
+      });
+    }
+
+    ['filter-level', 'filter-semester', 'filter-type'].forEach(id => {
+      const filter = getElement(id);
+
+      if (filter) {
+        filter.addEventListener('change', renderResources);
+      }
+    });
+
+    loadResources();
+    if (window.clarivaIsCourseRep !== true) loadAdminOverview();
+
+    const overviewRefresh = window.clarivaIsCourseRep === true ? null : getElement('admin-overview-refresh');
+    if (overviewRefresh && overviewRefresh.dataset.handlerAttached !== 'true') {
+      overviewRefresh.addEventListener('click', loadAdminOverview);
+      overviewRefresh.dataset.handlerAttached = 'true';
+    }
+  }
+
+  // Do not initialize dashboard data until the shared authentication guard
+  // has completed. Optional third-party libraries load independently.
+  const ready = window.clarivaPageReady;
+  if (ready && typeof ready.then === 'function') {
+    ready.then(() => initializeAdminDashboard()).catch(error => {
+      console.error('Admin dashboard initialization was blocked:', error);
+    });
+  } else {
+    void initializeAdminDashboard();
+  }
+})();
+
     if (!getElement('course-rep-appointment-form') && !getElement('manual-announcement-form')) return;
     initializeCourseRepTermSelectors();
     const studentSelect = getElement('course-rep-student');
