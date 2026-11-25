@@ -2097,8 +2097,23 @@
         p_destination: destination
       });
       if (error) throw error;
+
+      let deliveryMessage = 'The announcement is available in recipients’ Clariva inboxes.';
+      try {
+        const { data: pushResult, error: pushError } = await supabaseClient.functions.invoke('clariva-push', {
+          body: { action: 'announcement_push', announcementId: data }
+        });
+        if (pushError || pushResult?.error) {
+          throw pushError || new Error(pushResult.error);
+        }
+        deliveryMessage += ' Push sent to ' + Number(pushResult?.sent || 0).toLocaleString() + ' subscribed device(s).';
+      } catch (pushError) {
+        console.warn('Clariva announcement push delivery is unavailable:', pushError);
+        deliveryMessage += ' Push delivery could not be completed; in-app delivery is saved.';
+      }
+
       getElement('manual-announcement-form').reset();
-      setFeatureStatus('announcement-status', 'Announcement published to the selected audience.', 'success');
+      setFeatureStatus('announcement-status', deliveryMessage, 'success');
       await loadAnnouncementHistory();
       document.dispatchEvent(new CustomEvent('clariva:announcement-published', { detail: { id: data } }));
     } catch (error) {
