@@ -38,6 +38,7 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const action = String(body.action || "");
   let notificationIdForDispatch: string | null = null;
+  let announcementIdForDispatch: string | null = null;
 
   if (action === "subscribe") {
     const sub = body.subscription as { endpoint?: string; keys?: { p256dh?: string; auth?: string } } | undefined;
@@ -81,9 +82,9 @@ Deno.serve(async (req: Request) => {
 
   if (action === "dispatch_notification") {
     const { data: profile, error: profileError } = await admin.from("students")
-      .select("Role,Verified").eq("user_id", userId).maybeSingle();
+      .select("Role,Verified,password_reset_required").eq("user_id", userId).maybeSingle();
     const role = String(profile?.Role || "").toLowerCase();
-    if (profileError || profile?.Verified !== true || !["admin", "owner"].includes(role)) {
+    if (profileError || profile?.Verified !== true || profile?.password_reset_required === true || !["admin", "owner"].includes(role)) {
       return json({ error: "Only verified Clariva administrators can dispatch system notifications." }, 403);
     }
 
@@ -139,9 +140,10 @@ Deno.serve(async (req: Request) => {
         .select("id,title,message,destination").eq("id", announcementId).maybeSingle();
       if (announcementError || !announcement) return json({ error: "The published announcement could not be found." }, 404);
       const { data: recipients, error: recipientsError } = await admin.from("announcement_recipients")
-        .select("user_id").eq("announcement_id", announcementId);
+        .select("user_id").eq("announcement_id", announcementId).is("delivered_at", null);
       if (recipientsError) return json({ error: "Unable to retrieve announcement recipients." }, 500);
       targetIds = [...new Set((recipients || []).map((row: { user_id: string }) => row.user_id))];
+      announcementIdForDispatch = announcement.id;
       if (!targetIds.length) return json({ ok: true, sent: 0, failed: 0, removedExpired: 0 });
       payload = {
         title: announcement.title,
@@ -163,17 +165,19 @@ Deno.serve(async (req: Request) => {
 
   let sent = 0;
   let failed = 0;
+  const sentUserIds = new Set<string>();
   const expired: string[] = [];
   const subscriptionBatchSize = 50;
   for (let offset = 0; offset < subscriptions.length; offset += subscriptionBatchSize) {
     const batch = subscriptions.slice(offset, offset + subscriptionBatchSize);
-    await Promise.all(batch.map(async (row: { id: string; endpoint: string; p256dh: string; auth: string }) => {
+    await Promise.all(batch.map(async (row: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string }) => {
       try {
         await webpush.sendNotification({
           endpoint: row.endpoint,
           keys: { p256dh: row.p256dh, auth: row.auth }
         }, JSON.stringify(payload), { TTL: 60 * 60 * 24 });
         sent++;
+        sentUserIds.add(row.user_id);
       } catch (error) {
         failed++;
         const statusCode = Number((error as { statusCode?: number })?.statusCode || 0);
@@ -183,6 +187,13 @@ Deno.serve(async (req: Request) => {
     }));
   }
   if (expired.length) await admin.from("push_subscriptions").delete().in("id", expired);
+  if (announcementIdForDispatch && sentUserIds.size > 0) {
+    const { error: recipientUpdateError } = await admin.from("announcement_recipients")
+      .update({ delivered_at: new Date().toISOString() })
+      .eq("announcement_id", announcementIdForDispatch)
+      .in("user_id", [...sentUserIds]);
+    if (recipientUpdateError) console.error("Announcement push delivery status could not be saved:", recipientUpdateError);
+  }
   if (notificationIdForDispatch && sent > 0) {
     const { error: deliveryUpdateError } = await admin.from("notifications")
       .update({ push_sent_at: new Date().toISOString() })
