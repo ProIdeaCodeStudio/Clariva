@@ -387,7 +387,10 @@ create table if not exists public.notifications (
   event_type text not null,
   title text not null check (length(btrim(title)) between 1 and 120),
   message text not null check (length(btrim(message)) between 1 and 500),
-  destination text not null default './' check (destination like '/%' or destination like './%'),
+  destination text not null default './' check (
+    (destination like '/%' and left(destination, 2) <> '//' and position(chr(92) in destination) = 0)
+    or (destination like './%' and position(chr(92) in destination) = 0)
+  ),
   announcement_id uuid,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -421,7 +424,10 @@ create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),
   title text not null check (length(btrim(title)) between 1 and 100),
   message text not null check (length(btrim(message)) between 1 and 500),
-  destination text not null default './' check (destination like '/%' or destination like './%'),
+  destination text not null default './' check (
+    (destination like '/%' and left(destination, 2) <> '//' and position(chr(92) in destination) = 0)
+    or (destination like './%' and position(chr(92) in destination) = 0)
+  ),
   audience_type text not null check (audience_type in ('all', 'role', 'level')),
   audience_value text,
   published_by uuid not null references auth.users(id),
@@ -475,7 +481,10 @@ begin
     raise exception 'Provide a title and message within the allowed length.' using errcode = '22023';
   end if;
 
-  if p_destination is null or not (p_destination like '/%' or p_destination like './%') then
+  if p_destination is null
+     or position(chr(92) in p_destination) > 0
+     or (p_destination like '/%' and left(p_destination, 2) = '//')
+     or not (p_destination like '/%' or p_destination like './%') then
     raise exception 'Announcement destination must remain within Clariva.' using errcode = '22023';
   end if;
 
@@ -484,8 +493,8 @@ begin
   end if;
 
   if (p_audience_type = 'all' and p_audience_value is not null)
-     or (p_audience_type = 'role' and p_audience_value not in ('student', 'admin', 'owner'))
-     or (p_audience_type = 'level' and p_audience_value not in ('100', '200', '300', '400', '500')) then
+     or (p_audience_type = 'role' and (p_audience_value is null or p_audience_value not in ('student', 'admin', 'owner')))
+     or (p_audience_type = 'level' and (p_audience_value is null or p_audience_value not in ('100', '200', '300', '400', '500'))) then
     raise exception 'The selected audience is invalid.' using errcode = '22023';
   end if;
 
