@@ -301,6 +301,29 @@ $function$;
 revoke all on function public.is_active_course_rep() from public, anon;
 grant execute on function public.is_active_course_rep() to authenticated;
 
+create or replace function public.get_active_course_rep_permissions()
+returns text[]
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select coalesce(array(
+    select distinct unnest(a.permissions)
+    from public.course_rep_appointments a
+    join public.students s on s.user_id = a.student_user_id
+    where a.student_user_id = (select auth.uid())
+      and a.revoked_at is null
+      and pg_catalog.make_date(a.start_year, a.start_month, 1) <= (pg_catalog.now() at time zone 'Africa/Lagos')::date
+      and (pg_catalog.now() at time zone 'Africa/Lagos')::date < (pg_catalog.make_date(a.end_year, a.end_month, 1) + interval '1 month')::date
+      and s."Verified" is true
+      and lower(coalesce(s."Role", '')) = 'student'
+  ), '{}'::text[]);
+$function$;
+
+revoke all on function public.get_active_course_rep_permissions() from public, anon;
+grant execute on function public.get_active_course_rep_permissions() to authenticated;
+
 -- Dashboard RPCs expose only the course-rep directory fields needed by
 -- administrators; student contact details are deliberately excluded.
 create or replace function public.admin_list_course_rep_candidates(p_search text default null)
