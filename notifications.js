@@ -259,13 +259,7 @@
         }
         list.appendChild(card);
       });
-      for (const item of data) {
-        if (!item.push_sent_at && ['new_registration', 'resource_uploaded', 'resource_deleted', 'platform'].includes(item.event_type)) {
-          void invoke('dispatch_notification', { notificationId: item.id }).catch(error => {
-            console.warn('Clariva automatic push delivery could not be completed:', error);
-          });
-        }
-      }
+      // Automatic event push delivery is handled server-side by the database dispatch queue.
     } catch (error) {
       console.error('Clariva inbox could not be loaded:', error);
       list.replaceChildren();
