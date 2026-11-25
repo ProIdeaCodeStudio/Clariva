@@ -1,0 +1,3 @@
+# Publish the user-facing website without serving backend project files.
+exclude:
+  - supabase/
