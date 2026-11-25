@@ -365,6 +365,20 @@ if (emailConfirmationLoginBtn) {
       }
 
       const role = String(profile.Role || '').toLowerCase();
+      let isCourseRep = false;
+      if (role === 'student' && (isAdminDashboard || isUndergraduatesPage)) {
+        if (isAdminDashboard && !profile.academic_level_confirmed_at) {
+          window.location.replace('Undergraduates.html');
+          return;
+        }
+        try {
+          const { data: courseRepAccess, error: courseRepError } = await supabaseClient.rpc('is_active_course_rep');
+          if (!courseRepError) isCourseRep = courseRepAccess === true;
+        } catch (courseRepError) {
+          console.warn('Clariva course-representative access could not be checked:', courseRepError);
+        }
+      }
+      window.clarivaIsCourseRep = isCourseRep;
 
       if (isOwnerDashboard) {
         if (role !== 'owner') {
@@ -373,7 +387,7 @@ if (emailConfirmationLoginBtn) {
         }
         if (dashboard) dashboard.hidden = false;
       } else if (isAdminDashboard) {
-        if (!['admin', 'owner'].includes(role)) {
+        if (!['admin', 'owner'].includes(role) && !(role === 'student' && isCourseRep && profile.academic_level_confirmed_at)) {
           if (role === 'student') {
             window.location.replace('Undergraduates.html');
           } else {
