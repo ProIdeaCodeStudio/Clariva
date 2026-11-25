@@ -14,9 +14,9 @@
   <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="script.js?v=20261125-1" defer></script>
+  <script src="script.js?v=20261125-2" defer></script>
   <script src="notifications.js?v=20261125-1" defer></script>
-  <script src="ProfileMenu.js?v=20261124-1" defer></script>
+  <script src="ProfileMenu.js?v=20261125-1" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" async></script>
   <script src="https://apis.google.com/js/api.js" async></script>
@@ -32,7 +32,7 @@
       appId: '579040774646'
     };
   </script>
-  <script src="AdminDashboard.js?v=20261125-1" defer></script>
+  <script src="AdminDashboard.js?v=20261125-2" defer></script>
 
   <style>
     /* ============================================================
@@ -1037,7 +1037,6 @@
             <legend>Permissions for this appointment</legend>
             <label><input type="checkbox" name="course-rep-permission" value="resource_upload"> Upload resources within the assigned scope</label>
             <label><input type="checkbox" name="course-rep-permission" value="resource_update"> Edit resources within the assigned scope</label>
-            <label><input type="checkbox" name="course-rep-permission" value="resource_delete"> Delete resources within the assigned scope</label>
           </fieldset>
         </div>
         <div class="admin-actions"><button class="admin-button" id="course-rep-appoint-button" type="submit">Create appointment</button><button class="admin-button admin-button-secondary" id="course-rep-refresh" type="button">Refresh appointments</button></div>
