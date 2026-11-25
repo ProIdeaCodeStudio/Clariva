@@ -93,7 +93,7 @@ Deno.serve(async (req: Request) => {
       const title = String(body.title || "").trim().slice(0, 80);
       const message = String(body.message || "").trim().slice(0, 220);
       const url = String(body.url || "./");
-      if (!title || !message || (!url.startsWith("/") && !url.startsWith("./")) || url.startsWith("//") || url.includes("\\\\")) {
+      if (!title || !message || (!url.startsWith("/") && !url.startsWith("./")) || url.startsWith("//") || url.includes("\\")) {
         return json({ error: "Provide a title, message and same-site destination." }, 400);
       }
       payload = { title, body: message, url, tag: String(body.tag || crypto.randomUUID()).slice(0, 80) };
