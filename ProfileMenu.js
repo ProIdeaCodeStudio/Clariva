@@ -96,6 +96,9 @@
     if (roleNode) roleNode.textContent = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Member';
     if (levelNode) levelNode.textContent = profile?.Level ? 'Level ' + profile.Level : '—';
 
+    const courseRepLink = byId('clariva-course-rep-dashboard-link');
+    if (courseRepLink) courseRepLink.hidden = !(role === 'student' && window.clarivaIsCourseRep === true && isStudentPage);
+
     const studentLink = byId('clariva-student-dashboard-link');
     const adminLink = byId('clariva-admin-dashboard-link');
     const ownerLink = byId('clariva-owner-dashboard-link');
