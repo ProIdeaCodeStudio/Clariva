@@ -28,7 +28,6 @@ Deno.serve(async (req: Request) => {
 
   const authorization = req.headers.get("Authorization") || "";
   const token = authorization.replace(/^Bearer\s+/i, "");
-  if (!token) return json({ error: "Sign in to manage device notifications." }, 401);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
