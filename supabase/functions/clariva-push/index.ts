@@ -119,26 +119,36 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  const { data: subscriptions, error: listError } = await admin.from("push_subscriptions")
-    .select("id,user_id,endpoint,p256dh,auth").in("user_id", targetIds);
-  if (listError) return json({ error: "Unable to retrieve notification recipients." }, 500);
+  const subscriptions: Array<{ id: string; user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
+  for (let offset = 0; offset < targetIds.length; offset += 500) {
+    const userBatch = targetIds.slice(offset, offset + 500);
+    const { data, error } = await admin.from("push_subscriptions")
+      .select("id,user_id,endpoint,p256dh,auth").in("user_id", userBatch);
+    if (error) return json({ error: "Unable to retrieve notification recipients." }, 500);
+    subscriptions.push(...(data || []));
+  }
+
   let sent = 0;
   let failed = 0;
   const expired: string[] = [];
-  await Promise.all((subscriptions || []).map(async (row: { id: string; endpoint: string; p256dh: string; auth: string }) => {
-    try {
-      await webpush.sendNotification({
-        endpoint: row.endpoint,
-        keys: { p256dh: row.p256dh, auth: row.auth }
-      }, JSON.stringify(payload), { TTL: 60 * 60 * 24 });
-      sent++;
-    } catch (error) {
-      failed++;
-      const statusCode = Number((error as { statusCode?: number })?.statusCode || 0);
-      if (statusCode === 404 || statusCode === 410) expired.push(row.id);
-      else console.error("Push delivery failed:", statusCode, error);
-    }
-  }));
+  const subscriptionBatchSize = 50;
+  for (let offset = 0; offset < subscriptions.length; offset += subscriptionBatchSize) {
+    const batch = subscriptions.slice(offset, offset + subscriptionBatchSize);
+    await Promise.all(batch.map(async (row: { id: string; endpoint: string; p256dh: string; auth: string }) => {
+      try {
+        await webpush.sendNotification({
+          endpoint: row.endpoint,
+          keys: { p256dh: row.p256dh, auth: row.auth }
+        }, JSON.stringify(payload), { TTL: 60 * 60 * 24 });
+        sent++;
+      } catch (error) {
+        failed++;
+        const statusCode = Number((error as { statusCode?: number })?.statusCode || 0);
+        if (statusCode === 404 || statusCode === 410) expired.push(row.id);
+        else console.error("Push delivery failed:", statusCode, error);
+      }
+    }));
+  }
   if (expired.length) await admin.from("push_subscriptions").delete().in("id", expired);
   return json({ ok: true, sent, failed, removedExpired: expired.length });
 });
