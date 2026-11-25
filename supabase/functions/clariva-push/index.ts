@@ -140,7 +140,7 @@ Deno.serve(async (req: Request) => {
         .select("id,title,message,destination").eq("id", announcementId).maybeSingle();
       if (announcementError || !announcement) return json({ error: "The published announcement could not be found." }, 404);
       const { data: recipients, error: recipientsError } = await admin.from("announcement_recipients")
-        .select("user_id").eq("announcement_id", announcementId).is("delivered_at", null);
+        .select("user_id").eq("announcement_id", announcementId).is("push_sent_at", null);
       if (recipientsError) return json({ error: "Unable to retrieve announcement recipients." }, 500);
       targetIds = [...new Set((recipients || []).map((row: { user_id: string }) => row.user_id))];
       announcementIdForDispatch = announcement.id;
@@ -189,7 +189,7 @@ Deno.serve(async (req: Request) => {
   if (expired.length) await admin.from("push_subscriptions").delete().in("id", expired);
   if (announcementIdForDispatch && sentUserIds.size > 0) {
     const { error: recipientUpdateError } = await admin.from("announcement_recipients")
-      .update({ delivered_at: new Date().toISOString() })
+      .update({ push_sent_at: new Date().toISOString() })
       .eq("announcement_id", announcementIdForDispatch)
       .in("user_id", [...sentUserIds]);
     if (recipientUpdateError) console.error("Announcement push delivery status could not be saved:", recipientUpdateError);
