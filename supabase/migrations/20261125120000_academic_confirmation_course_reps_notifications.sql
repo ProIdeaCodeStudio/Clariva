@@ -368,6 +368,40 @@ $function$;
 revoke all on function public.get_active_course_rep_permissions() from public, anon;
 grant execute on function public.get_active_course_rep_permissions() to authenticated;
 
+create or replace function public.course_rep_list_resources()
+returns setof public."Resources"
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or not public.is_active_course_rep() then
+    raise exception 'An active course-representative appointment is required.' using errcode = '42501';
+  end if;
+
+  return query
+  select r.*
+  from public."Resources" r
+  where exists (
+    select 1
+    from public.course_rep_appointments a
+    where a.student_user_id = (select auth.uid())
+      and a.revoked_at is null
+      and pg_catalog.make_date(a.start_year, a.start_month, 1) <= (pg_catalog.now() at time zone 'Africa/Lagos')::date
+      and (pg_catalog.now() at time zone 'Africa/Lagos')::date < (pg_catalog.make_date(a.end_year, a.end_month, 1) + interval '1 month')::date
+      and a.scope_level = r.level
+      and lower(btrim(a.scope_department)) = lower(btrim(coalesce(r.department, '')))
+      and (a.scope_course_code is null or lower(btrim(a.scope_course_code)) = lower(btrim(coalesce(r.course_code, ''))))
+      and (a.permissions && array['resource_upload', 'resource_update']::text[])
+  )
+  order by r.created_at desc;
+end;
+$function$;
+
+revoke all on function public.course_rep_list_resources() from public, anon;
+grant execute on function public.course_rep_list_resources() to authenticated;
+
 -- Dashboard RPCs expose only the course-rep directory fields needed by
 -- administrators; student contact details are deliberately excluded.
 create or replace function public.admin_list_course_rep_candidates(p_search text default null)
