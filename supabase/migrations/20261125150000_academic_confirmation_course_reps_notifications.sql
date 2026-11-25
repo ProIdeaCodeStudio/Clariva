@@ -39,6 +39,27 @@ begin
 end;
 $function$;
 
+create or replace function private.reset_academic_level_confirmation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if new."Level" is distinct from old."Level" then
+    new.academic_level_confirmed_at := null;
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists reset_academic_level_confirmation on public.students;
+create trigger reset_academic_level_confirmation
+before update of "Level" on public.students
+for each row execute function private.reset_academic_level_confirmation();
+
+revoke all on function private.reset_academic_level_confirmation() from public, anon, authenticated;
+
 create or replace function private.is_clariva_admin_or_owner()
 returns boolean
 language sql
