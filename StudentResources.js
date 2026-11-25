@@ -24,6 +24,93 @@
 
   const getElement = id => document.getElementById(id);
 
+  function requireAcademicLevelConfirmation(level) {
+    return new Promise(resolve => {
+      let overlay = document.getElementById('clariva-academic-confirmation');
+      if (!overlay) {
+        const style = document.createElement('style');
+        style.id = 'clariva-academic-confirmation-style';
+        style.textContent = `
+          #clariva-academic-confirmation{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:20px;background:rgba(17,16,8,.72)}
+          #clariva-academic-confirmation[hidden]{display:none}
+          #clariva-academic-confirmation .clariva-academic-card{width:min(460px,100%);padding:clamp(22px,5vw,34px);border:1px solid #d8c9a8;border-radius:16px;background:#fffaf0;color:#211b12;box-shadow:0 18px 60px rgba(0,0,0,.24);font:15px/1.55 system-ui,sans-serif}
+          #clariva-academic-confirmation h2{margin:0 0 10px;font:700 25px/1.2 Georgia,serif}
+          #clariva-academic-confirmation p{margin:0 0 14px}
+          #clariva-academic-confirmation .academic-level-value{display:block;margin:18px 0;padding:14px;border-radius:10px;background:#f1e8d6;font:700 22px Georgia,serif;text-align:center}
+          #clariva-academic-confirmation button{width:100%;min-height:46px;border:0;border-radius:9px;background:#211b12;color:#fffaf0;font:600 14px system-ui,sans-serif;cursor:pointer}
+          #clariva-academic-confirmation button:disabled{opacity:.6;cursor:wait}
+          #clariva-academic-confirmation .academic-confirmation-status{min-height:20px;margin:12px 0 0;font-size:13px;color:#8b2c20}
+        `;
+        document.head.appendChild(style);
+        overlay = document.createElement('section');
+        overlay.id = 'clariva-academic-confirmation';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-labelledby', 'clariva-academic-confirmation-title');
+        overlay.innerHTML = `
+          <div class="clariva-academic-card">
+            <p class="features-label">One-time account confirmation</p>
+            <h2 id="clariva-academic-confirmation-title">Confirm your academic level</h2>
+            <p>Before you continue to the Clariva Resource Library, please confirm that the academic level shown below is correct.</p>
+            <strong class="academic-level-value" id="clariva-academic-level-value"></strong>
+            <p>If this level is incorrect, do not confirm it. Contact a Clariva administrator to have your account corrected.</p>
+            <button id="clariva-academic-confirm-button" type="button">Yes, this is my level</button>
+            <p class="academic-confirmation-status" id="clariva-academic-confirm-status" role="status" aria-live="polite"></p>
+          </div>`;
+        document.body.appendChild(overlay);
+      }
+
+      const value = overlay.querySelector('#clariva-academic-level-value');
+      const button = overlay.querySelector('#clariva-academic-confirm-button');
+      const status = overlay.querySelector('#clariva-academic-confirm-status');
+      value.textContent = level + ' Level';
+      status.textContent = '';
+      overlay.hidden = false;
+      button.disabled = false;
+      button.onclick = async () => {
+        button.disabled = true;
+        status.textContent = 'Saving your confirmation…';
+        try {
+          const { data: confirmedAt, error } = await client.rpc('confirm_academic_level', { p_level: String(level) });
+          if (error) throw error;
+          if (window.clarivaCachedProfile) {
+            window.clarivaCachedProfile.academic_level_confirmed_at = confirmedAt || new Date().toISOString();
+          }
+          try {
+            const cacheKey = 'clariva-offline-profile-v1:' + currentUserId;
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+            if (cached) {
+              cached.academic_level_confirmed_at = confirmedAt || new Date().toISOString();
+              cached.cachedAt = Date.now();
+              localStorage.setItem(cacheKey, JSON.stringify(cached));
+            }
+          } catch (cacheError) {
+            console.warn('Clariva could not refresh the offline confirmation cache:', cacheError);
+          }
+          try {
+            const { data: courseRepAccess } = await client.rpc('is_active_course_rep');
+            window.clarivaIsCourseRep = courseRepAccess === true;
+            if (window.clarivaIsCourseRep) {
+              const { data: permissions, error: permissionsError } = await client.rpc('get_active_course_rep_permissions');
+              window.clarivaCourseRepPermissions = !permissionsError && Array.isArray(permissions) ? permissions : [];
+              window.clarivaIsCourseRep = window.clarivaCourseRepPermissions.length > 0;
+              const courseRepLink = getElement('clariva-course-rep-dashboard-link');
+              if (courseRepLink) courseRepLink.hidden = !window.clarivaIsCourseRep;
+            }
+          } catch (courseRepError) {
+            console.warn('Clariva course representative access refresh failed:', courseRepError);
+          }
+          overlay.hidden = true;
+          resolve(true);
+        } catch (error) {
+          console.error('Clariva academic-level confirmation error:', error);
+          status.textContent = window.clarivaFriendlyError?.(error, error.message || 'Your confirmation could not be saved. Please try again.') || error.message || 'Your confirmation could not be saved. Please try again.';
+          button.disabled = false;
+        }
+      };
+    });
+  }
+
   function setLibraryStatus(message, state = 'info') {
     const savedStatus = getElement('saved-offline-section') && !getElement('saved-offline-section').hidden
       ? getElement('saved-offline-status') : null;
@@ -867,7 +954,7 @@
         const offlineUser = window.clarivaOfflineUser;
         const cachedProfile = window.clarivaCachedProfile;
         const role = String(cachedProfile?.Role || '').toLowerCase();
-        if (!offlineUser?.id || cachedProfile?.Verified !== true || !['student', 'admin', 'owner'].includes(role)) {
+        if (!offlineUser?.id || cachedProfile?.Verified !== true || !['student', 'admin', 'owner'].includes(role) || (role === 'student' && !cachedProfile?.academic_level_confirmed_at)) {
           throw new Error('Offline access requires a previously verified account on this device.');
         }
         currentUserId = offlineUser.id;
@@ -898,7 +985,7 @@
 
       const { data: profile, error: profileError } = await client
         .from('students')
-        .select('Level, Verified, Role')
+        .select('Level, Verified, Role, academic_level_confirmed_at')
         .eq('user_id', user.id)
         .single();
 
@@ -914,6 +1001,14 @@
       }
 
       currentUserRole = role;
+      if (role === 'student' && !profile.academic_level_confirmed_at) {
+        const storedLevel = String(profile.Level || '');
+        if (!['100', '200', '300', '400', '500'].includes(storedLevel)) {
+          throw new Error('Your academic level is missing or invalid. Please contact a Clariva administrator.');
+        }
+        const confirmed = await requireAcademicLevelConfirmation(storedLevel);
+        if (!confirmed) return;
+      }
       if (savedView) {
         document.querySelector('.student-library-section')?.setAttribute('hidden', '');
         getElement('saved-offline-section').hidden = false;

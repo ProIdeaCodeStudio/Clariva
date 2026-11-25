@@ -11,6 +11,7 @@
   let disableButton = null;
   let testButton = null;
   let initialized = false;
+  let inboxChannel = null;
 
   const encodeKey = value => {
     const padding = '='.repeat((4 - value.length % 4) % 4);
@@ -36,6 +37,17 @@
       #clariva-push-status{font-size:12px;color:#625744;min-height:18px;margin:8px 0}
       #clariva-push-status[data-state="error"]{color:#a12b20}
       #clariva-push-status[data-state="success"]{color:#28623c}
+      #clariva-inbox{margin-top:14px;padding-top:12px;border-top:1px solid #e5dac5}
+      #clariva-inbox h3{font:600 14px Georgia,serif;margin:0 0 8px}
+      #clariva-inbox-list{display:grid;gap:8px;max-height:230px;overflow:auto}
+      .clariva-inbox-item{padding:9px;border-radius:9px;background:#f3ecdf}
+      .clariva-inbox-item[data-unread="true"]{border-left:3px solid #e8941a}
+      .clariva-inbox-item strong{display:block;font-size:13px}
+      .clariva-inbox-item p{margin:4px 0;font-size:12px}
+      .clariva-inbox-item small{font-size:10px;color:#625744}
+      .clariva-inbox-item a{display:inline-block;margin-top:5px;color:#6d4814;font-weight:600;font-size:12px}
+      .clariva-inbox-empty{font-size:12px;color:#625744}
+      #clariva-inbox-refresh{margin-top:8px;border:0;border-radius:7px;padding:7px 10px;background:#e9dfca;color:#211b12;font:600 12px system-ui,sans-serif}
       .clariva-push-actions{display:flex;gap:8px;flex-wrap:wrap}
       .clariva-push-actions button{border:0;border-radius:8px;padding:9px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
       #clariva-push-enable,#clariva-push-test{background:#211b12;color:#fffaf0}
@@ -58,7 +70,12 @@
         <button id="clariva-push-enable" type="button">Enable notifications</button>
         <button id="clariva-push-test" type="button" hidden>Send test</button>
         <button id="clariva-push-disable" type="button" hidden>Turn off</button>
-      </div>`;
+      </div>
+      <section id="clariva-inbox" aria-label="Recent Clariva updates">
+        <h3>Recent updates</h3>
+        <div id="clariva-inbox-list" aria-live="polite"><p class="clariva-inbox-empty">Loading updates…</p></div>
+        <button id="clariva-inbox-refresh" type="button">Refresh updates</button>
+      </section>`;
     document.body.appendChild(panel);
     statusNode = panel.querySelector('#clariva-push-status');
     enableButton = panel.querySelector('#clariva-push-enable');
@@ -69,6 +86,7 @@
     enableButton.addEventListener('click', enableNotifications);
     disableButton.addEventListener('click', disableNotifications);
     testButton.addEventListener('click', sendTest);
+    panel.querySelector('#clariva-inbox-refresh').addEventListener('click', loadInbox);
   }
 
   async function invoke(action, extra = {}) {
@@ -178,17 +196,113 @@
     }
   }
 
+  async function loadInbox() {
+    const list = panel?.querySelector('#clariva-inbox-list');
+    if (!list || !supabaseClient || !activeUserId) return;
+    list.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'clariva-inbox-empty';
+    loading.textContent = 'Loading updates…';
+    list.appendChild(loading);
+    try {
+      const { data, error } = await supabaseClient.from('notifications')
+        .select('id,event_type,title,message,destination,created_at,read_at,push_sent_at')
+        .eq('user_id', activeUserId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      list.replaceChildren();
+      if (!data?.length) {
+        const empty = document.createElement('p');
+        empty.className = 'clariva-inbox-empty';
+        empty.textContent = 'You are all caught up. No recent updates.';
+        list.appendChild(empty);
+        return;
+      }
+      data.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'clariva-inbox-item';
+        card.dataset.unread = String(!item.read_at);
+        const title = document.createElement('strong');
+        title.textContent = item.title || 'Clariva update';
+        const message = document.createElement('p');
+        message.textContent = item.message || '';
+        const date = document.createElement('small');
+        date.textContent = new Date(item.created_at).toLocaleString();
+        card.append(title, message, date);
+        if (item.destination) {
+          const link = document.createElement('a');
+          link.href = item.destination;
+          link.textContent = 'Open update';
+          card.appendChild(link);
+        }
+        if (!item.read_at) {
+          const markRead = document.createElement('button');
+          markRead.type = 'button';
+          markRead.textContent = 'Mark as read';
+          markRead.style.cssText = 'display:block;margin-top:6px;border:0;background:transparent;color:#6d4814;font:600 11px system-ui,sans-serif;padding:2px 0;cursor:pointer';
+          markRead.addEventListener('click', async () => {
+            markRead.disabled = true;
+            try {
+              const { error: updateError } = await supabaseClient.from('notifications')
+                .update({ read_at: new Date().toISOString() })
+                .eq('id', item.id)
+                .eq('user_id', activeUserId);
+              if (updateError) throw updateError;
+              await loadInbox();
+            } catch (error) {
+              console.error('Clariva notification read state could not be updated:', error);
+              markRead.disabled = false;
+            }
+          });
+          card.appendChild(markRead);
+        }
+        list.appendChild(card);
+      });
+      // Automatic event push delivery is handled server-side by the database dispatch queue.
+    } catch (error) {
+      console.error('Clariva inbox could not be loaded:', error);
+      list.replaceChildren();
+      const message = document.createElement('p');
+      message.className = 'clariva-inbox-empty';
+      message.textContent = 'Updates could not be loaded. Check your connection and refresh.';
+      list.appendChild(message);
+    }
+  }
+
+  function watchInbox(userId) {
+    if (!supabaseClient || typeof supabaseClient.channel !== 'function') return;
+    if (inboxChannel) {
+      try { void supabaseClient.removeChannel(inboxChannel); } catch (_) {}
+      inboxChannel = null;
+    }
+    inboxChannel = supabaseClient
+      .channel('clariva-notifications-' + userId)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: 'user_id=eq.' + userId
+      }, () => { void loadInbox(); })
+      .subscribe();
+  }
+
   async function showForUser(userId) {
     if (!userId || window.clarivaOfflineMode === true) return;
     if (activeUserId === userId && panel) return;
     activeUserId = userId;
     createPanel();
     panel.hidden = false;
-    await refreshState();
+    watchInbox(userId);
+    await Promise.all([refreshState(), loadInbox()]);
   }
 
   async function hideForSignedOutUser() {
     activeUserId = null;
+    if (inboxChannel && supabaseClient) {
+      try { await supabaseClient.removeChannel(inboxChannel); } catch (_) {}
+      inboxChannel = null;
+    }
     if (panel) panel.hidden = true;
   }
 

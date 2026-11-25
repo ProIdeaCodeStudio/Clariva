@@ -14,9 +14,9 @@
   <!-- Load EmailJS and Supabase first, then the site script (deferred) -->
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="script.js?v=20261124-1" defer></script>
-  <script src="notifications.js?v=20261124-1" defer></script>
-  <script src="ProfileMenu.js?v=20261124-1" defer></script>
+  <script src="script.js?v=20261125-3" defer></script>
+  <script src="notifications.js?v=20261125-2" defer></script>
+  <script src="ProfileMenu.js?v=20261125-1" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" async></script>
   <script src="https://apis.google.com/js/api.js" async></script>
@@ -32,7 +32,7 @@
       appId: '579040774646'
     };
   </script>
-  <script src="AdminDashboard.js?v=20261122-1" defer></script>
+  <script src="AdminDashboard.js?v=20261125-7" defer></script>
 
   <style>
     /* ============================================================
@@ -726,6 +726,8 @@
             <a href="#manage-resources">Manage resources</a>
             <a href="#user-overview">User overview</a>
             <a href="#platform-overview">Platform overview</a>
+            <a href="#course-representatives">Course representatives</a>
+            <a href="#manual-announcements">Manual announcements</a>
             <div class="clariva-menu-divider"></div>
             <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
             <a id="clariva-saved-offline-link" href="Undergraduates.html?saved=1">Saved Offline Resources</a>
@@ -1015,6 +1017,56 @@
           <div class="admin-breakdown" id="admin-level-breakdown"><p class="admin-muted">Loading level distribution...</p></div>
         </div>
       </div>
+    </section>
+
+    <section class="admin-panel" id="course-representatives">
+      <p class="admin-section-kicker">Scoped administration</p>
+      <h2>Course Representatives</h2>
+      <p class="admin-panel-intro">Appoint verified students as course representatives for a defined academic scope and term. Their student account role remains unchanged.</p>
+      <form id="course-rep-appointment-form">
+        <div class="admin-form-grid">
+          <div class="admin-field"><label for="course-rep-student">Student</label><select id="course-rep-student" required><option value="">Loading eligible students…</option></select></div>
+          <div class="admin-field"><label for="course-rep-level">Academic level</label><select id="course-rep-level" required><option value="">Select level</option><option value="100">100 Level</option><option value="200">200 Level</option><option value="300">300 Level</option><option value="400">400 Level</option><option value="500">500 Level</option></select></div>
+          <div class="admin-field"><label for="course-rep-department">Department scope</label><input id="course-rep-department" type="text" maxlength="160" required placeholder="e.g. Electrical and Electronics Engineering"></div>
+          <div class="admin-field"><label for="course-rep-course">Course code scope (optional)</label><input id="course-rep-course" type="text" maxlength="40" placeholder="e.g. EEE 201"></div>
+          <div class="admin-field"><label for="course-rep-start-month">Term starts — month</label><select id="course-rep-start-month" required><option value="">Select month</option></select></div>
+          <div class="admin-field"><label for="course-rep-start-year">Term starts — year</label><select id="course-rep-start-year" required><option value="">Select year</option></select></div>
+          <div class="admin-field"><label for="course-rep-end-month">Term ends — month</label><select id="course-rep-end-month" required><option value="">Select month</option></select></div>
+          <div class="admin-field"><label for="course-rep-end-year">Term ends — year</label><select id="course-rep-end-year" required><option value="">Select year</option></select></div>
+          <fieldset class="admin-field admin-field-full" style="border:0;padding:0">
+            <legend>Permissions for this appointment</legend>
+            <label><input type="checkbox" name="course-rep-permission" value="resource_upload"> Upload resources within the assigned scope</label>
+            <label><input type="checkbox" name="course-rep-permission" value="resource_update"> Edit resources within the assigned scope</label>
+          </fieldset>
+        </div>
+        <div class="admin-actions"><button class="admin-button" id="course-rep-appoint-button" type="submit">Create appointment</button><button class="admin-button admin-button-secondary" id="course-rep-refresh" type="button">Refresh appointments</button></div>
+        <p class="admin-muted" id="course-rep-status" role="status" aria-live="polite"></p>
+      </form>
+      <h3 class="admin-overview-subtitle">Appointment history</h3>
+      <div class="admin-resource-list-wrap" style="overflow-x:auto">
+        <table class="admin-resource-table"><thead><tr><th>Student</th><th>Scope</th><th>Term</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead><tbody id="course-rep-appointments"><tr><td colspan="6">Loading appointments…</td></tr></tbody></table>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="manual-announcements">
+      <p class="admin-section-kicker">Platform communication</p>
+      <h2>Manual Announcements</h2>
+      <p class="admin-panel-intro">Publish an announcement to all Clariva users, a role group, or students at a selected academic level. Recipients are resolved securely by Clariva.</p>
+      <form id="manual-announcement-form">
+        <div class="admin-form-grid">
+          <div class="admin-field admin-field-full"><label for="announcement-title">Announcement title</label><input id="announcement-title" type="text" maxlength="100" required placeholder="A clear title for the update"></div>
+          <div class="admin-field admin-field-full"><label for="announcement-message">Message</label><textarea id="announcement-message" maxlength="500" rows="4" required placeholder="Write the announcement…"></textarea></div>
+          <div class="admin-field"><label for="announcement-audience">Recipients</label><select id="announcement-audience" required>
+            <option value="all">All Clariva users</option><option value="role:student">All students</option><option value="role:admin">Administrators</option><option value="role:owner">Owners</option>
+            <option value="level:100">100 Level students</option><option value="level:200">200 Level students</option><option value="level:300">300 Level students</option><option value="level:400">400 Level students</option><option value="level:500">500 Level students</option>
+          </select></div>
+          <div class="admin-field"><label for="announcement-destination">In-app destination</label><input id="announcement-destination" type="text" maxlength="200" value="./" placeholder="./ or /page.html"></div>
+        </div>
+        <div class="admin-actions"><button class="admin-button" id="announcement-publish-button" type="submit">Publish announcement</button></div>
+        <p class="admin-muted" id="announcement-status" role="status" aria-live="polite"></p>
+      </form>
+      <h3 class="admin-overview-subtitle">Published announcements</h3>
+      <div id="announcement-history" class="admin-placeholder" aria-live="polite">Loading announcement history…</div>
     </section>
 
     <section class="admin-panel" id="platform-overview" aria-labelledby="platform-overview-title">
