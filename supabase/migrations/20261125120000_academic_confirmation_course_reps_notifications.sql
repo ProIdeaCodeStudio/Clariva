@@ -158,6 +158,7 @@ create policy "Verified admins and owners insert course rep appointments"
       select 1 from public.students s
       where s.user_id = student_user_id
         and lower(coalesce(s."Role", '')) = 'student'
+        and s."Verified" is true
         and s."Level" = scope_level::text
     )
   );
@@ -166,7 +167,16 @@ drop policy if exists "Verified admins and owners update course rep appointments
 create policy "Verified admins and owners update course rep appointments"
   on public.course_rep_appointments for update to authenticated
   using (private.is_clariva_admin_or_owner())
-  with check (private.is_clariva_admin_or_owner());
+  with check (
+    private.is_clariva_admin_or_owner()
+    and exists (
+      select 1 from public.students s
+      where s.user_id = student_user_id
+        and lower(coalesce(s."Role", '')) = 'student'
+        and s."Verified" is true
+        and s."Level" = scope_level::text
+    )
+  );
 
 create or replace function private.has_active_course_rep_permission(
   p_level smallint,
@@ -363,6 +373,7 @@ as $function$
       and pg_catalog.make_date(a.start_year, a.start_month, 1) <= (pg_catalog.now() at time zone 'Africa/Lagos')::date
       and (pg_catalog.now() at time zone 'Africa/Lagos')::date < (pg_catalog.make_date(a.end_year, a.end_month, 1) + interval '1 month')::date
       and s."Verified" is true
+      and s.academic_level_confirmed_at is not null
       and lower(coalesce(s."Role", '')) = 'student'
   ), '{}'::text[]);
 $function$;
@@ -632,6 +643,7 @@ begin
   select announcement_id, s.user_id
   from public.students s
   where s.user_id is not null
+    and s."Verified" is true
     and (
       p_audience_type = 'all'
       or (p_audience_type = 'role' and lower(coalesce(s."Role", '')) = p_audience_value)
