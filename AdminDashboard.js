@@ -2140,7 +2140,12 @@
         if (pushError || pushResult?.error) {
           throw pushError || new Error(pushResult.error);
         }
-        deliveryMessage += ' Push sent to ' + Number(pushResult?.sent || 0).toLocaleString() + ' subscribed device(s).';
+        const pushSent = Number(pushResult?.sent || 0);
+        const pushFailed = Number(pushResult?.failed || 0);
+        deliveryMessage += pushSent
+          ? ' Push sent to ' + pushSent.toLocaleString() + ' subscribed device(s).'
+          : ' No subscribed devices were available for push delivery.';
+        if (pushFailed) deliveryMessage += ' ' + pushFailed.toLocaleString() + ' device(s) could not be reached.';
       } catch (pushError) {
         console.warn('Clariva announcement push delivery is unavailable:', pushError);
         deliveryMessage += ' Push delivery could not be completed; in-app delivery is saved.';
