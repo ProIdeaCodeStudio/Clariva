@@ -1079,7 +1079,7 @@ set search_path = ''
 as $function$
 declare
   v_project_url text;
-  v_service_key text;
+  v_dispatch_secret text;
 begin
   select ds.decrypted_secret
     into v_project_url
@@ -1088,12 +1088,12 @@ begin
    limit 1;
 
   select ds.decrypted_secret
-    into v_service_key
+    into v_dispatch_secret
     from vault.decrypted_secrets ds
    where ds.name = 'clariva_dispatch_secret'
    limit 1;
 
-  if coalesce(v_project_url, '') = '' or coalesce(v_service_key, '') = '' then
+  if coalesce(v_project_url, '') = '' or coalesce(v_dispatch_secret, '') = '' then
     return;
   end if;
 
@@ -1102,7 +1102,7 @@ begin
     body := '{"action":"dispatch_pending"}'::jsonb,
     headers := pg_catalog.jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-clariva-dispatch-secret', v_service_key
+      'x-clariva-dispatch-secret', v_dispatch_secret
     ),
     timeout_milliseconds := 10000
   );
