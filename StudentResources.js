@@ -71,8 +71,34 @@
         button.disabled = true;
         status.textContent = 'Saving your confirmation…';
         try {
-          const { error } = await client.rpc('confirm_academic_level', { p_level: String(level) });
+          const { data: confirmedAt, error } = await client.rpc('confirm_academic_level', { p_level: String(level) });
           if (error) throw error;
+          if (window.clarivaCachedProfile) {
+            window.clarivaCachedProfile.academic_level_confirmed_at = confirmedAt || new Date().toISOString();
+          }
+          try {
+            const cacheKey = 'clariva-offline-profile-v1:' + currentUserId;
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+            if (cached) {
+              cached.academic_level_confirmed_at = confirmedAt || new Date().toISOString();
+              cached.cachedAt = Date.now();
+              localStorage.setItem(cacheKey, JSON.stringify(cached));
+            }
+          } catch (cacheError) {
+            console.warn('Clariva could not refresh the offline confirmation cache:', cacheError);
+          }
+          try {
+            const { data: courseRepAccess } = await client.rpc('is_active_course_rep');
+            window.clarivaIsCourseRep = courseRepAccess === true;
+            if (window.clarivaIsCourseRep) {
+              const { data: permissions } = await client.rpc('get_active_course_rep_permissions');
+              window.clarivaCourseRepPermissions = Array.isArray(permissions) ? permissions : [];
+              const courseRepLink = getElement('clariva-course-rep-dashboard-link');
+              if (courseRepLink) courseRepLink.hidden = false;
+            }
+          } catch (courseRepError) {
+            console.warn('Clariva course representative access refresh failed:', courseRepError);
+          }
           overlay.hidden = true;
           resolve(true);
         } catch (error) {
