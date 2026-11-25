@@ -792,7 +792,7 @@
     return `${baseName || 'resource'}.${extension}`;
   }
 
-  async function getAuthorizedUploader() {
+  async function getAuthorizedUploader(requiredPermission = 'resource_upload') {
     if (typeof supabaseClient === 'undefined' || !supabaseClient) {
       throw new Error('Supabase is not ready. Refresh the page and try again.');
     }
@@ -818,11 +818,18 @@
 
     const role = String(profile.Role || '').toLowerCase();
 
-    if (profile.Verified !== true || !['admin', 'owner'].includes(role)) {
-      throw new Error('You are not authorized to upload resources.');
+    if (profile.Verified !== true) {
+      throw new Error('Your account is not verified for resource management.');
     }
 
-    return user;
+    if (['admin', 'owner'].includes(role)) return user;
+
+    const courseRepPermissions = new Set(window.clarivaCourseRepPermissions || []);
+    if (role === 'student' && window.clarivaIsCourseRep === true && courseRepPermissions.has(requiredPermission)) {
+      return user;
+    }
+
+    throw new Error('Your account does not have permission for this resource action.');
   }
 
   /* ============================================================
@@ -1123,7 +1130,7 @@
     button.disabled = true;
     button.textContent = busyLabel || 'Saving...';
     try {
-      await getAuthorizedUploader();
+      await getAuthorizedUploader('resource_update');
 
       const { data, error } = await supabaseClient
         .from('Resources')
@@ -1178,7 +1185,7 @@
     setResourceActionStatus('Removing resource from the library...', 'info');
 
     try {
-      await getAuthorizedUploader();
+      await getAuthorizedUploader('resource_delete');
 
       const { data, error } = await supabaseClient
         .from('Resources')
