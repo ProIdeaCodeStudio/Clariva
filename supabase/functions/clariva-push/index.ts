@@ -37,6 +37,7 @@ Deno.serve(async (req: Request) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const action = String(body.action || "");
+  let notificationIdForDispatch: string | null = null;
 
   if (action === "subscribe") {
     const sub = body.subscription as { endpoint?: string; keys?: { p256dh?: string; auth?: string } } | undefined;
@@ -66,7 +67,7 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true });
   }
 
-  if (action !== "test" && action !== "send" && action !== "announcement_push") return json({ error: "Unknown notification action." }, 400);
+  if (action !== "test" && action !== "send" && action !== "announcement_push" && action !== "dispatch_notification") return json({ error: "Unknown notification action." }, 400);
   if (!vapidPublic || !vapidPrivate) return json({ error: "The notification delivery keys have not been configured yet." }, 503);
   webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
 
@@ -77,6 +78,38 @@ Deno.serve(async (req: Request) => {
     url: "./",
     tag: "clariva-push-test"
   };
+
+  if (action === "dispatch_notification") {
+    const { data: profile, error: profileError } = await admin.from("students")
+      .select("Role,Verified").eq("user_id", userId).maybeSingle();
+    const role = String(profile?.Role || "").toLowerCase();
+    if (profileError || profile?.Verified !== true || !["admin", "owner"].includes(role)) {
+      return json({ error: "Only verified Clariva administrators can dispatch system notifications." }, 403);
+    }
+
+    const notificationId = String(body.notificationId || "");
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(notificationId)) {
+      return json({ error: "A valid notification reference is required." }, 400);
+    }
+    const { data: notification, error: notificationError } = await admin.from("notifications")
+      .select("id,event_type,title,message,destination,push_sent_at")
+      .eq("id", notificationId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (notificationError || !notification) return json({ error: "The notification could not be found." }, 404);
+    if (!["new_registration", "resource_uploaded", "resource_deleted", "platform"].includes(notification.event_type)) {
+      return json({ error: "This notification is not eligible for automatic push delivery." }, 400);
+    }
+    if (notification.push_sent_at) return json({ ok: true, sent: 0, alreadySent: true });
+    notificationIdForDispatch = notification.id;
+    targetIds = [userId];
+    payload = {
+      title: notification.title,
+      body: notification.message,
+      url: notification.destination,
+      tag: ("clariva-event-" + notification.id).slice(0, 80)
+    };
+  }
 
   if (action === "send" || action === "announcement_push") {
     const { data: profile, error: profileError } = await admin.from("students")
@@ -150,5 +183,12 @@ Deno.serve(async (req: Request) => {
     }));
   }
   if (expired.length) await admin.from("push_subscriptions").delete().in("id", expired);
+  if (notificationIdForDispatch && sent > 0) {
+    const { error: deliveryUpdateError } = await admin.from("notifications")
+      .update({ push_sent_at: new Date().toISOString() })
+      .eq("id", notificationIdForDispatch)
+      .eq("user_id", userId);
+    if (deliveryUpdateError) console.error("Notification push status could not be saved:", deliveryUpdateError);
+  }
   return json({ ok: true, sent, failed, removedExpired: expired.length });
 });
