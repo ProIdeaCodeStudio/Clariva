@@ -28,15 +28,113 @@ Deno.serve(async (req: Request) => {
   const vapidSubject = Deno.env.get("VAPID_SUBJECT") || "mailto:Proidea2025@gmail.com";
   if (!supabaseUrl || !anonKey || !serviceKey) return json({ error: "Notification service configuration is incomplete." }, 503);
 
-  const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: authData, error: authError } = await authClient.auth.getUser(token);
-  if (authError || !authData.user) return json({ error: "Your session is invalid. Sign in again." }, 401);
-  const userId = authData.user.id;
+  const isServiceDispatch = token === serviceKey;
+  let userId: string | null = null;
+  if (!isServiceDispatch) {
+    const authClient = createClient(supabaseUrl, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: authData, error: authError } = await authClient.auth.getUser(token);
+    if (authError || !authData.user) return json({ error: "Your session is invalid. Sign in again." }, 401);
+    userId = authData.user.id;
+  }
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const action = String(body.action || "");
+
+  if (action === "dispatch_pending") {
+    if (!isServiceDispatch) return json({ error: "Service authorization is required." }, 403);
+    if (!vapidPublic || !vapidPrivate) return json({ error: "The notification delivery keys have not been configured yet." }, 503);
+    webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
+
+    const { data: pending, error: claimError } = await admin.rpc("claim_clariva_push_notifications", { p_limit: 200 });
+    if (claimError) {
+      console.error("Pending notification claim failed:", claimError);
+      return json({ error: "Unable to claim pending notifications." }, 500);
+    }
+    if (!pending?.length) return json({ ok: true, claimed: 0, sent: 0, failed: 0, noSubscription: 0, removedExpired: 0 });
+
+    const targetIds = [...new Set((pending as Array<{ user_id: string }>).map(row => row.user_id))];
+    const subscriptions: Array<{ id: string; user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
+    for (let offset = 0; offset < targetIds.length; offset += 500) {
+      const { data, error } = await admin.from("push_subscriptions")
+        .select("id,user_id,endpoint,p256dh,auth")
+        .in("user_id", targetIds.slice(offset, offset + 500));
+      if (error) return json({ error: "Unable to retrieve push subscriptions." }, 500);
+      subscriptions.push(...(data || []));
+    }
+
+    const subscriptionsByUser = new Map<string, typeof subscriptions>();
+    for (const sub of subscriptions) {
+      const list = subscriptionsByUser.get(sub.user_id) || [];
+      list.push(sub);
+      subscriptionsByUser.set(sub.user_id, list);
+    }
+
+    const sentNotificationIds = new Set<string>();
+    const expiredSubscriptionIds: string[] = [];
+    let sent = 0;
+    let failed = 0;
+    let noSubscription = 0;
+
+    const deliveryTasks = (pending as Array<{
+      notification_id: string; user_id: string; title: string; message: string; destination: string;
+    }>).flatMap(notification => {
+      const userSubscriptions = subscriptionsByUser.get(notification.user_id) || [];
+      if (!userSubscriptions.length) {
+        noSubscription++;
+        return [];
+      }
+      return userSubscriptions.map(subscription => ({ notification, subscription }));
+    });
+
+    for (let offset = 0; offset < deliveryTasks.length; offset += 40) {
+      const batch = deliveryTasks.slice(offset, offset + 40);
+      await Promise.all(batch.map(async ({ notification, subscription }) => {
+        try {
+          await webpush.sendNotification({
+            endpoint: subscription.endpoint,
+            keys: { p256dh: subscription.p256dh, auth: subscription.auth }
+          }, JSON.stringify({
+            title: notification.title,
+            body: notification.message,
+            url: notification.destination,
+            tag: ("clariva-event-" + notification.notification_id).slice(0, 80)
+          }), { TTL: 60 * 60 * 24 });
+          sent++;
+          sentNotificationIds.add(notification.notification_id);
+        } catch (error) {
+          failed++;
+          const statusCode = Number((error as { statusCode?: number })?.statusCode || 0);
+          if (statusCode === 404 || statusCode === 410) expiredSubscriptionIds.push(subscription.id);
+          else console.error("Automatic event push failed:", statusCode, error);
+        }
+      }));
+    }
+
+    if (expiredSubscriptionIds.length) {
+      await admin.from("push_subscriptions").delete().in("id", [...new Set(expiredSubscriptionIds)]);
+    }
+    if (sentNotificationIds.size) {
+      const { error: markError } = await admin.from("notifications")
+        .update({ push_sent_at: new Date().toISOString() })
+        .in("id", [...sentNotificationIds]);
+      if (markError) console.error("Automatic push success could not be recorded:", markError);
+    }
+
+    return json({
+      ok: true,
+      claimed: pending.length,
+      sent,
+      failed,
+      noSubscription,
+      notificationsSent: sentNotificationIds.size,
+      removedExpired: [...new Set(expiredSubscriptionIds)].length
+    });
+  }
+
+  if (isServiceDispatch) return json({ error: "Service credentials cannot perform user actions." }, 403);
+  if (!userId) return json({ error: "Sign in to manage device notifications." }, 401);
   let notificationIdForDispatch: string | null = null;
   let announcementIdForDispatch: string | null = null;
 
