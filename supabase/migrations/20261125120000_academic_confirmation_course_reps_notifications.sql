@@ -323,7 +323,6 @@ begin
        or new.file_url is distinct from old.file_url
        or new.file_name is distinct from old.file_name
        or new.file_size is distinct from old.file_size
-       or new.view_count is distinct from old.view_count
        or new.download_count is distinct from old.download_count
        or new.created_at is distinct from old.created_at then
       raise exception 'Course representatives cannot change resource scope, publication, featured status, ownership, or stored files.' using errcode = '42501';
