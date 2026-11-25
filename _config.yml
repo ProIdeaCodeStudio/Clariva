@@ -1,3 +1,5 @@
-# Publish the user-facing website without serving backend project files.
+# Publish user-facing website content without serving backend project files
+# or the redundant archived overview package.
 exclude:
   - supabase/
+  - docs/CLARIVA_DEVELOPMENT_OVERVIEW_SAFE.zip
