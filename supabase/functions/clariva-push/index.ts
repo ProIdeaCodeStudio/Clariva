@@ -114,9 +114,9 @@ Deno.serve(async (req: Request) => {
 
   if (action === "send" || action === "announcement_push") {
     const { data: profile, error: profileError } = await admin.from("students")
-      .select("Role,Verified").eq("user_id", userId).maybeSingle();
+      .select("Role,Verified,password_reset_required").eq("user_id", userId).maybeSingle();
     const role = String(profile?.Role || "").toLowerCase();
-    if (profileError || profile?.Verified !== true || !["admin", "owner"].includes(role)) {
+    if (profileError || profile?.Verified !== true || profile?.password_reset_required === true || !["admin", "owner"].includes(role)) {
       return json({ error: "Only verified Clariva administrators can send platform notifications." }, 403);
     }
 
