@@ -52,6 +52,7 @@ as $function$
     select 1 from public.students s
     where s.user_id = (select auth.uid())
       and s."Verified" is true
+      and coalesce(s.password_reset_required, false) is false
       and lower(coalesce(s."Role", '')) in ('admin', 'owner')
   );
 $function$;
