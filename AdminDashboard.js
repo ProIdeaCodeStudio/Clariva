@@ -1691,8 +1691,8 @@
         file_size: file.size,
         uploaded_by: user.id,
         visibility: true,
-        featured: true,
-        featured_until: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        featured: window.clarivaIsCourseRep === true ? false : true,
+        featured_until: window.clarivaIsCourseRep === true ? null : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         featured_permanent: false
       });
 
