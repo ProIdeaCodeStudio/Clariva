@@ -1817,8 +1817,324 @@
      DASHBOARD INITIALIZATION
      ============================================================ */
 
+  function setFeatureStatus(id, message, state = 'info') {
+    const node = getElement(id);
+    if (!node) return;
+    node.textContent = message || '';
+    node.dataset.state = state;
+  }
+
+  function appendOption(select, value, label) {
+    const option = document.createElement('option');
+    option.value = String(value);
+    option.textContent = label;
+    select.appendChild(option);
+  }
+
+  function initializeCourseRepTermSelectors() {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    ['course-rep-start-month', 'course-rep-end-month'].forEach(id => {
+      const select = getElement(id);
+      if (!select || select.dataset.optionsReady === 'true') return;
+      monthNames.forEach((name, index) => appendOption(select, index + 1, name));
+      select.dataset.optionsReady = 'true';
+    });
+    ['course-rep-start-year', 'course-rep-end-year'].forEach(id => {
+      const select = getElement(id);
+      if (!select || select.dataset.optionsReady === 'true') return;
+      const year = new Date().getFullYear();
+      for (let value = year; value <= year + 8; value += 1) appendOption(select, value, String(value));
+      select.dataset.optionsReady = 'true';
+    });
+  }
+
+  async function loadCourseRepCandidates() {
+    const select = getElement('course-rep-student');
+    if (!select || !supabaseClient) return;
+    select.replaceChildren();
+    appendOption(select, '', 'Loading eligible students…');
+    try {
+      const { data, error } = await supabaseClient.rpc('admin_list_course_rep_candidates', { p_search: null });
+      if (error) throw error;
+      select.replaceChildren();
+      appendOption(select, '', 'Select a verified student');
+      (data || []).forEach(student => {
+        const option = document.createElement('option');
+        option.value = student.user_id;
+        option.textContent = (student.display_name || 'Student') + ' — ' + (student.academic_level || 'Level unavailable') + ' Level';
+        option.dataset.level = student.academic_level || '';
+        select.appendChild(option);
+      });
+      if (!data?.length) appendOption(select, '', 'No eligible students found');
+    } catch (error) {
+      console.error('Course representative candidates could not be loaded:', error);
+      select.replaceChildren();
+      appendOption(select, '', 'Unable to load students');
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Eligible students could not be loaded.') || 'Eligible students could not be loaded.', 'error');
+    }
+  }
+
+  function formatAppointmentTerm(row) {
+    const month = value => new Date(2000, Number(value) - 1, 1).toLocaleString(undefined, { month: 'short' });
+    return month(row.start_month) + ' ' + row.start_year + ' – ' + month(row.end_month) + ' ' + row.end_year;
+  }
+
+  function appointmentStatus(row) {
+    if (row.revoked_at) return 'Revoked';
+    const now = new Date();
+    const start = new Date(Number(row.start_year), Number(row.start_month) - 1, 1);
+    const endExclusive = new Date(Number(row.end_year), Number(row.end_month), 1);
+    if (now < start) return 'Scheduled';
+    if (now >= endExclusive) return 'Expired';
+    return 'Active';
+  }
+
+  async function loadCourseRepAppointments() {
+    const body = getElement('course-rep-appointments');
+    if (!body || !supabaseClient) return;
+    body.replaceChildren();
+    const loading = document.createElement('tr');
+    const loadingCell = document.createElement('td');
+    loadingCell.colSpan = 6;
+    loadingCell.textContent = 'Loading appointments…';
+    loading.appendChild(loadingCell);
+    body.appendChild(loading);
+    try {
+      const { data, error } = await supabaseClient.rpc('admin_list_course_rep_appointments');
+      if (error) throw error;
+      body.replaceChildren();
+      if (!data?.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 6;
+        cell.textContent = 'No course-representative appointments yet.';
+        row.appendChild(cell);
+        body.appendChild(row);
+        return;
+      }
+      data.forEach(appointment => {
+        const row = document.createElement('tr');
+        const scope = 'Level ' + appointment.scope_level +
+          (appointment.scope_department ? ' · ' + appointment.scope_department : ' · All departments') +
+          (appointment.scope_course_code ? ' · ' + appointment.scope_course_code : ' · All courses');
+        const cells = [
+          appointment.student_name || 'Student',
+          scope,
+          formatAppointmentTerm(appointment),
+          (appointment.permissions || []).map(value => value.replace('resource_', '').replace('_', ' ')).join(', ') || 'No permissions',
+          appointmentStatus(appointment)
+        ];
+        cells.forEach(value => {
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        const action = document.createElement('td');
+        if (!appointment.revoked_at && appointmentStatus(appointment) !== 'Expired') {
+          const revoke = document.createElement('button');
+          revoke.type = 'button';
+          revoke.className = 'admin-button admin-button-secondary';
+          revoke.textContent = 'Revoke';
+          revoke.addEventListener('click', async () => {
+            const reason = window.prompt('Optional reason for revoking this appointment:') || '';
+            if (!window.confirm('Revoke this course-representative appointment now?')) return;
+            revoke.disabled = true;
+            try {
+              const { error } = await supabaseClient.rpc('admin_revoke_course_rep_appointment', {
+                p_appointment_id: appointment.appointment_id,
+                p_reason: reason
+              });
+              if (error) throw error;
+              setFeatureStatus('course-rep-status', 'Appointment revoked. The scoped permissions have been terminated.', 'success');
+              await loadCourseRepAppointments();
+            } catch (error) {
+              console.error('Course representative appointment revocation failed:', error);
+              setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'The appointment could not be revoked.') || 'The appointment could not be revoked.', 'error');
+              revoke.disabled = false;
+            }
+          });
+          action.appendChild(revoke);
+        } else {
+          action.textContent = '—';
+        }
+        row.appendChild(action);
+        body.appendChild(row);
+      });
+    } catch (error) {
+      console.error('Course representative appointments could not be loaded:', error);
+      body.replaceChildren();
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 6;
+      cell.textContent = 'Appointments could not be loaded. Refresh and try again.';
+      row.appendChild(cell);
+      body.appendChild(row);
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Appointments could not be loaded.') || 'Appointments could not be loaded.', 'error');
+    }
+  }
+
+  async function createCourseRepAppointment(event) {
+    event.preventDefault();
+    const form = getElement('course-rep-appointment-form');
+    const studentSelect = getElement('course-rep-student');
+    const selectedStudent = studentSelect?.selectedOptions?.[0];
+    const level = getElement('course-rep-level')?.value;
+    const permissions = Array.from(form.querySelectorAll('[name="course-rep-permission"]:checked')).map(input => input.value);
+    if (!studentSelect?.value || !selectedStudent?.dataset.level || selectedStudent.dataset.level !== level) {
+      setFeatureStatus('course-rep-status', 'Select a student and use that student’s registered academic level.', 'error');
+      return;
+    }
+    if (!permissions.length) {
+      setFeatureStatus('course-rep-status', 'Select at least one permission for this appointment.', 'error');
+      return;
+    }
+    const startMonth = Number(getElement('course-rep-start-month').value);
+    const startYear = Number(getElement('course-rep-start-year').value);
+    const endMonth = Number(getElement('course-rep-end-month').value);
+    const endYear = Number(getElement('course-rep-end-year').value);
+    if (!startMonth || !startYear || !endMonth || !endYear ||
+        new Date(startYear, startMonth - 1, 1) > new Date(endYear, endMonth - 1, 1)) {
+      setFeatureStatus('course-rep-status', 'Choose a valid appointment term. The end month cannot be earlier than the start month.', 'error');
+      return;
+    }
+    const button = getElement('course-rep-appoint-button');
+    button.disabled = true;
+    setFeatureStatus('course-rep-status', 'Creating appointment…');
+    try {
+      const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+      if (authError || !authData?.user) throw authError || new Error('Your session has expired.');
+      const { error } = await supabaseClient.from('course_rep_appointments').insert({
+        student_user_id: studentSelect.value,
+        scope_level: Number(level),
+        scope_department: getElement('course-rep-department').value.trim() || null,
+        scope_course_code: getElement('course-rep-course').value.trim().toUpperCase() || null,
+        start_month: startMonth,
+        start_year: startYear,
+        end_month: endMonth,
+        end_year: endYear,
+        permissions,
+        appointed_by: authData.user.id
+      });
+      if (error) throw error;
+      form.reset();
+      setFeatureStatus('course-rep-status', 'Course-representative appointment created successfully.', 'success');
+      await Promise.all([loadCourseRepCandidates(), loadCourseRepAppointments()]);
+    } catch (error) {
+      console.error('Course representative appointment creation failed:', error);
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'The appointment could not be created.') || 'The appointment could not be created.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function renderAnnouncementHistory(items) {
+    const container = getElement('announcement-history');
+    if (!container) return;
+    container.replaceChildren();
+    if (!items?.length) {
+      container.textContent = 'No announcements have been published yet.';
+      return;
+    }
+    items.forEach(item => {
+      const card = document.createElement('article');
+      card.className = 'admin-placeholder';
+      const title = document.createElement('strong');
+      title.textContent = item.title;
+      const detail = document.createElement('p');
+      const audience = item.audience_type === 'all'
+        ? 'All users'
+        : item.audience_type === 'role'
+          ? 'Role: ' + item.audience_value
+          : 'Level ' + item.audience_value + ' students';
+      detail.textContent = audience + ' · ' + Number(item.recipient_count || 0).toLocaleString() +
+        ' recipient(s) · ' + new Date(item.published_at).toLocaleString();
+      card.append(title, detail);
+      container.appendChild(card);
+    });
+  }
+
+  async function loadAnnouncementHistory() {
+    const container = getElement('announcement-history');
+    if (!container || !supabaseClient) return;
+    container.textContent = 'Loading announcement history…';
+    try {
+      const { data, error } = await supabaseClient.from('announcements')
+        .select('id,title,audience_type,audience_value,published_at,recipient_count')
+        .order('published_at', { ascending: false }).limit(30);
+      if (error) throw error;
+      renderAnnouncementHistory(data || []);
+    } catch (error) {
+      console.error('Announcement history could not be loaded:', error);
+      container.textContent = window.clarivaFriendlyError?.(error, 'Announcement history could not be loaded.') || 'Announcement history could not be loaded.';
+    }
+  }
+
+  async function publishManualAnnouncement(event) {
+    event.preventDefault();
+    const title = getElement('announcement-title').value.trim();
+    const message = getElement('announcement-message').value.trim();
+    const audience = getElement('announcement-audience').value;
+    const destination = getElement('announcement-destination').value.trim() || './';
+    const [audienceType, audienceValue] = audience.includes(':') ? audience.split(':', 2) : ['all', null];
+    const button = getElement('announcement-publish-button');
+    if (!title || !message) {
+      setFeatureStatus('announcement-status', 'Enter an announcement title and message.', 'error');
+      return;
+    }
+    if (!window.confirm('Publish this announcement to ' + getElement('announcement-audience').selectedOptions[0].textContent + '?')) return;
+    button.disabled = true;
+    setFeatureStatus('announcement-status', 'Publishing announcement…');
+    try {
+      const { data, error } = await supabaseClient.rpc('publish_announcement', {
+        p_title: title,
+        p_message: message,
+        p_audience_type: audienceType,
+        p_audience_value: audienceValue,
+        p_destination: destination
+      });
+      if (error) throw error;
+      getElement('manual-announcement-form').reset();
+      setFeatureStatus('announcement-status', 'Announcement published to the selected audience.', 'success');
+      await loadAnnouncementHistory();
+      document.dispatchEvent(new CustomEvent('clariva:announcement-published', { detail: { id: data } }));
+    } catch (error) {
+      console.error('Manual announcement publishing failed:', error);
+      setFeatureStatus('announcement-status', window.clarivaFriendlyError?.(error, 'The announcement could not be published.') || 'The announcement could not be published.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function initializeAdminCommunicationAndCourseRepFeatures() {
+    if (!getElement('course-rep-appointment-form') && !getElement('manual-announcement-form')) return;
+    initializeCourseRepTermSelectors();
+    const studentSelect = getElement('course-rep-student');
+    studentSelect?.addEventListener('change', () => {
+      const level = studentSelect.selectedOptions?.[0]?.dataset.level || '';
+      if (getElement('course-rep-level')) getElement('course-rep-level').value = level;
+    });
+    const appointmentForm = getElement('course-rep-appointment-form');
+    if (appointmentForm && appointmentForm.dataset.handlerAttached !== 'true') {
+      appointmentForm.addEventListener('submit', createCourseRepAppointment);
+      appointmentForm.dataset.handlerAttached = 'true';
+    }
+    getElement('course-rep-refresh')?.addEventListener('click', () => {
+      void loadCourseRepCandidates();
+      void loadCourseRepAppointments();
+    });
+    const announcementForm = getElement('manual-announcement-form');
+    if (announcementForm && announcementForm.dataset.handlerAttached !== 'true') {
+      announcementForm.addEventListener('submit', publishManualAnnouncement);
+      announcementForm.dataset.handlerAttached = 'true';
+    }
+    void loadCourseRepCandidates();
+    void loadCourseRepAppointments();
+    void loadAnnouncementHistory();
+  }
+
   function initializeAdminDashboard() {
     initializeAdminPdfReaderControls();
+    initializeAdminCommunicationAndCourseRepFeatures();
     const form = getElement('resource-upload-form');
 
     if (form && form.dataset.uploadHandlerAttached !== 'true') {
