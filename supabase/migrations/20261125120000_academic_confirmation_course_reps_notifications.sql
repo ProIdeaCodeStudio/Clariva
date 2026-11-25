@@ -536,6 +536,23 @@ create table if not exists public.notifications (
     event_type in ('new_registration', 'resource_uploaded', 'resource_deleted', 'announcement', 'platform')
   )
 );
+alter table public.notifications
+  add column if not exists push_sent_at timestamptz;
+
+do $publication$
+begin
+  if exists (select 1 from pg_catalog.pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_catalog.pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = 'notifications'
+     ) then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end;
+$publication$;
+
 create index if not exists notifications_user_created_idx
   on public.notifications (user_id, created_at desc);
 create index if not exists notifications_unread_idx
