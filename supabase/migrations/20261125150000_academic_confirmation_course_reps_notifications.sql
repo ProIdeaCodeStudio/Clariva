@@ -39,32 +39,7 @@ begin
 end;
 $function$;
 
-create or replace function private.reset_academic_level_confirmation()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-begin
-  if new."Level" is distinct from old."Level" then
-    new.academic_level_confirmed_at := null;
-    update public.course_rep_appointments
-       set revoked_at = pg_catalog.now(),
-           revoked_by = (select auth.uid()),
-           revoke_reason = 'Academic level changed; a new appointment is required.'
-     where student_user_id = new.user_id
-       and revoked_at is null;
-  end if;
-  return new;
-end;
-$function$;
 
-drop trigger if exists reset_academic_level_confirmation on public.students;
-create trigger reset_academic_level_confirmation
-before update of "Level" on public.students
-for each row execute function private.reset_academic_level_confirmation();
-
-revoke all on function private.reset_academic_level_confirmation() from public, anon, authenticated;
 
 create or replace function private.is_clariva_admin_or_owner()
 returns boolean
@@ -276,6 +251,33 @@ create table if not exists public.course_rep_appointments (
       and (scope_course_code is null or length(btrim(scope_course_code)) between 1 and 40)
     )
 );
+
+create or replace function private.reset_academic_level_confirmation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if new."Level" is distinct from old."Level" then
+    new.academic_level_confirmed_at := null;
+    update public.course_rep_appointments
+       set revoked_at = pg_catalog.now(),
+           revoked_by = (select auth.uid()),
+           revoke_reason = 'Academic level changed; a new appointment is required.'
+     where student_user_id = new.user_id
+       and revoked_at is null;
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists reset_academic_level_confirmation on public.students;
+create trigger reset_academic_level_confirmation
+before update of "Level" on public.students
+for each row execute function private.reset_academic_level_confirmation();
+
+revoke all on function private.reset_academic_level_confirmation() from public, anon, authenticated;
 
 create index if not exists course_rep_appointments_student_idx
   on public.course_rep_appointments (student_user_id, revoked_at);
