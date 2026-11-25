@@ -1,6 +1,6 @@
 CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 2.9
-Prepared: 24 November 2026
+Version: 3.0
+Prepared: 25 November 2026
 Product: Clariva
 Product studio: Pro Idea
 Public website: https://proideacodestudio.github.io/Clariva/
@@ -9,7 +9,7 @@ PURPOSE
 This document provides a public, non-technical account of Clariva's development and product direction. It is intended to communicate the project's evolution and user-facing capabilities. It is not an implementation manual, technical handover, security guide, deployment guide, or troubleshooting reference.
 
 PRODUCT VISION
-Clariva is an educational platform created to help learners move from confusion to confidence by making academic resources easier to discover and use. The project began within the wider Pro Idea digital work and developed into a distinct educational product with its own identity.
+Clariva is an educational platform created to help learners move from confusion to confidence by making academic resources easier to discover and use. The project began within the wider Pro Idea digital work and developed into a distinct educational product with its own identity and academic direction.
 
 DEVELOPMENT HISTORY
 
@@ -31,36 +31,41 @@ The student resource experience was expanded with semester-led browsing and impr
 6. RESOURCE UPLOAD EXPERIENCE — NOVEMBER 2026
 The resource-submission experience was improved to support files selected from device storage and Google Drive. Batch selection and review were refined, and the interface now makes clear that files submitted together should share the same academic and resource details.
 
-7. ACCOUNT RELIABILITY AND RELEASE PREPARATION — NOVEMBER 2026
-Further work concentrated on account recovery, administrative feedback, resource visibility, role-aware navigation and website connectivity feedback. The platform is being prepared for feedback from a small group of early users before wider availability.
+7. ACCOUNT RELIABILITY AND CONNECTIVITY — NOVEMBER 2026
+Further work concentrated on account recovery, administrative feedback, resource visibility, role-aware navigation and website connectivity feedback. The platform continues to receive usability and reliability improvements.
 
 8. OFFLINE READING AND GUIDED ONBOARDING — NOVEMBER 2026
-A further development stage introduced work on offline access to selected student learning materials, broader academic-resource discovery and guided tours for the main user workspaces. This work is undergoing release and real-device verification and is not represented here as a completed public release.
+The student experience expanded to include device-local copies of selected PDF resources for offline reading, a dedicated Saved Offline Resources destination and guided tours for the main workspaces. Online account and management actions remain unavailable while offline.
 
 9. SIMPLIFIED DASHBOARD ONBOARDING — NOVEMBER 2026
-The guided tours were subsequently simplified to focus on locating the main dashboard sections and moving between them. Detailed explanations of individual metrics, form fields, filters, PDF controls and routine actions were removed from the tours so that onboarding remains brief and easy to follow.
+The guided tours were simplified to focus on locating the main dashboard sections and moving between them. This keeps onboarding brief and easy to follow.
 
-10. SAVED OFFLINE RESOURCES AND FEATURE ONBOARDING — NOVEMBER 2026
-The offline reading experience now includes a dedicated Saved Offline Resources destination for verified Student, Admin and Owner accounts, with a brief feature introduction for existing users. Online account and management functions remain unavailable offline.
+10. SPOTLIGHT GUIDED TOURS — NOVEMBER 2026
+The guided tour experience uses a clear spotlight around the item being explained, with the surrounding page softly blurred. Explanations appear in a nearby card, and relevant dashboard navigation opens automatically when a step needs it. First-time onboarding and completed-user replay provide different levels of guidance. The latest spotlight release is deployed. Feedback and verification across additional device and browser combinations remain ongoing.
 
-11. SPOTLIGHT GUIDED TOURS — NOVEMBER 2026
-The guided tour experience uses a clear spotlight around the item being explained, with the surrounding page softly blurred. Explanations type progressively in a nearby card. When a step refers to dashboard navigation, the relevant menu opens automatically so the item being discussed is visible. First-time onboarding requires each explanation to finish before moving forward; completed users can replay or skip the tour. The latest spotlight release is deployed. The project owner has confirmed that the spotlight works on their own device; feedback and verification from other users and additional device/browser combinations are still pending.
+11. ACADEMIC CONFIRMATION AND COURSE-REPRESENTATIVE COORDINATION — NOVEMBER 2026
+Clariva now includes a one-time academic-level confirmation experience for existing students and a course-representative appointment experience. Appointments can be limited to an academic scope and a defined term, while representatives continue to use their normal student accounts.
+
+12. NOTIFICATIONS AND PLATFORM ANNOUNCEMENTS — NOVEMBER 2026
+The platform now includes an in-app updates inbox, optional device notifications and automatic administrative alerts for key account and resource events. Administrators and owners can also publish announcements to all users, selected account roles or a chosen academic level.
 
 CURRENT PRODUCT AREAS
 - Student accounts and academic resource access.
-- A student library for discovering and viewing available learning materials.
-- Administrative tools for maintaining the resource collection.
-- Platform and library overviews for authorised administrators.
-- Ongoing usability, accessibility and release-readiness improvements.
+- A student library with level- and semester-led browsing, document viewing and saved offline PDFs.
+- Resource submission and management tools for authorised administrators and owners.
+- Owner-level account management, platform insights and activity overviews.
+- Scoped course-representative appointments for defined academic responsibilities.
+- An in-app updates inbox, optional device notifications and targeted manual announcements.
+- Guided onboarding and ongoing usability, accessibility and reliability improvements.
 
-DEVELOPMENT POSITION — 24 NOVEMBER 2026
-Since the previous revision, the platform build has advanced to include semester-led undergraduate browsing, an owner-level workspace, role-aware account management, improved dashboard navigation and website-wide connectivity feedback. These developments are recorded as repository milestones; this public overview does not certify that every change is deployed or available to every user.
+DEVELOPMENT POSITION — 25 NOVEMBER 2026
+The academic confirmation, course-representative, notification and announcement release has been merged into the main website branch and successfully deployed to the public website. The corresponding production services are active.
 
-The role-inclusive, device-local saved-resource experience has been merged and deployed, including a dedicated destination and feature-specific onboarding. Full cross-device and multi-account acceptance testing remains outstanding.
+Existing students who have not yet confirmed their registered academic level will be asked to complete the one-time confirmation before continuing to the resource library. New registrations continue through the existing registration experience.
 
-The latest spotlight guided-tour refinement is deployed. The project owner has personally confirmed that it works on their device. This is a successful owner-device check, not a claim of universal compatibility; feedback from other users and checks across additional browsers and devices remain outstanding.
+The owner workspace includes the administrative resource-management experience alongside owner-level account management and platform activity views. Course-representative tools are limited to the responsibilities assigned to each appointment.
 
-Structured course-representative coordination remains a future product consideration.
+The latest release has passed the website build and publication workflow. Real-account, cross-role and multi-device acceptance checks for the new features remain outstanding. Device notifications also depend on each user explicitly enabling them in their browser. The project owner should collect feedback before treating the release as fully accepted across all supported devices and browsers.
 
 PRODUCT OWNERSHIP AND SUPPORT
 Clariva is developed and maintained by Pro Idea. This public document intentionally does not explain how the website is implemented, how its internal services are configured, how access controls are enforced, how privileged operations are performed, or how technical faults are diagnosed.
