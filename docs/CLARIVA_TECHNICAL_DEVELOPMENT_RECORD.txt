@@ -1,8 +1,8 @@
 CLARIVA — RESTRICTED TECHNICAL DOCUMENTATION NOTICE
-Revision: 2.1
-Date: 22 November 2026
+Revision: 2.2
+Date: 25 November 2026
 
-This file no longer publishes technical implementation or operational instructions.
+This file does not publish technical implementation or operational instructions.
 
 The public development history is available in:
 docs/CLARIVA_DEVELOPMENT_OVERVIEW.txt
