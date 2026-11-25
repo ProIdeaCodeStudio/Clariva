@@ -1988,6 +1988,10 @@
       setFeatureStatus('course-rep-status', 'Select at least one permission for this appointment.', 'error');
       return;
     }
+    if (!getElement('course-rep-department').value.trim()) {
+      setFeatureStatus('course-rep-status', 'Enter the department this appointment will cover.', 'error');
+      return;
+    }
     const startMonth = Number(getElement('course-rep-start-month').value);
     const startYear = Number(getElement('course-rep-start-year').value);
     const endMonth = Number(getElement('course-rep-end-month').value);
