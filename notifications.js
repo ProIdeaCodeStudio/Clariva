@@ -11,6 +11,7 @@
   let disableButton = null;
   let testButton = null;
   let initialized = false;
+  let inboxChannel = null;
 
   const encodeKey = value => {
     const padding = '='.repeat((4 - value.length % 4) % 4);
@@ -205,7 +206,7 @@
     list.appendChild(loading);
     try {
       const { data, error } = await supabaseClient.from('notifications')
-        .select('id,event_type,title,message,destination,created_at,read_at')
+        .select('id,event_type,title,message,destination,created_at,read_at,push_sent_at')
         .eq('user_id', activeUserId)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -258,6 +259,13 @@
         }
         list.appendChild(card);
       });
+      for (const item of data) {
+        if (!item.push_sent_at && ['new_registration', 'resource_uploaded', 'resource_deleted', 'platform'].includes(item.event_type)) {
+          void invoke('dispatch_notification', { notificationId: item.id }).catch(error => {
+            console.warn('Clariva automatic push delivery could not be completed:', error);
+          });
+        }
+      }
     } catch (error) {
       console.error('Clariva inbox could not be loaded:', error);
       list.replaceChildren();
@@ -268,17 +276,39 @@
     }
   }
 
+  function watchInbox(userId) {
+    if (!supabaseClient || typeof supabaseClient.channel !== 'function') return;
+    if (inboxChannel) {
+      try { void supabaseClient.removeChannel(inboxChannel); } catch (_) {}
+      inboxChannel = null;
+    }
+    inboxChannel = supabaseClient
+      .channel('clariva-notifications-' + userId)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: 'user_id=eq.' + userId
+      }, () => { void loadInbox(); })
+      .subscribe();
+  }
+
   async function showForUser(userId) {
     if (!userId || window.clarivaOfflineMode === true) return;
     if (activeUserId === userId && panel) return;
     activeUserId = userId;
     createPanel();
     panel.hidden = false;
+    watchInbox(userId);
     await Promise.all([refreshState(), loadInbox()]);
   }
 
   async function hideForSignedOutUser() {
     activeUserId = null;
+    if (inboxChannel && supabaseClient) {
+      try { await supabaseClient.removeChannel(inboxChannel); } catch (_) {}
+      inboxChannel = null;
+    }
     if (panel) panel.hidden = true;
   }
 
