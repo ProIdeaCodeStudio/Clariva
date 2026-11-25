@@ -195,6 +195,7 @@ as $function$
         select 1 from public.students s
         where s.user_id = a.student_user_id
           and s."Verified" is true
+          and s.academic_level_confirmed_at is not null
           and lower(coalesce(s."Role", '')) = 'student'
       )
   );
@@ -338,6 +339,7 @@ as $function$
       and pg_catalog.make_date(a.start_year, a.start_month, 1) <= (pg_catalog.now() at time zone 'Africa/Lagos')::date
       and (pg_catalog.now() at time zone 'Africa/Lagos')::date < (pg_catalog.make_date(a.end_year, a.end_month, 1) + interval '1 month')::date
       and s."Verified" is true
+      and s.academic_level_confirmed_at is not null
       and lower(coalesce(s."Role", '')) = 'student'
   );
 $function$;
@@ -395,7 +397,8 @@ begin
       and (a.scope_course_code is null or lower(btrim(a.scope_course_code)) = lower(btrim(coalesce(r.course_code, ''))))
       and (a.permissions && array['resource_upload', 'resource_update']::text[])
   )
-  order by r.created_at desc;
+  order by r.created_at desc
+  limit 500;
 end;
 $function$;
 
