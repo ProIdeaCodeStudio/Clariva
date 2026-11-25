@@ -374,6 +374,15 @@ if (emailConfirmationLoginBtn) {
         try {
           const { data: courseRepAccess, error: courseRepError } = await supabaseClient.rpc('is_active_course_rep');
           if (!courseRepError) isCourseRep = courseRepAccess === true;
+          if (isCourseRep) {
+            const { data: courseRepPermissions, error: permissionsError } = await supabaseClient.rpc('get_active_course_rep_permissions');
+            if (!permissionsError && Array.isArray(courseRepPermissions)) {
+              window.clarivaCourseRepPermissions = courseRepPermissions;
+            } else {
+              isCourseRep = false;
+              window.clarivaCourseRepPermissions = [];
+            }
+          }
         } catch (courseRepError) {
           console.warn('Clariva course-representative access could not be checked:', courseRepError);
         }
