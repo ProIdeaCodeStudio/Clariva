@@ -301,7 +301,7 @@ if (emailConfirmationLoginBtn) {
       if (!window.clarivaOfflineMode) {
         const profileResult = await supabaseClient
           .from('students')
-          .select('Verified, Role, Level, password_reset_required')
+          .select('Verified, Role, Level, academic_level_confirmed_at, password_reset_required')
           .eq('user_id', user.id)
           .single();
         fetchedProfile = profileResult.data;
