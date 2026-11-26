@@ -853,21 +853,21 @@
 
   async function showPdfReader(documentUrl, title) {
     const reader = getElement('pdf-reader');
-    if (!pdfHistoryEntryActive) {
-      history.pushState({ ...(history.state || {}), clarivaPdfReader: true }, '', window.location.href);
-      pdfHistoryEntryActive = true;
-    }
     const message = getElement('pdf-reader-message');
     const canvas = getElement('pdf-reader-canvas');
     const offlineFrame = getElement('pdf-reader-offline-frame');
     const isLocalBlob = String(documentUrl).startsWith('blob:');
 
-    if (!window.pdfjsLib) {
-      if (isLocalBlob) {
-        showPdfInOfflineFrame(documentUrl, title);
-        return;
-      }
+    if (!window.pdfjsLib && !isLocalBlob) {
       throw new Error('The document viewer could not be loaded. Please refresh and try again.');
+    }
+    if (!pdfHistoryEntryActive) {
+      history.pushState({ ...(history.state || {}), clarivaPdfReader: true }, '', window.location.href);
+      pdfHistoryEntryActive = true;
+    }
+    if (!window.pdfjsLib && isLocalBlob) {
+      showPdfInOfflineFrame(documentUrl, title);
+      return;
     }
 
     offlineFrame.hidden = true;
