@@ -15,7 +15,7 @@
   let optInPrompt = null;
   let optInPromptStatus = null;
   let promptEnableButton = null;
-  let promptDismissedForPage = false;
+  
 
   const encodeKey = value => {
     const padding = '='.repeat((4 - value.length % 4) % 4);
@@ -85,9 +85,9 @@
       #clariva-notification-bell.clariva-header-control{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:1px solid #E8941A !important;border-radius:10px;background:#111008 !important;color:#F5EDD8 !important;opacity:1}
       #clariva-notification-bell.clariva-header-control svg{width:23px;height:23px;stroke:#F5EDD8 !important;stroke-width:2.1}
       #clariva-notification-bell.clariva-header-control:focus-visible{outline:3px solid #E8941A;outline-offset:3px}
-      #clariva-push-optin{position:fixed;inset:0;z-index:10040;display:grid;place-items:center;padding:20px;box-sizing:border-box;background:rgba(17,16,8,.66)}
+      #clariva-push-optin{position:fixed;inset:0;z-index:10040;display:grid;place-items:center;align-items:center;justify-items:center;padding:20px;box-sizing:border-box;background:rgba(17,16,8,.66);overflow-y:auto}
       #clariva-push-optin[hidden]{display:none}
-      #clariva-push-optin .clariva-push-optin-card{position:relative;width:min(440px,100%);padding:28px 24px 22px;border:1px solid #d9c9a8;border-radius:18px;background:#fffaf0;color:#211b12;box-shadow:0 18px 60px rgba(0,0,0,.24)}
+      #clariva-push-optin .clariva-push-optin-card{position:relative;width:min(440px,100%);max-height:calc(100dvh - 40px);overflow-y:auto;box-sizing:border-box;padding:28px 24px 22px;border:1px solid #d9c9a8;border-radius:18px;background:#fffaf0;color:#211b12;box-shadow:0 18px 60px rgba(0,0,0,.24)}
       #clariva-push-optin h2{margin:0 30px 10px 0;font:700 25px/1.2 Georgia,serif;color:#211b12}
       #clariva-push-optin p{margin:0 0 14px;font:15px/1.6 system-ui,sans-serif;color:#514735}
       #clariva-push-optin .clariva-push-optin-status{min-height:18px;margin:0 0 16px;font:13px/1.5 system-ui,sans-serif;color:#8a5a14}
@@ -138,7 +138,7 @@
       <div class="clariva-push-optin-card">
         <button id="clariva-push-optin-dismiss" type="button" aria-label="Close reminder">×</button>
         <h2 id="clariva-push-optin-title">Stay updated with Clariva</h2>
-        <p>Enable device notifications to receive important updates relevant to your account, even when Clariva is not open. You can close this reminder and continue; it will appear again the next time you open Clariva until notifications are enabled.</p>
+        <p>Enable device notifications to receive important updates relevant to your account, even when Clariva is not open. You can close this reminder and continue; Clariva will remind you again on a future visit if this device is still not subscribed.</p>
         <p class="clariva-push-optin-status" id="clariva-push-optin-status" role="status" aria-live="polite"></p>
         <div class="clariva-push-optin-actions">
           <button id="clariva-push-optin-enable" type="button">Enable notifications</button>
@@ -150,9 +150,17 @@
     promptEnableButton = optInPrompt.querySelector('#clariva-push-optin-enable');
 
     const dismissOptInPrompt = () => {
-      promptDismissedForPage = true;
+      if (activeUserId) {
+        try { sessionStorage.setItem('clariva-push-optin-dismissed:' + activeUserId, '1'); } catch (_) {}
+      }
       optInPrompt.hidden = true;
     };
+    optInPrompt.addEventListener('click', event => {
+      if (event.target === optInPrompt) dismissOptInPrompt();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && optInPrompt && !optInPrompt.hidden) dismissOptInPrompt();
+    });
     optInPrompt.querySelector('#clariva-push-optin-dismiss').addEventListener('click', dismissOptInPrompt);
     optInPrompt.querySelector('#clariva-push-optin-close').addEventListener('click', dismissOptInPrompt);
     promptEnableButton.addEventListener('click', () => enableNotifications(promptEnableButton));
@@ -179,7 +187,10 @@
   }
 
   function showOptInPrompt() {
-    if (optInPrompt && !promptDismissedForPage) optInPrompt.hidden = false;
+    if (!optInPrompt || !activeUserId) return;
+    let dismissed = false;
+    try { dismissed = sessionStorage.getItem('clariva-push-optin-dismissed:' + activeUserId) === '1'; } catch (_) {}
+    optInPrompt.hidden = dismissed;
   }
 
   function hideOptInPrompt() {
@@ -198,11 +209,14 @@
       const subscription = await registration.pushManager.getSubscription();
       const enabled = Notification.permission === 'granted' && Boolean(subscription);
       if (enabled) {
-        await invoke('subscribe', {
-          subscription: subscription.toJSON(),
-          userAgent: navigator.userAgent.slice(0, 500)
-        });
-        setStatus('Notifications are enabled and connected for this account on this device.', 'success');
+        const registrationStatus = await invoke('status', { endpoint: subscription.endpoint });
+        if (!registrationStatus?.subscribed) {
+          await invoke('subscribe', {
+            subscription: subscription.toJSON(),
+            userAgent: navigator.userAgent.slice(0, 500)
+          });
+        }
+        setStatus('Notifications are enabled and registered for this account on this device.', 'success');
         enableButton.hidden = true;
         enableButton.disabled = false;
         disableButton.hidden = false;
@@ -229,7 +243,9 @@
       enableButton.hidden = false;
       enableButton.disabled = false;
       disableButton.hidden = true;
-      showOptInPrompt();
+      // A failed status check is not proof that the user is unsubscribed.
+      // Avoid showing an opt-in prompt until the device state can be verified.
+      hideOptInPrompt();
     }
   }
 
@@ -245,6 +261,7 @@
       return;
     }
     if (triggerButton) triggerButton.disabled = true;
+    let browserSubscriptionCreated = false;
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
@@ -263,6 +280,7 @@
           applicationServerKey: encodeKey(PUBLIC_KEY)
         });
       }
+      browserSubscriptionCreated = true;
       await invoke('subscribe', {
         subscription: subscription.toJSON(),
         userAgent: navigator.userAgent.slice(0, 500)
@@ -275,7 +293,8 @@
       const message = error.message || 'Unable to enable notifications. Please try again.';
       setStatus(message, 'error');
       if (optInPromptStatus) optInPromptStatus.textContent = message;
-      showOptInPrompt();
+      if (browserSubscriptionCreated && Notification.permission === 'granted') hideOptInPrompt();
+      else showOptInPrompt();
     } finally {
       if (triggerButton) triggerButton.disabled = false;
     }
