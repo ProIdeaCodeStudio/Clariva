@@ -63,6 +63,24 @@
       #clariva-push-panel .clariva-push-settings{max-width:900px;margin:0 auto 22px;padding:16px;border:1px solid #e5dac5;border-radius:12px}
       #clariva-push-panel .clariva-push-settings[hidden]{display:none}
       #clariva-push-panel .clariva-push-actions button{margin-right:8px}
+      #clariva-push-panel{font-size:16px;line-height:1.6}
+      #clariva-push-panel .clariva-notification-page-head h2{font-size:32px}
+      #clariva-push-panel #clariva-inbox h3{font-size:20px}
+      #clariva-push-panel .clariva-inbox-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+      #clariva-push-panel .clariva-inbox-heading h3{margin:0}
+      #clariva-push-panel .clariva-inbox-item{padding:15px 16px;border:1px solid #e5dac5;border-radius:11px}
+      #clariva-push-panel .clariva-inbox-item strong{font-size:17px;line-height:1.4}
+      #clariva-push-panel .clariva-inbox-item p{font-size:15px;line-height:1.6;margin:7px 0}
+      #clariva-push-panel .clariva-inbox-item small{font-size:13px;line-height:1.5}
+      #clariva-push-panel .clariva-inbox-item a{font-size:14px}
+      #clariva-push-panel .clariva-inbox-empty{font-size:15px}
+      #clariva-push-panel #clariva-inbox-refresh,
+      #clariva-push-panel #clariva-inbox-mark-all-read{min-height:42px;padding:9px 14px;border:1px solid #cbbd9f;border-radius:8px;background:#211b12;color:#fffaf0;font:600 14px/1.3 system-ui,sans-serif;cursor:pointer}
+      #clariva-push-panel #clariva-inbox-mark-all-read:disabled{opacity:.5;cursor:not-allowed}
+      #clariva-push-panel #clariva-inbox-refresh{background:#e9dfca;color:#211b12}
+      #clariva-notification-bell.clariva-header-control{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:1px solid #E8941A !important;border-radius:10px;background:#111008 !important;color:#F5EDD8 !important;opacity:1}
+      #clariva-notification-bell.clariva-header-control svg{width:23px;height:23px;stroke:#F5EDD8 !important;stroke-width:2.1}
+      #clariva-notification-bell.clariva-header-control:focus-visible{outline:3px solid #E8941A;outline-offset:3px}
     `;
     document.head.appendChild(style);
 
@@ -85,7 +103,10 @@
         </div>
       </section>
       <section id="clariva-inbox" aria-label="All Clariva notifications">
-        <h3>All notifications</h3>
+        <div class="clariva-inbox-heading">
+          <h3>All notifications</h3>
+          <button id="clariva-inbox-mark-all-read" type="button" disabled>Mark all as read</button>
+        </div>
         <div id="clariva-inbox-list" aria-live="polite"><p class="clariva-inbox-empty">Loading notifications…</p></div>
         <button id="clariva-inbox-refresh" type="button">Refresh notifications</button>
       </section>`;
@@ -98,6 +119,7 @@
     enableButton.addEventListener('click', enableNotifications);
     disableButton.addEventListener('click', disableNotifications);
     panel.querySelector('#clariva-inbox-refresh').addEventListener('click', loadInbox);
+    panel.querySelector('#clariva-inbox-mark-all-read').addEventListener('click', markAllAsRead);
   }
 
   async function invoke(action, extra = {}) {
@@ -224,6 +246,27 @@
     if (bellButton) bellButton.setAttribute('aria-label', count ? 'Open notifications, ' + count + ' unread' : 'Open notifications');
   }
 
+  async function markAllAsRead() {
+    const button = panel?.querySelector('#clariva-inbox-mark-all-read');
+    if (!button || !activeUserId || !supabaseClient || button.disabled) return;
+    button.disabled = true;
+    const originalText = button.textContent;
+    button.textContent = 'Marking…';
+    try {
+      const { error } = await supabaseClient.from('notifications')
+        .update({ read_at: new Date().toISOString() })
+        .eq('user_id', activeUserId)
+        .is('read_at', null);
+      if (error) throw error;
+      updateUnreadCount([]);
+      await loadInbox();
+    } catch (error) {
+      console.error('Clariva notifications could not all be marked as read:', error);
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+
   async function loadInbox() {
     const list = panel?.querySelector('#clariva-inbox-list');
     if (!list || !supabaseClient || !activeUserId) return;
@@ -246,6 +289,11 @@
         if (!page || page.length < pageSize) break;
       }
       updateUnreadCount(data);
+      const markAllButton = panel.querySelector('#clariva-inbox-mark-all-read');
+      if (markAllButton) {
+        markAllButton.disabled = !data.some(item => !item.read_at);
+        markAllButton.textContent = 'Mark all as read';
+      }
       list.replaceChildren();
       if (!data?.length) {
         const empty = document.createElement('p');
