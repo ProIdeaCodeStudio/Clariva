@@ -1,5 +1,5 @@
 CLARIVA — DEVELOPMENT HISTORY & CURRENT PRODUCT OVERVIEW
-Version: 3.1
+Version: 3.2
 Prepared: 26 November 2026
 Product: Clariva
 Product studio: Pro Idea
@@ -11,47 +11,41 @@ This document presents a public, non-technical account of Clariva's development 
 PRODUCT VISION
 Clariva is an educational platform developed by Pro Idea to help university students move from confusion to confidence by bringing academic resources, organised study access and platform support together in one place.
 
-CURRENT WEBSITE EXPERIENCE
+ROLE-BASED ACCESS
+Clariva provides separate workspaces and permissions according to the role assigned to each verified account. The role determines which dashboard sections, management tools and responsibilities are available.
 
-1. STUDENT ACCOUNTS AND ACADEMIC PROFILES
-Students can create accounts using their personal details, verify their email address, sign in and access account recovery. Their academic profile records their current level and academic timeline. Students can review and confirm their academic information, and the platform supports progression through successive academic levels.
+1. STUDENTS
+Students use the Student Resource Library to browse available academic materials by level and semester, explore featured resources, search by resource title or course, and filter by resource type. Resource records display academic details such as department, course code, course title, level, semester and resource category.
 
-2. ACADEMIC RESOURCE LIBRARY
-The student library organises available learning materials by academic level and semester. Students can explore featured resources and the wider resource collection, search by resource title or course, and filter by resource type. Resource records include relevant academic details such as department, course code, course title, level, semester and resource category.
+Students can open PDF learning materials in the integrated document reader, navigate between pages and adjust the reading view. Selected PDFs can be saved to the device for offline reading and revisited from a dedicated Saved Offline Resources area. Students can view and confirm academic profile information, including current-level timeline details, manage account access and personalise their profile avatar.
 
-3. DOCUMENT READING AND OFFLINE SAVING
-Students can open PDF learning materials in the integrated document reader, move between pages and adjust the reading view. Selected PDFs can be saved to the device for offline reading and revisited from a dedicated Saved Offline Resources area. Saved-resource records are associated with the student's account.
+2. COURSE REPRESENTATIVES
+Course representatives retain their student account and student learning-resource access. An active appointment grants additional permissions only for the responsibilities assigned to that representative. Depending on the appointment, these permissions can include uploading resources and/or updating resources within a defined academic level, department and optional course scope. Each appointment has a recorded start and end period. Course representatives do not automatically receive the full privileges of an administrator.
 
-4. STUDENT ACCOUNT PERSONALISATION
-The account menu presents the student's account details and academic information and allows a choice of profile avatar. Role-aware navigation provides access to the areas available to the signed-in account.
+3. ADMINISTRATORS
+Verified administrators use the Admin Dashboard to review account and resource summaries and platform activity indicators. They can upload, search, filter, edit and manage learning resources, select files from device storage or Google Drive, and submit multiple files after reviewing their academic details.
 
-5. ADMINISTRATIVE RESOURCE MANAGEMENT
-The Admin Dashboard provides tools for authorised administrators to upload, review, search, filter, edit and manage learning resources. Files can be selected from device storage or Google Drive. Multiple files can be selected for a batch, with shared academic and resource details reviewed before submission. Administrators can manage resource visibility and featured-resource presentation.
+Administrators can appoint course representatives and define their academic scope, permitted resource actions and appointment period. They can also publish announcements to all users, selected account roles or students in a chosen academic level. Relevant administrative notifications cover key events such as new student registrations and resource uploads or deletions.
 
-6. ADMINISTRATIVE OVERVIEW
-The Admin Dashboard presents account and resource summaries, including account totals, verification status, role and academic-level distribution, resource totals and platform activity indicators. It also provides course-representative appointment tools and announcement publishing.
+4. OWNER
+The Owner Dashboard includes the administrative resource-management experience and additional platform-wide oversight. Owner views include account totals, role and verification information, resource-library summaries and platform activity. Owner account tools support searching and overseeing accounts, changing eligible roles and verification status, revoking administrative access and removing eligible accounts. Owner-level controls are reserved for the owner account.
 
-7. COURSE-REPRESENTATIVE APPOINTMENTS
-Authorised administrators can appoint eligible students as course representatives for a defined academic scope and term. Appointments can specify an academic level, department, optional course scope and start/end period. Course representatives continue to use their student accounts while receiving the additional responsibilities attached to their active appointment.
+SHARED PLATFORM FEATURES
 
-8. OWNER DASHBOARD AND PLATFORM OVERSIGHT
-The Owner Dashboard combines the administrative resource-management experience with owner-level oversight. It presents account distribution, verification information, resource-library summaries and platform activity views. Owner tools include user-account management and oversight of administrative access.
+5. NOTIFICATIONS AND ANNOUNCEMENTS
+Signed-in users have an in-app notification inbox for updates relevant to their account role. Device push notifications can be enabled separately on supported browsers and devices. Administrators and owners can publish announcements to all users, selected account roles or students in a chosen academic level.
 
-9. NOTIFICATIONS AND ANNOUNCEMENTS
-Clariva includes an in-app notifications inbox and optional device notifications for users who enable them on their devices. The platform supports administrative alerts for key account and resource events. Administrators and owners can publish platform announcements to all users, selected account roles or students in a chosen academic level.
-
-10. GUIDED TOURS AND CONNECTIVITY SUPPORT
-Guided tours introduce users to the main website workspaces and dashboard features. Users can revisit the website tour from the dashboard navigation. Clariva also provides connectivity feedback and an offline continuation experience, alongside access to previously saved offline learning materials.
+6. GUIDED TOURS AND CONNECTIVITY SUPPORT
+Guided tours introduce users to the website workspaces and dashboard features. Users can revisit the website tour from dashboard navigation. Clariva also provides connectivity feedback and an offline continuation experience, alongside access to previously saved offline learning materials.
 
 DEVELOPMENT HISTORY
-
 - May–June 2026: Clariva emerged as an independent educational platform, with its own identity, public introduction and foundational student experience.
 - June–July 2026: Registration, sign-in, account assistance, password recovery and general usability were refined.
 - October 2026: Dedicated administrative tools were introduced for managing the educational resource collection.
 - November 2026: The student library, document reader, resource submission workflow, administrative and owner dashboards, account management, guided tours, offline PDF saving, academic-profile confirmation, course-representative appointments, notifications and platform announcements were expanded.
 
 CURRENT PRODUCT POSITION — 26 NOVEMBER 2026
-Clariva is live at https://proideacodestudio.github.io/Clariva/. The current website provides student, administrator and owner experiences, with course-representative responsibilities assigned within the student account model. The product overview above describes the user-facing capabilities represented in the current website.
+Clariva is live at https://proideacodestudio.github.io/Clariva/. The current website provides student, administrator and owner workspaces. Course representatives use student accounts with additional permissions limited to their active appointments. The role-based descriptions above explain the capabilities available to each account type.
 
 PRODUCT OWNERSHIP AND SUPPORT
 Clariva is developed and maintained by Pro Idea. This public document intentionally does not explain how the website is implemented, how its internal services are configured, how access controls are enforced, how privileged operations are performed, or how technical faults are diagnosed.
