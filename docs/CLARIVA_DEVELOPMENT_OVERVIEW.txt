@@ -17,7 +17,7 @@ Clariva provides separate workspaces and permissions according to the role assig
 1. STUDENTS
 Students use the Student Resource Library to browse available academic materials by level and semester, explore featured resources, search by resource title or course, and filter by resource type. Resource records display academic details such as department, course code, course title, level, semester and resource category.
 
-Students can open PDF learning materials in the integrated document reader, navigate between pages and adjust the reading view. Selected PDFs can be saved to the device for offline reading and revisited from a dedicated Saved Offline Resources area. Students can view and confirm academic profile information, including current-level timeline details, manage account access and personalise their profile avatar.
+Students can open PDF learning materials in the integrated document reader, navigate between pages and adjust the reading view. Selected PDFs can be saved to the device for offline reading and revisited from a dedicated Saved Offline Resources area. Students can view and confirm academic profile information, including current-level timeline details, manage account access and personalise their profile avatar. They can also receive in-app notifications and enable device push notifications.
 
 2. COURSE REPRESENTATIVES
 Course representatives retain their student account and student learning-resource access. An active appointment grants additional permissions only for the responsibilities assigned to that representative. Depending on the appointment, these permissions can include uploading resources and/or updating resources within a defined academic level, department and optional course scope. Each appointment has a recorded start and end period. Course representatives do not automatically receive the full privileges of an administrator.
@@ -33,7 +33,7 @@ The Owner Dashboard includes the administrative resource-management experience a
 SHARED PLATFORM FEATURES
 
 5. NOTIFICATIONS AND ANNOUNCEMENTS
-Signed-in users have an in-app notification inbox for updates relevant to their account role. Device push notifications can be enabled separately on supported browsers and devices. Administrators and owners can publish announcements to all users, selected account roles or students in a chosen academic level.
+Signed-in users have an in-app notification inbox for updates relevant to their account role. Device push notifications are available across student, course-representative, administrator and owner workspaces on supported browsers and devices. Users who have not enabled them receive a reminder on dashboard visits until they do. Selecting a device notification opens the inbox in the dashboard associated with the user's account role. Administrators and owners can publish announcements to all users, selected account roles or students in a chosen academic level.
 
 6. GUIDED TOURS AND CONNECTIVITY SUPPORT
 Guided tours introduce users to the website workspaces and dashboard features. Users can revisit the website tour from dashboard navigation. Clariva also provides connectivity feedback and an offline continuation experience, alongside access to previously saved offline learning materials.
