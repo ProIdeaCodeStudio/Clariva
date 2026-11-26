@@ -15,6 +15,8 @@
   let currentUserId = null;
   let currentUserRole = '';
   let activeLevel = null;
+  let activeSemester = null;
+  let pdfHistoryEntryActive = false;
   let offlineDbPromise = null;
   let activePdfObjectUrl = null;
   let activePdf = null;
@@ -619,11 +621,29 @@
     });
   }
 
+  function saveLibraryViewState() {
+    try {
+      sessionStorage.setItem('clariva-library-view-v1', JSON.stringify({
+        level: activeLevel,
+        semester: activeSemester
+      }));
+    } catch (_) {}
+  }
+
+  function restoreLibraryViewState() {
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem('clariva-library-view-v1') || 'null'); } catch (_) {}
+    if (!saved || !resources.some(resource => Number(resource.level) === Number(saved.level))) return;
+    openLevel(saved.level);
+    if ([1, 2].includes(Number(saved.semester))) openSemester(saved.semester);
+  }
+
   function openLevel(level, trigger = null) {
     const safeLevel = Number(level);
     if (!resources.some(resource => Number(resource.level) === safeLevel)) return;
     activeLevel = safeLevel;
     activeSemester = null;
+    saveLibraryViewState();
     lastLevelTrigger = trigger || lastLevelTrigger;
     const overlay = getElement('semester-resource-overlay');
     const title = getElement('semester-overlay-title');
@@ -644,6 +664,7 @@
     if (![1, 2].includes(safeSemester) || activeLevel === null) return;
 
     activeSemester = safeSemester;
+    saveLibraryViewState();
     lastSemesterTrigger = trigger || lastSemesterTrigger;
     const title = getElement('semester-overlay-title');
     const label = safeSemester === 1 ? 'First Semester' : 'Second Semester';
@@ -663,6 +684,7 @@
   function handleSemesterOverlayBack() {
     if (!getElement('semester-resource-content')?.hidden) {
       activeSemester = null;
+      saveLibraryViewState();
       getElement('semester-resource-content').hidden = true;
       getElement('semester-picker-panel').hidden = false;
       const title = getElement('semester-overlay-title');
@@ -682,6 +704,7 @@
     overlay.hidden = true;
     activeLevel = null;
     activeSemester = null;
+    saveLibraryViewState();
     getElement('semester-picker-panel').hidden = false;
     getElement('semester-resource-content').hidden = true;
     document.body.classList.remove('semester-overlay-open');
@@ -830,6 +853,10 @@
 
   async function showPdfReader(documentUrl, title) {
     const reader = getElement('pdf-reader');
+    if (!pdfHistoryEntryActive) {
+      history.pushState({ ...(history.state || {}), clarivaPdfReader: true }, '', window.location.href);
+      pdfHistoryEntryActive = true;
+    }
     const message = getElement('pdf-reader-message');
     const canvas = getElement('pdf-reader-canvas');
     const offlineFrame = getElement('pdf-reader-offline-frame');
@@ -881,8 +908,13 @@
     }
   }
 
-  function closePdfReader() {
+  function closePdfReader(fromPopState = false) {
     const reader = getElement('pdf-reader');
+    if (!fromPopState && pdfHistoryEntryActive && history.state?.clarivaPdfReader) {
+      history.back();
+      return;
+    }
+    pdfHistoryEntryActive = false;
     if (pdfRenderTask) {
       try { pdfRenderTask.cancel(); } catch (_) {}
       pdfRenderTask = null;
@@ -979,7 +1011,11 @@
   }
 
   function initializePdfReaderControls() {
-    getElement('pdf-reader-close')?.addEventListener('click', closePdfReader);
+    getElement('pdf-reader-close')?.addEventListener('click', () => closePdfReader());
+    window.addEventListener('popstate', () => {
+      if (!getElement('pdf-reader')?.hidden) closePdfReader(true);
+      else pdfHistoryEntryActive = false;
+    });
     const goToPreviousPage = async () => {
       if (activePdf && activePdfPage > 1) { activePdfPage -= 1; await renderPdfPage(); }
     };
@@ -1124,6 +1160,7 @@
       resources = data || [];
       populateResourceTypeFilter();
       updateLevelChoices(studentLevel);
+      restoreLibraryViewState();
 
       setLibraryStatus(
         resources.length
