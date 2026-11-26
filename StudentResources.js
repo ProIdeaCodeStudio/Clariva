@@ -309,14 +309,15 @@
     button.disabled = true;
     button.textContent = 'Saving…';
     try {
-      const { data, error } = await client.storage.from(BUCKET_NAME)
-        .createSignedUrl(resource.file_url, SIGNED_URL_TTL_SECONDS);
+      // Download the Storage object directly. This does not depend on the PDF
+      // having been opened first or on a previously generated viewer URL.
+      const storagePath = String(resource.file_url || '').trim();
+      if (!storagePath) throw new Error('This resource does not have a downloadable file.');
+      const { data: blob, error } = await client.storage.from(BUCKET_NAME).download(storagePath);
       if (error) throw error;
-      if (!data?.signedUrl) throw new Error('A secure file link could not be created.');
-      const response = await fetch(data.signedUrl, { cache: 'no-store' });
-      if (!response.ok) throw new Error('The document could not be retrieved. Try again.');
-      const blob = await response.blob();
-      if (!blob.size) throw new Error('The document returned an empty file.');
+      if (!(blob instanceof Blob) || !blob.size) {
+        throw new Error('The document download was empty or incomplete. Please try again.');
+      }
       await writeOfflineDocument(resource, blob);
       if (currentUserRole === 'student') {
         const { error: saveError } = await client.rpc('save_offline_resource', {
