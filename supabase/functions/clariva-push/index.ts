@@ -258,7 +258,7 @@ Deno.serve(async (req: Request) => {
       .eq("user_id", userId)
       .maybeSingle();
     if (notificationError || !notification) return json({ error: "The notification could not be found." }, 404);
-    if (!["new_registration", "resource_uploaded", "resource_deleted", "platform"].includes(notification.event_type)) {
+    if (!["new_registration", "resource_uploaded", "resource_deleted", "platform", "course_rep_appointed"].includes(notification.event_type)) {
       return json({ error: "This notification is not eligible for automatic push delivery." }, 400);
     }
     if (notification.push_sent_at) return json({ ok: true, sent: 0, alreadySent: true });
