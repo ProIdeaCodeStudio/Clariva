@@ -2044,19 +2044,16 @@
     button.disabled = true;
     setFeatureStatus('course-rep-status', 'Creating appointment…');
     try {
-      const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-      if (authError || !authData?.user) throw authError || new Error('Your session has expired.');
-      const { error } = await supabaseClient.from('course_rep_appointments').insert({
-        student_user_id: studentSelect.value,
-        scope_level: Number(level),
-        scope_department: getElement('course-rep-department').value.trim() || null,
-        scope_course_code: getElement('course-rep-course').value.trim().toUpperCase() || null,
-        start_month: startMonth,
-        start_year: startYear,
-        end_month: endMonth,
-        end_year: endYear,
-        permissions,
-        appointed_by: authData.user.id
+      const { error } = await supabaseClient.rpc('admin_create_course_rep_appointment', {
+        p_student_user_id: studentSelect.value,
+        p_scope_level: Number(level),
+        p_scope_department: getElement('course-rep-department').value.trim(),
+        p_scope_course_code: getElement('course-rep-course').value.trim().toUpperCase() || null,
+        p_start_month: startMonth,
+        p_start_year: startYear,
+        p_end_month: endMonth,
+        p_end_year: endYear,
+        p_permissions: permissions
       });
       if (error) throw error;
       form.reset();
@@ -2064,7 +2061,11 @@
       await Promise.all([loadCourseRepCandidates(), loadCourseRepAppointments()]);
     } catch (error) {
       console.error('Course representative appointment creation failed:', error);
-      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'The appointment could not be created.') || 'The appointment could not be created.', 'error');
+      const detail = String(error?.message || '');
+      const fallback = detail && !/row-level security|permission denied|violates/i.test(detail)
+        ? detail
+        : 'The appointment could not be created. Check the selected student, academic level and appointment term, then try again.';
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, fallback) || fallback, 'error');
     } finally {
       button.disabled = false;
     }
