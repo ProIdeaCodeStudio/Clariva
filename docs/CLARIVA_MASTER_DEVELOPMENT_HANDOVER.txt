@@ -1,10 +1,10 @@
 CLARIVA — RESTRICTED TECHNICAL DOCUMENTATION NOTICE
-Revision: 2.2
-Date: 25 November 2026
+Revision: 2.3
+Date: 26 November 2026
 
 This file does not publish technical implementation or operational instructions.
 
-The public development history is available in:
+The current public product overview is available in:
 docs/CLARIVA_DEVELOPMENT_OVERVIEW.txt
 
 This repository document intentionally does not disclose:
@@ -12,6 +12,7 @@ This repository document intentionally does not disclose:
 - Source-code structure, database design, security policies or privileged operations.
 - Deployment, maintenance, diagnostic and troubleshooting procedures.
 - Internal account, role-management or recovery workflows.
+- Private operational records, credentials, configuration values or service access details.
 
 For technical questions, suspected faults, account-access issues requiring intervention, security concerns or change requests, contact the project owner directly:
 
