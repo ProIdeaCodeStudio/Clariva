@@ -1,87 +1,60 @@
-CLARIVA — DEVELOPMENT HISTORY & PRODUCT OVERVIEW
-Version: 3.0
-Prepared: 25 November 2026
+CLARIVA — DEVELOPMENT HISTORY & CURRENT PRODUCT OVERVIEW
+Version: 3.2
+Prepared: 26 November 2026
 Product: Clariva
 Product studio: Pro Idea
 Public website: https://proideacodestudio.github.io/Clariva/
 
 PURPOSE
-This document provides a public, non-technical account of Clariva's development and product direction. It is intended to communicate the project's evolution and user-facing capabilities. It is not an implementation manual, technical handover, security guide, deployment guide, or troubleshooting reference.
+This document presents a public, non-technical account of Clariva's development and the capabilities available in the current website. It is intended for general product understanding and introduction. It is not an implementation manual, technical handover, security guide, deployment guide, or troubleshooting reference.
 
 PRODUCT VISION
-Clariva is an educational platform created to help learners move from confusion to confidence by making academic resources easier to discover and use. The project began within the wider Pro Idea digital work and developed into a distinct educational product with its own identity and academic direction.
+Clariva is an educational platform developed by Pro Idea to help university students move from confusion to confidence by bringing academic resources, organised study access and platform support together in one place.
+
+ROLE-BASED ACCESS
+Clariva provides separate workspaces and permissions according to the role assigned to each verified account. The role determines which dashboard sections, management tools and responsibilities are available.
+
+1. STUDENTS
+Students use the Student Resource Library to browse available academic materials by level and semester, explore featured resources, search by resource title or course, and filter by resource type. Resource records display academic details such as department, course code, course title, level, semester and resource category.
+
+Students can open PDF learning materials in the integrated document reader, navigate between pages and adjust the reading view. Selected PDFs can be saved to the device for offline reading and revisited from a dedicated Saved Offline Resources area. Students can view and confirm academic profile information, including current-level timeline details, manage account access and personalise their profile avatar.
+
+2. COURSE REPRESENTATIVES
+Course representatives retain their student account and student learning-resource access. An active appointment grants additional permissions only for the responsibilities assigned to that representative. Depending on the appointment, these permissions can include uploading resources and/or updating resources within a defined academic level, department and optional course scope. Each appointment has a recorded start and end period. Course representatives do not automatically receive the full privileges of an administrator.
+
+3. ADMINISTRATORS
+Verified administrators use the Admin Dashboard to review account and resource summaries and platform activity indicators. They can upload, search, filter, edit and manage learning resources, select files from device storage or Google Drive, and submit multiple files after reviewing their academic details.
+
+Administrators can appoint course representatives and define their academic scope, permitted resource actions and appointment period. They can also publish announcements to all users, selected account roles or students in a chosen academic level. Relevant administrative notifications cover key events such as new student registrations and resource uploads or deletions.
+
+4. OWNER
+The Owner Dashboard includes the administrative resource-management experience and additional platform-wide oversight. Owner views include account totals, role and verification information, resource-library summaries and platform activity. Owner account tools support searching and overseeing accounts, changing eligible roles and verification status, revoking administrative access and removing eligible accounts. Owner-level controls are reserved for the owner account.
+
+SHARED PLATFORM FEATURES
+
+5. NOTIFICATIONS AND ANNOUNCEMENTS
+Signed-in users have an in-app notification inbox for updates relevant to their account role. Device push notifications can be enabled separately on supported browsers and devices. Administrators and owners can publish announcements to all users, selected account roles or students in a chosen academic level.
+
+6. GUIDED TOURS AND CONNECTIVITY SUPPORT
+Guided tours introduce users to the website workspaces and dashboard features. Users can revisit the website tour from dashboard navigation. Clariva also provides connectivity feedback and an offline continuation experience, alongside access to previously saved offline learning materials.
 
 DEVELOPMENT HISTORY
+- May–June 2026: Clariva emerged as an independent educational platform, with its own identity, public introduction and foundational student experience.
+- June–July 2026: Registration, sign-in, account assistance, password recovery and general usability were refined.
+- October 2026: Dedicated administrative tools were introduced for managing the educational resource collection.
+- November 2026: The student library, document reader, resource submission workflow, administrative and owner dashboards, account management, guided tours, offline PDF saving, academic-profile confirmation, course-representative appointments, notifications and platform announcements were expanded.
 
-1. INITIAL CONCEPT AND IDENTITY — MAY 2026
-The educational-services idea was separated from the wider creative-services website so that each could have a clearer purpose and audience. Clariva emerged as the independent educational platform, with its own name, identity and academic direction.
-
-2. FOUNDATIONAL STUDENT EXPERIENCE — MAY TO JUNE 2026
-The first student-facing experience took shape. Work during this period focused on the public introduction to Clariva, account access, the student journey and the initial academic-resource experience.
-
-3. ACCOUNT EXPERIENCE AND USABILITY — JUNE TO JULY 2026
-The platform's account experience was refined through successive improvements to registration, sign-in, account assistance, password recovery, form feedback and general usability. The focus was on making routine actions clearer and more dependable.
-
-4. ADMINISTRATION AND RESOURCE MANAGEMENT — OCTOBER 2026
-The administrative experience expanded to support the management of learning materials. The project introduced a dedicated administrative workspace and continued refining the relationship between student access and administrative responsibilities.
-
-5. STUDENT LIBRARY AND PLATFORM INSIGHTS — NOVEMBER 2026
-The student resource experience was expanded with semester-led browsing and improved document viewing. Administrative and owner-level overviews were developed to make key platform and library activity easier to understand. Role-aware navigation and account-management experiences were refined alongside these additions.
-
-6. RESOURCE UPLOAD EXPERIENCE — NOVEMBER 2026
-The resource-submission experience was improved to support files selected from device storage and Google Drive. Batch selection and review were refined, and the interface now makes clear that files submitted together should share the same academic and resource details.
-
-7. ACCOUNT RELIABILITY AND CONNECTIVITY — NOVEMBER 2026
-Further work concentrated on account recovery, administrative feedback, resource visibility, role-aware navigation and website connectivity feedback. The platform continues to receive usability and reliability improvements.
-
-8. OFFLINE READING AND GUIDED ONBOARDING — NOVEMBER 2026
-The student experience expanded to include device-local copies of selected PDF resources for offline reading, a dedicated Saved Offline Resources destination and guided tours for the main workspaces. Online account and management actions remain unavailable while offline.
-
-9. SIMPLIFIED DASHBOARD ONBOARDING — NOVEMBER 2026
-The guided tours were simplified to focus on locating the main dashboard sections and moving between them. This keeps onboarding brief and easy to follow.
-
-10. SPOTLIGHT GUIDED TOURS — NOVEMBER 2026
-The guided tour experience uses a clear spotlight around the item being explained, with the surrounding page softly blurred. Explanations appear in a nearby card, and relevant dashboard navigation opens automatically when a step needs it. First-time onboarding and completed-user replay provide different levels of guidance. The latest spotlight release is deployed. Feedback and verification across additional device and browser combinations remain ongoing.
-
-11. ACADEMIC CONFIRMATION AND COURSE-REPRESENTATIVE COORDINATION — NOVEMBER 2026
-Clariva now includes a one-time academic-level confirmation experience for existing students and a course-representative appointment experience. Appointments can be limited to an academic scope and a defined term, while representatives continue to use their normal student accounts.
-
-12. NOTIFICATIONS AND PLATFORM ANNOUNCEMENTS — NOVEMBER 2026
-The platform now includes an in-app updates inbox, optional device notifications and automatic administrative alerts for key account and resource events. Administrators and owners can also publish announcements to all users, selected account roles or a chosen academic level.
-
-CURRENT PRODUCT AREAS
-- Student accounts and academic resource access.
-- A student library with level- and semester-led browsing, document viewing and saved offline PDFs.
-- Resource submission and management tools for authorised administrators and owners.
-- Owner-level account management, platform insights and activity overviews.
-- Scoped course-representative appointments for defined academic responsibilities.
-- An in-app updates inbox, optional device notifications and targeted manual announcements.
-- Guided onboarding and ongoing usability, accessibility and reliability improvements.
-
-DEVELOPMENT POSITION — 25 NOVEMBER 2026
-The academic confirmation, course-representative, notification and announcement release has been merged into the main website branch and successfully deployed to the public website. The corresponding production services are active.
-
-Existing students who have not yet confirmed their registered academic level will be asked to complete the one-time confirmation before continuing to the resource library. New registrations continue through the existing registration experience.
-
-The owner workspace includes the administrative resource-management experience alongside owner-level account management and platform activity views. Course-representative tools are limited to the responsibilities assigned to each appointment.
-
-The latest release has passed the website build and publication workflow. Real-account, cross-role and multi-device acceptance checks for the new features remain outstanding. Device notifications also depend on each user explicitly enabling them in their browser. The project owner should collect feedback before treating the release as fully accepted across all supported devices and browsers.
+CURRENT PRODUCT POSITION — 26 NOVEMBER 2026
+Clariva is live at https://proideacodestudio.github.io/Clariva/. The current website provides student, administrator and owner workspaces. Course representatives use student accounts with additional permissions limited to their active appointments. The role-based descriptions above explain the capabilities available to each account type.
 
 PRODUCT OWNERSHIP AND SUPPORT
 Clariva is developed and maintained by Pro Idea. This public document intentionally does not explain how the website is implemented, how its internal services are configured, how access controls are enforced, how privileged operations are performed, or how technical faults are diagnosed.
 
-For technical questions, account-access issues requiring intervention, suspected faults, security concerns, or requests for changes, contact the project owner directly:
+For technical questions, account-access issues requiring intervention, security concerns or requests for changes, contact the project owner directly:
 
 Email: proidea2025@gmail.com
 
-Please do not attempt to infer or reproduce internal operations from this document. Technical investigation and changes should be handled by the project owner or an explicitly authorised developer.
-
 DOCUMENTATION BOUNDARY
-This public record deliberately excludes:
-- Source-code structure and component responsibilities.
-- Database design, data relationships, policies and internal service configuration.
-- Authentication, account-recovery and privilege-management procedures.
-- Deployment, maintenance, diagnostic and troubleshooting instructions.
-- Internal access paths, privileged workflows, and operational details.
+This public record deliberately excludes source-code structure, database design, internal service configuration, authentication and recovery procedures, security policies, privileged workflows, deployment operations, maintenance procedures, diagnostics and troubleshooting instructions. Technical investigation and privileged changes are reserved for the project owner or a developer explicitly authorised by the owner.
 
 END OF PUBLIC DEVELOPMENT OVERVIEW
