@@ -1882,16 +1882,20 @@
     });
   }
 
-  async function loadCourseRepCandidates() {
+  let courseRepCandidateRequest = 0;
+
+  async function loadCourseRepCandidates(search = '') {
+    const requestId = ++courseRepCandidateRequest;
     const select = getElement('course-rep-student');
     if (!select || !supabaseClient) return;
     select.replaceChildren();
-    appendOption(select, '', 'Loading eligible students…');
+    appendOption(select, '', 'Loading students…');
     try {
-      const { data, error } = await supabaseClient.rpc('admin_list_course_rep_candidates', { p_search: null });
+      const { data, error } = await supabaseClient.rpc('admin_list_course_rep_candidates', { p_search: search.trim() || null });
       if (error) throw error;
+      if (requestId !== courseRepCandidateRequest) return;
       select.replaceChildren();
-      appendOption(select, '', 'Select a verified student');
+      appendOption(select, '', 'Select a student');
       (data || []).forEach(student => {
         const option = document.createElement('option');
         option.value = student.user_id;
@@ -1899,12 +1903,13 @@
         option.dataset.level = student.academic_level || '';
         select.appendChild(option);
       });
-      if (!data?.length) appendOption(select, '', 'No eligible students found');
+      if (!data?.length) appendOption(select, '', 'No student accounts found for this search');
     } catch (error) {
       console.error('Course representative candidates could not be loaded:', error);
+      if (requestId !== courseRepCandidateRequest) return;
       select.replaceChildren();
       appendOption(select, '', 'Unable to load students');
-      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Eligible students could not be loaded.') || 'Eligible students could not be loaded.', 'error');
+      if (requestId === courseRepCandidateRequest) setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Student accounts could not be loaded.') || 'Student accounts could not be loaded.', 'error');
     }
   }
 
@@ -2200,6 +2205,8 @@
   function initializeAdminCommunicationAndCourseRepFeatures() {
     if (!getElement('course-rep-appointment-form') && !getElement('manual-announcement-form')) return;
     initializeCourseRepTermSelectors();
+    const studentSearch = getElement('course-rep-student-search');
+    studentSearch?.addEventListener('input', () => { void loadCourseRepCandidates(studentSearch.value); });
     const studentSelect = getElement('course-rep-student');
     studentSelect?.addEventListener('change', () => {
       const level = studentSelect.selectedOptions?.[0]?.dataset.level || '';

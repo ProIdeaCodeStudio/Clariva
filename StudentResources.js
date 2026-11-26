@@ -31,15 +31,19 @@
         const style = document.createElement('style');
         style.id = 'clariva-academic-confirmation-style';
         style.textContent = `
-          #clariva-academic-confirmation{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:20px;background:rgba(17,16,8,.72)}
+          #clariva-academic-confirmation{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:16px;background:rgba(17,16,8,.76);overflow:auto}
           #clariva-academic-confirmation[hidden]{display:none}
-          #clariva-academic-confirmation .clariva-academic-card{width:min(460px,100%);padding:clamp(22px,5vw,34px);border:1px solid #d8c9a8;border-radius:16px;background:#fffaf0;color:#211b12;box-shadow:0 18px 60px rgba(0,0,0,.24);font:15px/1.55 system-ui,sans-serif}
+          #clariva-academic-confirmation .clariva-academic-card{width:min(540px,100%);max-height:94vh;overflow:auto;padding:clamp(20px,5vw,30px);border:1px solid #d8c9a8;border-radius:16px;background:#fffaf0;color:#211b12;font:14px/1.5 system-ui,sans-serif}
           #clariva-academic-confirmation h2{margin:0 0 10px;font:700 25px/1.2 Georgia,serif}
           #clariva-academic-confirmation p{margin:0 0 14px}
-          #clariva-academic-confirmation .academic-level-value{display:block;margin:18px 0;padding:14px;border-radius:10px;background:#f1e8d6;font:700 22px Georgia,serif;text-align:center}
-          #clariva-academic-confirmation button{width:100%;min-height:46px;border:0;border-radius:9px;background:#211b12;color:#fffaf0;font:600 14px system-ui,sans-serif;cursor:pointer}
+          #clariva-academic-confirmation .academic-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+          #clariva-academic-confirmation label{display:grid;gap:5px;font-weight:600;font-size:12px}
+          #clariva-academic-confirmation select{width:100%;min-height:43px;padding:8px;border:1px solid #cbbd9f;border-radius:8px;background:white;color:#211b12;font:14px system-ui,sans-serif}
+          #clariva-academic-confirmation .academic-full{grid-column:1/-1}
+          #clariva-academic-confirmation button{width:100%;min-height:46px;margin-top:18px;border:0;border-radius:9px;background:#211b12;color:#fffaf0;font:600 14px system-ui,sans-serif;cursor:pointer}
           #clariva-academic-confirmation button:disabled{opacity:.6;cursor:wait}
           #clariva-academic-confirmation .academic-confirmation-status{min-height:20px;margin:12px 0 0;font-size:13px;color:#8b2c20}
+          @media(max-width:420px){#clariva-academic-confirmation .academic-fields{grid-template-columns:1fr}}
         `;
         document.head.appendChild(style);
         overlay = document.createElement('section');
@@ -47,41 +51,89 @@
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
         overlay.setAttribute('aria-labelledby', 'clariva-academic-confirmation-title');
+        const monthOptions = ['January','February','March','April','May','June','July','August','September','October','November','December']
+          .map((name, index) => '<option value="' + (index + 1) + '">' + name + '</option>').join('');
+        const year = new Date().getFullYear();
+        const yearOptions = Array.from({length: year - 2000 + 11}, (_, index) => 2000 + index)
+          .map(value => '<option value="' + value + '">' + value + '</option>').join('');
         overlay.innerHTML = `
           <div class="clariva-academic-card">
             <p class="features-label">One-time account confirmation</p>
-            <h2 id="clariva-academic-confirmation-title">Confirm your academic level</h2>
-            <p>Before you continue to the Clariva Resource Library, please confirm that the academic level shown below is correct.</p>
-            <strong class="academic-level-value" id="clariva-academic-level-value"></strong>
-            <p>If this level is incorrect, do not confirm it. Contact a Clariva administrator to have your account corrected.</p>
-            <button id="clariva-academic-confirm-button" type="button">Yes, this is my level</button>
+            <h2 id="clariva-academic-confirmation-title">Confirm your academic profile</h2>
+            <p>Check your current academic level. If this is not your level, select the correct one below. You must also provide the month and year you started this level and your expected completion month and year.</p>
+            <div class="academic-fields">
+              <label class="academic-full" for="clariva-academic-level-select">Your academic level
+                <select id="clariva-academic-level-select">
+                  <option value="100">100 Level</option><option value="200">200 Level</option>
+                  <option value="300">300 Level</option><option value="400">400 Level</option><option value="500">500 Level</option>
+                </select>
+              </label>
+              <label for="clariva-level-start-month">Started — month<select id="clariva-level-start-month"><option value="">Select month</option>${monthOptions}</select></label>
+              <label for="clariva-level-start-year">Started — year<select id="clariva-level-start-year"><option value="">Select year</option>${yearOptions}</select></label>
+              <label for="clariva-level-end-month">Expected completion — month<select id="clariva-level-end-month"><option value="">Select month</option>${monthOptions}</select></label>
+              <label for="clariva-level-end-year">Expected completion — year<select id="clariva-level-end-year"><option value="">Select year</option>${yearOptions}</select></label>
+            </div>
+            <button id="clariva-academic-confirm-button" type="button">Confirm academic profile</button>
             <p class="academic-confirmation-status" id="clariva-academic-confirm-status" role="status" aria-live="polite"></p>
           </div>`;
         document.body.appendChild(overlay);
       }
 
-      const value = overlay.querySelector('#clariva-academic-level-value');
+      const levelSelect = overlay.querySelector('#clariva-academic-level-select');
       const button = overlay.querySelector('#clariva-academic-confirm-button');
       const status = overlay.querySelector('#clariva-academic-confirm-status');
-      value.textContent = level + ' Level';
+      levelSelect.value = String(level);
       status.textContent = '';
       overlay.hidden = false;
       button.disabled = false;
       button.onclick = async () => {
+        const startMonth = Number(overlay.querySelector('#clariva-level-start-month').value);
+        const startYear = Number(overlay.querySelector('#clariva-level-start-year').value);
+        const endMonth = Number(overlay.querySelector('#clariva-level-end-month').value);
+        const endYear = Number(overlay.querySelector('#clariva-level-end-year').value);
+        if (!startMonth || !startYear || !endMonth || !endYear) {
+          status.textContent = 'Select both the start date and expected completion date.';
+          return;
+        }
+        if (new Date(startYear, startMonth - 1, 1) > new Date(endYear, endMonth - 1, 1)) {
+          status.textContent = 'Expected completion cannot be earlier than the level start date.';
+          return;
+        }
         button.disabled = true;
-        status.textContent = 'Saving your confirmation…';
+        status.textContent = 'Saving your academic profile…';
         try {
-          const { data: confirmedAt, error } = await client.rpc('confirm_academic_level', { p_level: String(level) });
+          const selectedLevel = levelSelect.value;
+          const { data: confirmedAt, error } = await client.rpc('confirm_academic_level', {
+            p_level: selectedLevel,
+            p_start_month: startMonth,
+            p_start_year: startYear,
+            p_expected_completion_month: endMonth,
+            p_expected_completion_year: endYear
+          });
           if (error) throw error;
           if (window.clarivaCachedProfile) {
-            window.clarivaCachedProfile.academic_level_confirmed_at = confirmedAt || new Date().toISOString();
+            Object.assign(window.clarivaCachedProfile, {
+              Level: selectedLevel,
+              academic_level_confirmed_at: confirmedAt || new Date().toISOString(),
+              academic_level_started_month: startMonth,
+              academic_level_started_year: startYear,
+              expected_level_completion_month: endMonth,
+              expected_level_completion_year: endYear
+            });
           }
           try {
             const cacheKey = 'clariva-offline-profile-v1:' + currentUserId;
             const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
             if (cached) {
-              cached.academic_level_confirmed_at = confirmedAt || new Date().toISOString();
-              cached.cachedAt = Date.now();
+              Object.assign(cached, {
+                Level: selectedLevel,
+                academic_level_confirmed_at: confirmedAt || new Date().toISOString(),
+                academic_level_started_month: startMonth,
+                academic_level_started_year: startYear,
+                expected_level_completion_month: endMonth,
+                expected_level_completion_year: endYear,
+                cachedAt: Date.now()
+              });
               localStorage.setItem(cacheKey, JSON.stringify(cached));
             }
           } catch (cacheError) {
@@ -101,10 +153,10 @@
             console.warn('Clariva course representative access refresh failed:', courseRepError);
           }
           overlay.hidden = true;
-          resolve(true);
+          resolve(selectedLevel);
         } catch (error) {
           console.error('Clariva academic-level confirmation error:', error);
-          status.textContent = window.clarivaFriendlyError?.(error, error.message || 'Your confirmation could not be saved. Please try again.') || error.message || 'Your confirmation could not be saved. Please try again.';
+          status.textContent = window.clarivaFriendlyError?.(error, error.message || 'Your academic profile could not be saved. Please try again.') || error.message || 'Your academic profile could not be saved. Please try again.';
           button.disabled = false;
         }
       };
@@ -162,8 +214,12 @@
     return new Promise((resolve, reject) => {
       const transaction = database.transaction(OFFLINE_STORE_NAME, 'readonly');
       const request = transaction.objectStore(OFFLINE_STORE_NAME).get(offlineDocumentKey(resourceId));
-      request.onsuccess = () => resolve(request.result || null);
+      let result = null;
+      request.onsuccess = () => { result = request.result || null; };
       request.onerror = () => reject(request.error || new Error('Offline save could not be checked.'));
+      transaction.oncomplete = () => resolve(result);
+      transaction.onerror = () => reject(transaction.error || new Error('Offline save could not be checked.'));
+      transaction.onabort = () => reject(transaction.error || new Error('Offline save lookup was interrupted.'));
     });
   }
 
@@ -392,14 +448,14 @@
     openButton.type = 'button';
     openButton.className = 'student-resource-open';
     openButton.textContent = 'Open resource';
-    openButton.disabled = !resource.file_url;
+    openButton.disabled = false;
     openButton.addEventListener('click', () => openResource(resource, openButton));
 
     card.appendChild(openButton);
 
     const isPdfResource = String(resource.file_name || '').toLowerCase().endsWith('.pdf') ||
       String(resource.resource_type || '').toLowerCase().includes('pdf');
-    if (['student', 'admin', 'owner'].includes(currentUserRole) && isPdfResource && resource.file_url) {
+    if (['student', 'admin', 'owner'].includes(currentUserRole) && isPdfResource && resource.id) {
       const offlineButton = document.createElement('button');
       offlineButton.type = 'button';
       offlineButton.className = 'student-resource-open student-resource-offline';
@@ -747,32 +803,47 @@
     }
   }
 
-  async function showPdfReader(signedUrl, title) {
+  function showPdfInOfflineFrame(documentUrl, title) {
     const reader = getElement('pdf-reader');
     const message = getElement('pdf-reader-message');
     const canvas = getElement('pdf-reader-canvas');
     const offlineFrame = getElement('pdf-reader-offline-frame');
-
-    if (String(signedUrl).startsWith('blob:')) {
-      reader.hidden = false;
-      document.body.classList.add('pdf-reader-open');
-      getElement('pdf-reader-title').textContent = title || 'Learning resource';
-      message.hidden = true;
-      canvas.hidden = true;
-      offlineFrame.hidden = false;
-      offlineFrame.src = signedUrl;
-      activePdf = null;
-      activePdfPage = 1;
-      updatePdfControls();
-      return;
+    if (pdfRenderTask) {
+      try { pdfRenderTask.cancel(); } catch (_) {}
+      pdfRenderTask = null;
     }
-    offlineFrame.hidden = true;
-    offlineFrame.removeAttribute('src');
+    if (activePdf) {
+      try { activePdf.destroy(); } catch (_) {}
+      activePdf = null;
+    }
+    reader.hidden = false;
+    document.body.classList.add('pdf-reader-open');
+    getElement('pdf-reader-title').textContent = title || 'Learning resource';
+    message.hidden = true;
+    canvas.hidden = true;
+    offlineFrame.hidden = false;
+    offlineFrame.src = documentUrl;
+    activePdfPage = 1;
+    updatePdfControls();
+  }
+
+  async function showPdfReader(documentUrl, title) {
+    const reader = getElement('pdf-reader');
+    const message = getElement('pdf-reader-message');
+    const canvas = getElement('pdf-reader-canvas');
+    const offlineFrame = getElement('pdf-reader-offline-frame');
+    const isLocalBlob = String(documentUrl).startsWith('blob:');
 
     if (!window.pdfjsLib) {
+      if (isLocalBlob) {
+        showPdfInOfflineFrame(documentUrl, title);
+        return;
+      }
       throw new Error('The document viewer could not be loaded. Please refresh and try again.');
     }
 
+    offlineFrame.hidden = true;
+    offlineFrame.removeAttribute('src');
     reader.hidden = false;
     document.body.classList.add('pdf-reader-open');
     getElement('pdf-reader-title').textContent = title || 'Learning resource';
@@ -787,8 +858,11 @@
     try {
       window.pdfjsLib.GlobalWorkerOptions.workerSrc =
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const source = isLocalBlob
+        ? { data: new Uint8Array(await (await fetch(documentUrl)).arrayBuffer()) }
+        : { url: documentUrl };
       activePdf = await window.pdfjsLib.getDocument({
-        url: signedUrl,
+        ...source,
         disableAutoFetch: false,
         disableStream: false,
         disableRange: false,
@@ -796,6 +870,11 @@
       }).promise;
       await renderPdfPage();
     } catch (error) {
+      if (isLocalBlob) {
+        // A saved PDF must remain readable when the PDF.js worker is unavailable offline.
+        showPdfInOfflineFrame(documentUrl, title);
+        return;
+      }
       closePdfReader();
       throw new Error('This PDF could not be displayed in Clariva. Please try again later.');
     }
@@ -862,12 +941,14 @@
       // Storage RLS independently verifies the signed-in student's level.
       let documentUrl = null;
       if (cachedCopy?.blob) {
+        if (activePdfObjectUrl) URL.revokeObjectURL(activePdfObjectUrl);
         activePdfObjectUrl = URL.createObjectURL(cachedCopy.blob);
         documentUrl = activePdfObjectUrl;
       } else if (!navigator.onLine) {
         throw new Error('This resource is not saved for offline reading on this device.');
       } else {
         try {
+          if (!client) throw new Error('Connect to the internet and sign in to retrieve this resource.');
           const { data, error } = await client.storage.from(BUCKET_NAME)
             .createSignedUrl(resource.file_url, SIGNED_URL_TTL_SECONDS);
           if (error) throw error;
@@ -1008,6 +1089,7 @@
         }
         const confirmed = await requireAcademicLevelConfirmation(storedLevel);
         if (!confirmed) return;
+        profile.Level = confirmed;
       }
       if (savedView) {
         document.querySelector('.student-library-section')?.setAttribute('hidden', '');
