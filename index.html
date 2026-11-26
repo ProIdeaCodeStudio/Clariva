@@ -223,9 +223,14 @@ Back to Login
             class="clariva-navbar-wordmark">
         </div>
 
-        <div>
-          <button type="button" class="header-btn js-open-gate">Get Started</button>
-          <button type="button" class="header-btn js-open-login">Login</button>
+        <div class="clariva-landing-actions">
+          <button type="button" class="clariva-landing-menu-toggle" id="clariva-landing-menu-toggle" aria-label="Open website menu" aria-controls="clariva-landing-menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+          <nav id="clariva-landing-menu" class="clariva-landing-menu" aria-label="Website navigation" hidden>
+            <a href="#leadership">About the Author</a>
+            <a href="#about-clariva">About Clariva</a>
+            <button type="button" class="js-open-gate">Get Started</button>
+            <button type="button" class="js-open-login">Login</button>
+          </nav>
         </div>
       </div>
     </div>
@@ -369,6 +374,15 @@ Back to Login
     </div>
   </section>
 
+  <section id="about-clariva" class="about-clariva-section" aria-labelledby="about-clariva-title">
+    <div class="container about-clariva-inner">
+      <p class="features-label">About Clariva</p>
+      <h2 class="features-title" id="about-clariva-title">A clearer way to learn.</h2>
+      <p>Clariva is an educational platform built to help undergraduate students find and use academic learning resources with greater clarity. It brings together curated study materials, past questions, CBT practice, and AI-assisted study support in one accessible learning environment.</p>
+      <p>Designed around the needs of students, Clariva organises resources by academic level, semester, course, and resource type. Its goal is to make useful learning materials easier to discover, understand, and revisit throughout a student's academic journey.</p>
+    </div>
+  </section>
+
   <!-- ── CTA BANNER ────────────────────────────────────── -->
   <section id="cta-banner">
     <div class="container">
@@ -393,6 +407,11 @@ Back to Login
           <a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank">PRO IDEA →</a>
         </div>
       </div>
+      <div class="footer-contact">
+          <span>Contact</span>
+          <a href="mailto:Proidea2025@gmail.com">Proidea2025@gmail.com</a>
+          <a href="https://wa.me/2349133264060" target="_blank" rel="noopener noreferrer">WhatsApp: 09133240600</a>
+        </div>
       <div class="footer-meta">
         CLARIVA · FREE EDUCATIONAL RESOURCES · 2026
       </div>
@@ -424,6 +443,26 @@ Back to Login
     </div>
 
   </div>
+  <script>
+    (() => {
+      const toggle = document.getElementById('clariva-landing-menu-toggle');
+      const menu = document.getElementById('clariva-landing-menu');
+      if (!toggle || !menu) return;
+      toggle.addEventListener('click', () => {
+        const open = menu.hidden;
+        menu.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+      menu.querySelectorAll('a, button').forEach(item => item.addEventListener('click', () => {
+        if (item.tagName === 'A') { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
+      }));
+      document.addEventListener('click', event => {
+        if (!menu.hidden && !menu.contains(event.target) && !toggle.contains(event.target)) {
+          menu.hidden = true; toggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+  </script>
 </body>
 
 </html>
