@@ -492,7 +492,7 @@
     if (currentUrl.searchParams.get('openNotifications') === '1') {
       panel.hidden = false;
       currentUrl.searchParams.delete('openNotifications');
-      window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search + currentUrl.hash);
+      window.history.replaceState(window.history.state || {}, document.title, currentUrl.pathname + currentUrl.search + currentUrl.hash);
       await loadInbox();
     }
   }
