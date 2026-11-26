@@ -6,18 +6,51 @@ Clariva is an educational platform developed by **Pro Idea** to help university 
 
 **Website:** https://proideacodestudio.github.io/Clariva/
 
-## What Clariva offers
+## What you can access on Clariva
 
-- **Student resource library:** Browse academic materials by level and semester, explore featured resources, search the collection and filter by resource type.
-- **PDF learning experience:** Read PDF resources in the integrated document viewer, navigate pages and save selected documents for offline reading.
-- **Student accounts:** Create and verify an account, manage account access, view academic information and personalise the profile avatar.
-- **Academic progression:** Maintain an academic profile with level and timeline information, including the one-time academic confirmation experience.
-- **Administrative resource tools:** Upload and manage learning materials, select files from device storage or Google Drive, and submit multiple files with reviewed academic details.
-- **Admin Dashboard:** View account and resource summaries, manage the resource collection, appoint course representatives and publish announcements.
-- **Course representatives:** Support defined academic responsibilities through appointments scoped by level, department, optional course and term.
-- **Owner Dashboard:** Access platform-wide account and activity overviews, resource-management tools and user-account oversight.
-- **Notifications and announcements:** Use the in-app notification inbox, enable optional device notifications and receive relevant platform updates. Administrators and owners can publish announcements to all users, selected roles or a chosen academic level.
-- **Guided tours and offline support:** Explore guided introductions to the website workspaces, receive connectivity feedback and revisit saved PDFs offline.
+Clariva provides different workspaces according to each account's role. Your role determines which dashboard tools and responsibilities are available.
+
+### Students
+
+A verified student can:
+- Browse academic resources organised by academic level and semester.
+- Explore featured materials, search the collection and filter by resource type.
+- Read PDF resources in the integrated document viewer and navigate between pages.
+- Save selected PDFs to the device and revisit them from Saved Offline Resources.
+- View and confirm academic profile information, including academic-level timeline details.
+- Manage account access and personalise the profile avatar.
+- Receive in-app notifications and enable device push notifications.
+
+### Course representatives
+
+A course representative continues to use a student account and retains the student learning experience. During an active appointment, the representative receives only the additional resource-management permissions assigned to that appointment.
+
+Depending on the appointment, this can include uploading resources and/or updating resources within the defined academic level, department and optional course scope. Appointment periods are recorded, and access is limited to the active appointment and granted permissions. Course representatives do not automatically receive full administrator privileges.
+
+### Administrators
+
+Verified administrators use the Admin Dashboard to:
+- Review account and resource summaries and platform activity indicators.
+- Upload, search, filter, edit and manage academic resources.
+- Select files from device storage or Google Drive and submit reviewed batches.
+- Appoint and manage course representatives, including their academic scope, permissions and term.
+- Publish announcements to all users, selected account roles or a chosen academic level.
+- Receive relevant administrative notifications about new student registrations and resource activity.
+
+### Owner
+
+The Owner Dashboard includes the administrative resource-management experience and additional platform-wide oversight. The owner can:
+- Review account totals, role and verification information, resource summaries and platform activity.
+- Search and oversee user accounts.
+- Change eligible account roles and verification status.
+- Revoke administrative access and remove eligible accounts.
+- Access the resource-management, course-representative and announcement tools available in the administrative workspace.
+
+Owner-level controls are reserved for the owner account.
+
+## Features shared across workspaces
+
+Signed-in users have access to the notification centre, role-appropriate platform updates, guided introductions to dashboard features and connectivity feedback. Device push notifications can be enabled separately on a supported browser and device.
 
 ## Product overview
 
