@@ -2061,7 +2061,11 @@
       await Promise.all([loadCourseRepCandidates(), loadCourseRepAppointments()]);
     } catch (error) {
       console.error('Course representative appointment creation failed:', error);
-      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'The appointment could not be created.') || 'The appointment could not be created.', 'error');
+      const detail = String(error?.message || '');
+      const fallback = detail && !/row-level security|permission denied|violates/i.test(detail)
+        ? detail
+        : 'The appointment could not be created. Check the selected student, academic level and appointment term, then try again.';
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, fallback) || fallback, 'error');
     } finally {
       button.disabled = false;
     }
