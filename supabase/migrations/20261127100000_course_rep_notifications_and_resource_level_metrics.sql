@@ -217,3 +217,17 @@ begin
   execute replace(v_definition, v_old, v_new);
 end;
 $migration$;
+
+
+-- Keep the pending-push partial index aligned with the expanded event set.
+drop index if exists public.notifications_push_pending_idx;
+create index notifications_push_pending_idx
+  on public.notifications (created_at)
+  where push_sent_at is null
+    and event_type in (
+      'new_registration',
+      'resource_uploaded',
+      'resource_deleted',
+      'platform',
+      'course_rep_appointed'
+    );
