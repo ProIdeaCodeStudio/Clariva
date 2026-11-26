@@ -1898,33 +1898,49 @@
   }
 
   let courseRepCandidateRequest = 0;
+  let courseRepCandidates = new Map();
 
   async function loadCourseRepCandidates(search = '') {
     const requestId = ++courseRepCandidateRequest;
-    const select = getElement('course-rep-student');
-    if (!select || !supabaseClient) return;
-    select.replaceChildren();
-    appendOption(select, '', 'Loading students…');
+    const searchInput = getElement('course-rep-student-search');
+    const suggestions = getElement('course-rep-student-options');
+    const selectedUser = getElement('course-rep-student');
+    const help = getElement('course-rep-search-help');
+    if (!searchInput || !suggestions || !selectedUser || !supabaseClient) return;
+    suggestions.replaceChildren();
+    searchInput.setAttribute('aria-busy', 'true');
     try {
       const { data, error } = await supabaseClient.rpc('admin_list_course_rep_candidates', { p_search: search.trim() || null });
       if (error) throw error;
       if (requestId !== courseRepCandidateRequest) return;
-      select.replaceChildren();
-      appendOption(select, '', 'Select a student');
+      courseRepCandidates = new Map();
       (data || []).forEach(student => {
+        const name = student.display_name || 'Student';
+        const email = student.email_address || 'Email unavailable';
+        const level = student.academic_level || '';
+        const label = name + ' — ' + email + (level ? ' — Level ' + level : '');
+        courseRepCandidates.set(label, student);
         const option = document.createElement('option');
-        option.value = student.user_id;
-        option.textContent = (student.display_name || 'Student') + ' — ' + (student.academic_level || 'Level unavailable') + ' Level';
-        option.dataset.level = student.academic_level || '';
-        select.appendChild(option);
+        option.value = label;
+        suggestions.appendChild(option);
       });
-      if (!data?.length) appendOption(select, '', 'No student accounts found for this search');
+      if (help) {
+        help.textContent = data?.length
+          ? data.length + ' matching student account' + (data.length === 1 ? '' : 's') + '. Choose the correct suggestion.'
+          : 'No matching student accounts found. Try another name, email address or phone number.';
+      }
+      const selected = courseRepCandidates.get(searchInput.value.trim());
+      selectedUser.value = selected?.user_id || '';
+      if (selected && getElement('course-rep-level')) getElement('course-rep-level').value = selected.academic_level || '';
     } catch (error) {
       console.error('Course representative candidates could not be loaded:', error);
       if (requestId !== courseRepCandidateRequest) return;
-      select.replaceChildren();
-      appendOption(select, '', 'Unable to load students');
-      if (requestId === courseRepCandidateRequest) setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Student accounts could not be loaded.') || 'Student accounts could not be loaded.', 'error');
+      suggestions.replaceChildren();
+      selectedUser.value = '';
+      if (help) help.textContent = 'Student suggestions could not be loaded. Try again.';
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Student accounts could not be loaded.') || 'Student accounts could not be loaded.', 'error');
+    } finally {
+      if (requestId === courseRepCandidateRequest) searchInput.removeAttribute('aria-busy');
     }
   }
 
@@ -2031,11 +2047,13 @@
     event.preventDefault();
     const form = getElement('course-rep-appointment-form');
     const studentSelect = getElement('course-rep-student');
-    const selectedStudent = studentSelect?.selectedOptions?.[0];
+    const studentSearch = getElement('course-rep-student-search');
+    const selectedStudent = courseRepCandidates.get(studentSearch?.value.trim() || '');
     const level = getElement('course-rep-level')?.value;
     const permissions = Array.from(form.querySelectorAll('[name="course-rep-permission"]:checked')).map(input => input.value);
-    if (!studentSelect?.value || !selectedStudent?.dataset.level || selectedStudent.dataset.level !== level) {
-      setFeatureStatus('course-rep-status', 'Select a student and use that student’s registered academic level.', 'error');
+    if (!studentSelect?.value || !selectedStudent || selectedStudent.user_id !== studentSelect.value ||
+        !selectedStudent.academic_level || String(selectedStudent.academic_level) !== String(level)) {
+      setFeatureStatus('course-rep-status', 'Search for a student and select an exact suggestion. The appointment level must match that student’s registered level.', 'error');
       return;
     }
     if (!permissions.length) {
@@ -2222,11 +2240,17 @@
     if (!getElement('course-rep-appointment-form') && !getElement('manual-announcement-form')) return;
     initializeCourseRepTermSelectors();
     const studentSearch = getElement('course-rep-student-search');
-    studentSearch?.addEventListener('input', () => { void loadCourseRepCandidates(studentSearch.value); });
     const studentSelect = getElement('course-rep-student');
-    studentSelect?.addEventListener('change', () => {
-      const level = studentSelect.selectedOptions?.[0]?.dataset.level || '';
-      if (getElement('course-rep-level')) getElement('course-rep-level').value = level;
+    studentSearch?.addEventListener('input', () => {
+      const selected = courseRepCandidates.get(studentSearch.value.trim());
+      if (selected) {
+        if (studentSelect) studentSelect.value = selected.user_id;
+        if (getElement('course-rep-level')) getElement('course-rep-level').value = selected.academic_level || '';
+        return;
+      }
+      if (studentSelect) studentSelect.value = '';
+      if (getElement('course-rep-level')) getElement('course-rep-level').value = '';
+      void loadCourseRepCandidates(studentSearch.value);
     });
     const appointmentForm = getElement('course-rep-appointment-form');
     if (appointmentForm && appointmentForm.dataset.handlerAttached !== 'true') {
