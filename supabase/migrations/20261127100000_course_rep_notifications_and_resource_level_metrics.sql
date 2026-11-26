@@ -125,11 +125,14 @@ $function$;
 revoke all on function public.claim_clariva_push_notifications(integer) from public, anon, authenticated;
 grant execute on function public.claim_clariva_push_notifications(integer) to service_role;
 
-create or replace function public.admin_list_course_rep_candidates(p_search text default null)
+drop function if exists public.admin_list_course_rep_candidates(text);
+
+create function public.admin_list_course_rep_candidates(p_search text default null)
 returns table (
   user_id uuid,
   display_name text,
-  academic_level text
+  academic_level text,
+  email_address text
 )
 language plpgsql
 security definer
@@ -153,7 +156,8 @@ begin
   select
     s.user_id,
     coalesce(nullif(s."Name", ''), 'Student')::text,
-    s."Level"::text
+    s."Level"::text,
+    coalesce(s."E-mail", '')::text
   from public.students s
   where s.user_id is not null
     and lower(coalesce(s."Role", '')) = 'student'
