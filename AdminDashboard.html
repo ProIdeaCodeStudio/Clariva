@@ -15,7 +15,7 @@
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js?v=20261125-3" defer></script>
-  <script src="notifications.js?v=20261126-3" defer></script>
+  <script src="notifications.js?v=20261127-1" defer></script>
   <script src="ProfileMenu.js?v=20261125-1" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" async></script>
@@ -32,7 +32,7 @@
       appId: '579040774646'
     };
   </script>
-  <script src="AdminDashboard.js?v=20261127-1" defer></script>
+  <script src="AdminDashboard.js?v=20261127-2" defer></script>
 
   <style>
     /* ============================================================
@@ -732,6 +732,9 @@
             <a id="clariva-student-dashboard-link" href="Undergraduates.html" hidden>Open Student Resource Library</a>
             <a id="clariva-saved-offline-link" href="Undergraduates.html?saved=1">Saved Offline Resources</a>
             <a id="clariva-owner-dashboard-link" href="OwnerDashboard.html" hidden>Open Owner Dashboard</a>
+            <div class="clariva-menu-divider"></div>
+            <a href="index.html#leadership">About the Author</a>
+            <a href="index.html#about-clariva">About Clariva</a>
             <button id="clariva-start-tour" class="menu-action" type="button">Website Tour</button>
             <button id="clariva-sign-out" class="menu-action" type="button">Sign out</button>
           </nav>
@@ -1025,7 +1028,7 @@
       <p class="admin-panel-intro">Appoint any student account as a course representative for a defined academic scope and term. Email verification and academic-level confirmation are not prerequisites for appointment. Their student account role remains unchanged.</p>
       <form id="course-rep-appointment-form">
         <div class="admin-form-grid">
-          <div class="admin-field admin-field-full"><label for="course-rep-student-search">Find a student</label><input id="course-rep-student-search" type="search" maxlength="120" placeholder="Search by student name"><small class="admin-muted">All student accounts are listed, including accounts awaiting email verification or academic confirmation.</small></div><div class="admin-field"><label for="course-rep-student">Student</label><select id="course-rep-student" required><option value="">Loading students…</option></select></div>
+          <div class="admin-field admin-field-full"><label for="course-rep-student-search">Search and select a student</label><input id="course-rep-student-search" type="search" list="course-rep-student-options" maxlength="180" placeholder="Start typing a student's name, email or phone" autocomplete="off" aria-describedby="course-rep-search-help" required><datalist id="course-rep-student-options"></datalist><input id="course-rep-student" type="hidden"><small id="course-rep-search-help" class="admin-muted">Type to search, then choose the matching student from the suggestions. Accounts awaiting email verification or academic confirmation are included.</small></div>
           <div class="admin-field"><label for="course-rep-level">Academic level</label><select id="course-rep-level" required><option value="">Select level</option><option value="100">100 Level</option><option value="200">200 Level</option><option value="300">300 Level</option><option value="400">400 Level</option><option value="500">500 Level</option></select></div>
           <div class="admin-field"><label for="course-rep-department">Department scope</label><input id="course-rep-department" type="text" maxlength="160" required placeholder="e.g. Electrical and Electronics Engineering"></div>
           <div class="admin-field"><label for="course-rep-course">Course code scope (optional)</label><input id="course-rep-course" type="text" maxlength="40" placeholder="e.g. EEE 201"></div>
@@ -1087,6 +1090,8 @@
         <div>
           <h3 class="admin-overview-subtitle">Resources by type</h3>
           <div class="admin-breakdown" id="admin-resource-type-breakdown"><p class="admin-muted">Loading resource types...</p></div>
+          <h3 class="admin-overview-subtitle">Resources by academic level</h3>
+          <div class="admin-breakdown" id="admin-resource-level-breakdown"><p class="admin-muted">Loading level totals...</p></div>
         </div>
         <div>
           <h3 class="admin-overview-subtitle">Latest library update</h3>
@@ -1096,6 +1101,12 @@
       </div>
     </section>
   </main>
+
+  <footer id="footer"><div class="container"><div class="footer-inner"><div><div class="footer-brand">Clariva</div><div class="footer-tagline">"From Confusion to Confidence."</div></div><div class="footer-powered">POWERED BY<br><a href="https://proideacodestudio.github.io/Pro-Idea/" target="_blank" rel="noopener noreferrer">PRO IDEA →</a></div></div><div class="footer-contact">
+          <span>Contact</span>
+          <a href="mailto:Proidea2025@gmail.com">Proidea2025@gmail.com</a>
+          <a href="https://wa.me/2349133264060" target="_blank" rel="noopener noreferrer">WhatsApp: 09133240600</a>
+        </div><div class="footer-meta">CLARIVA · FREE EDUCATIONAL RESOURCES · 2026</div><nav class="footer-legal" aria-label="Legal"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></nav></div></footer>
 
   <section id="admin-pdf-reader" class="admin-pdf-reader" role="dialog"
     aria-modal="true" aria-label="PDF resource viewer" hidden>

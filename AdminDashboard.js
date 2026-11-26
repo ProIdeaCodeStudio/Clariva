@@ -53,6 +53,7 @@
   let activePdfPage = 1;
   let pdfScale = 1;
   let pdfRenderTask = null;
+  let adminPdfHistoryEntryActive = false;
 
   function getElement(id) {
     return document.getElementById(id);
@@ -125,6 +126,10 @@
       throw new Error('The PDF viewer could not be loaded. Refresh the page and try again.');
     }
 
+    if (!adminPdfHistoryEntryActive) {
+      history.pushState({ ...(history.state || {}), clarivaAdminPdfReader: true }, '', window.location.href);
+      adminPdfHistoryEntryActive = true;
+    }
     reader.hidden = false;
     document.body.classList.add('admin-pdf-open');
     getElement('admin-pdf-title').textContent = title || 'Resource document';
@@ -150,8 +155,13 @@
     }
   }
 
-  function closeAdminPdfReader() {
+  function closeAdminPdfReader(fromPopState = false) {
     const reader = getElement('admin-pdf-reader');
+    if (!fromPopState && adminPdfHistoryEntryActive && history.state?.clarivaAdminPdfReader) {
+      history.back();
+      return;
+    }
+    adminPdfHistoryEntryActive = false;
     if (pdfRenderTask) {
       try { pdfRenderTask.cancel(); } catch (_) {}
       pdfRenderTask = null;
@@ -165,7 +175,11 @@
   }
 
   function initializeAdminPdfReaderControls() {
-    getElement('admin-pdf-close')?.addEventListener('click', closeAdminPdfReader);
+    getElement('admin-pdf-close')?.addEventListener('click', () => closeAdminPdfReader());
+    window.addEventListener('popstate', () => {
+      if (!getElement('admin-pdf-reader')?.hidden) closeAdminPdfReader(true);
+      else adminPdfHistoryEntryActive = false;
+    });
     const goToPreviousAdminPage = async () => {
       if (activePdf && activePdfPage > 1) { activePdfPage -= 1; await renderAdminPdfPage(); }
     };
@@ -985,6 +999,7 @@
       setOverviewValue('admin-total-views', data.total_views);
       setOverviewValue('admin-new-resources', data.resources_added_7d);
       renderOverviewBreakdown('admin-resource-type-breakdown', data.resources_by_type, 'No resource types to display.');
+      renderOverviewBreakdown('admin-resource-level-breakdown', data.resources_by_level, 'No resources have been assigned to academic levels yet.');
 
       const latest = getElement('admin-latest-resource');
       if (latest) latest.textContent = formatOverviewDate(data.latest_resource_at);
@@ -1883,33 +1898,49 @@
   }
 
   let courseRepCandidateRequest = 0;
+  let courseRepCandidates = new Map();
 
   async function loadCourseRepCandidates(search = '') {
     const requestId = ++courseRepCandidateRequest;
-    const select = getElement('course-rep-student');
-    if (!select || !supabaseClient) return;
-    select.replaceChildren();
-    appendOption(select, '', 'Loading students…');
+    const searchInput = getElement('course-rep-student-search');
+    const suggestions = getElement('course-rep-student-options');
+    const selectedUser = getElement('course-rep-student');
+    const help = getElement('course-rep-search-help');
+    if (!searchInput || !suggestions || !selectedUser || !supabaseClient) return;
+    suggestions.replaceChildren();
+    searchInput.setAttribute('aria-busy', 'true');
     try {
       const { data, error } = await supabaseClient.rpc('admin_list_course_rep_candidates', { p_search: search.trim() || null });
       if (error) throw error;
       if (requestId !== courseRepCandidateRequest) return;
-      select.replaceChildren();
-      appendOption(select, '', 'Select a student');
+      courseRepCandidates = new Map();
       (data || []).forEach(student => {
+        const name = student.display_name || 'Student';
+        const email = student.email_address || 'Email unavailable';
+        const level = student.academic_level || '';
+        const label = name + ' — ' + email + (level ? ' — Level ' + level : '');
+        courseRepCandidates.set(label, student);
         const option = document.createElement('option');
-        option.value = student.user_id;
-        option.textContent = (student.display_name || 'Student') + ' — ' + (student.academic_level || 'Level unavailable') + ' Level';
-        option.dataset.level = student.academic_level || '';
-        select.appendChild(option);
+        option.value = label;
+        suggestions.appendChild(option);
       });
-      if (!data?.length) appendOption(select, '', 'No student accounts found for this search');
+      if (help) {
+        help.textContent = data?.length
+          ? data.length + ' matching student account' + (data.length === 1 ? '' : 's') + '. Choose the correct suggestion.'
+          : 'No matching student accounts found. Try another name, email address or phone number.';
+      }
+      const selected = courseRepCandidates.get(searchInput.value.trim());
+      selectedUser.value = selected?.user_id || '';
+      if (selected && getElement('course-rep-level')) getElement('course-rep-level').value = selected.academic_level || '';
     } catch (error) {
       console.error('Course representative candidates could not be loaded:', error);
       if (requestId !== courseRepCandidateRequest) return;
-      select.replaceChildren();
-      appendOption(select, '', 'Unable to load students');
-      if (requestId === courseRepCandidateRequest) setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Student accounts could not be loaded.') || 'Student accounts could not be loaded.', 'error');
+      suggestions.replaceChildren();
+      selectedUser.value = '';
+      if (help) help.textContent = 'Student suggestions could not be loaded. Try again.';
+      setFeatureStatus('course-rep-status', window.clarivaFriendlyError?.(error, 'Student accounts could not be loaded.') || 'Student accounts could not be loaded.', 'error');
+    } finally {
+      if (requestId === courseRepCandidateRequest) searchInput.removeAttribute('aria-busy');
     }
   }
 
@@ -2016,11 +2047,13 @@
     event.preventDefault();
     const form = getElement('course-rep-appointment-form');
     const studentSelect = getElement('course-rep-student');
-    const selectedStudent = studentSelect?.selectedOptions?.[0];
+    const studentSearch = getElement('course-rep-student-search');
+    const selectedStudent = courseRepCandidates.get(studentSearch?.value.trim() || '');
     const level = getElement('course-rep-level')?.value;
     const permissions = Array.from(form.querySelectorAll('[name="course-rep-permission"]:checked')).map(input => input.value);
-    if (!studentSelect?.value || !selectedStudent?.dataset.level || selectedStudent.dataset.level !== level) {
-      setFeatureStatus('course-rep-status', 'Select a student and use that student’s registered academic level.', 'error');
+    if (!studentSelect?.value || !selectedStudent || selectedStudent.user_id !== studentSelect.value ||
+        !selectedStudent.academic_level || String(selectedStudent.academic_level) !== String(level)) {
+      setFeatureStatus('course-rep-status', 'Search for a student and select an exact suggestion. The appointment level must match that student’s registered level.', 'error');
       return;
     }
     if (!permissions.length) {
@@ -2207,11 +2240,17 @@
     if (!getElement('course-rep-appointment-form') && !getElement('manual-announcement-form')) return;
     initializeCourseRepTermSelectors();
     const studentSearch = getElement('course-rep-student-search');
-    studentSearch?.addEventListener('input', () => { void loadCourseRepCandidates(studentSearch.value); });
     const studentSelect = getElement('course-rep-student');
-    studentSelect?.addEventListener('change', () => {
-      const level = studentSelect.selectedOptions?.[0]?.dataset.level || '';
-      if (getElement('course-rep-level')) getElement('course-rep-level').value = level;
+    studentSearch?.addEventListener('input', () => {
+      const selected = courseRepCandidates.get(studentSearch.value.trim());
+      if (selected) {
+        if (studentSelect) studentSelect.value = selected.user_id;
+        if (getElement('course-rep-level')) getElement('course-rep-level').value = selected.academic_level || '';
+        return;
+      }
+      if (studentSelect) studentSelect.value = '';
+      if (getElement('course-rep-level')) getElement('course-rep-level').value = '';
+      void loadCourseRepCandidates(studentSearch.value);
     });
     const appointmentForm = getElement('course-rep-appointment-form');
     if (appointmentForm && appointmentForm.dataset.handlerAttached !== 'true') {

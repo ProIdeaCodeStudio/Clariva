@@ -1203,3 +1203,50 @@ a:hover {
     max-height: 64px;
   }
 }
+
+
+/* Site-wide data table borders: outer frame and every cell boundary. */
+table {
+  border-collapse: collapse;
+  border: 1px solid var(--parchment) !important;
+}
+table th,
+table td {
+  border: 1px solid var(--parchment) !important;
+}
+
+/* Landing-page navigation and mobile header layout. */
+.clariva-landing-actions { position: relative; display: flex; align-items: center; gap: 10px; }
+.clariva-landing-menu-toggle {
+  display: inline-grid; place-items: center; width: 44px; height: 44px;
+  border: 1px solid var(--amber); border-radius: var(--radius-xs);
+  background: var(--deep-ink); color: var(--warm-white); cursor: pointer;
+}
+.clariva-landing-menu-toggle svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.clariva-landing-menu {
+  position: absolute; z-index: 1200; top: calc(100% + 12px); right: 0;
+  display: grid; gap: 4px; width: min(280px, calc(100vw - 32px));
+  padding: 12px; border: 1px solid var(--parchment); border-radius: 10px;
+  background: var(--deep-ink); box-shadow: 0 12px 32px rgba(0,0,0,.2);
+}
+.clariva-landing-menu[hidden] { display: none; }
+.clariva-landing-menu a, .clariva-landing-menu button {
+  display: block; width: 100%; padding: 12px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--warm-white); text-align: left;
+  font: inherit; text-decoration: none; cursor: pointer;
+}
+.clariva-landing-menu a:hover, .clariva-landing-menu button:hover { background: rgba(232,148,26,.16); color: var(--amber); }
+.about-clariva-section { padding: var(--space-xl) 0; background: var(--cream); color: var(--deep-ink); }
+.about-clariva-inner { max-width: 900px; }
+.about-clariva-inner p { max-width: 760px; line-height: 1.8; color: var(--ink-muted, #5b5140); }
+.footer-contact { display: grid; gap: 7px; min-width: 220px; color: var(--ember-fog); font-size: var(--text-sm); }
+.footer-contact span { color: var(--warm-white); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.footer-contact a { color: var(--amber); text-decoration: none; overflow-wrap: anywhere; }
+.footer-contact a:hover { color: var(--ember-tint); }
+@media (max-width: 640px) {
+  .clariva-landing-desktop-action { display: none !important; }
+  .clariva-landing-actions { width: 100%; justify-content: flex-end; }
+  .header-inner { gap: 12px; }
+  .clariva-navbar-wordmark { width: min(230px, 62vw); }
+  .footer-contact { text-align: center; }
+}

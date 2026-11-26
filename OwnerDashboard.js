@@ -304,28 +304,35 @@
     if (!main || !nav) return;
 
     const sections = Array.from(main.querySelectorAll(':scope > .admin-panel[id]'));
-    const showSection = id => {
+    const showSection = (id, updateHistory = false, scroll = true) => {
       const target = sections.find(section => section.id === id) || byId('owner-overview');
       if (!target) return;
       sections.forEach(section => { section.hidden = section !== target; });
-      if (window.location.hash !== '#' + target.id) {
-        history.replaceState(null, '', window.location.pathname + window.location.search + '#' + target.id);
+      if (updateHistory && window.location.hash !== '#' + target.id) {
+        history.pushState({ ...(history.state || {}), clarivaOwnerSection: target.id }, '', window.location.pathname + window.location.search + '#' + target.id);
       }
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (scroll) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     nav.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener('click', event => {
         event.preventDefault();
         const id = link.getAttribute('href').slice(1);
-        showSection(id);
+        showSection(id, true);
         nav.hidden = true;
         byId('clariva-menu-toggle')?.setAttribute('aria-expanded', 'false');
       });
     });
 
-    // The owner always lands on the metrics overview, never on a management panel.
-    showSection('owner-overview');
+    const initialSection = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+    const validInitialSection = sections.some(section => section.id === initialSection)
+      ? initialSection
+      : 'owner-overview';
+    showSection(validInitialSection, false, Boolean(window.location.hash));
+    window.addEventListener('popstate', () => {
+      const sectionId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+      showSection(sectionId || 'owner-overview', false, true);
+    });
   }
 
   function initialize() {
