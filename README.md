@@ -19,7 +19,7 @@ A verified student can:
 - Save selected PDFs to the device and revisit them from Saved Offline Resources.
 - View and confirm academic profile information, including academic-level timeline details.
 - Manage account access and personalise the profile avatar.
-- Receive in-app notifications and enable device push notifications.
+- Receive in-app notifications and enable device push notifications. If they have not enabled device notifications, Clariva reminds them on dashboard visits until they do.
 
 ### Course representatives
 
@@ -50,7 +50,7 @@ Owner-level controls are reserved for the owner account.
 
 ## Features shared across workspaces
 
-Signed-in users have access to the notification centre, role-appropriate platform updates, guided introductions to dashboard features and connectivity feedback. Device push notifications can be enabled separately on a supported browser and device.
+Signed-in users have access to the notification centre, role-appropriate platform updates, guided introductions to dashboard features and connectivity feedback. Device push notifications are available across the student, course-representative, administrator and owner workspaces on supported browsers and devices. Users who have not enabled them receive a reminder on dashboard visits until they enable notifications. Selecting a device notification opens the notification inbox in the dashboard associated with the user's account role.
 
 ## Product overview
 

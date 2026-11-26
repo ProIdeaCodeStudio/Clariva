@@ -39,6 +39,30 @@ Deno.serve(async (req: Request) => {
 
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
+  const dashboardInboxUrl = (role: unknown) => {
+    const normalized = String(role || "").toLowerCase();
+    const page = normalized === "owner"
+      ? "OwnerDashboard.html"
+      : normalized === "admin"
+        ? "AdminDashboard.html"
+        : "Undergraduates.html";
+    return "./" + page + "?openNotifications=1";
+  };
+
+  const loadRoleMap = async (userIds: string[]) => {
+    const roles = new Map<string, string>();
+    for (let offset = 0; offset < userIds.length; offset += 500) {
+      const { data, error } = await admin.from("students")
+        .select("user_id,Role")
+        .in("user_id", userIds.slice(offset, offset + 500));
+      if (error) throw error;
+      for (const profile of data || []) {
+        roles.set(profile.user_id, String(profile.Role || "student").toLowerCase());
+      }
+    }
+    return roles;
+  };
+
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const action = String(body.action || "");
@@ -72,6 +96,13 @@ Deno.serve(async (req: Request) => {
     if (!pending?.length) return json({ ok: true, claimed: 0, sent: 0, failed: 0, noSubscription: 0, removedExpired: 0 });
 
     const targetIds = [...new Set((pending as Array<{ user_id: string }>).map(row => row.user_id))];
+    let roleByUserId: Map<string, string>;
+    try {
+      roleByUserId = await loadRoleMap(targetIds);
+    } catch (error) {
+      console.error("Push recipient roles could not be loaded:", error);
+      return json({ error: "Unable to resolve notification destinations." }, 500);
+    }
     const subscriptions: Array<{ id: string; user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
     for (let offset = 0; offset < targetIds.length; offset += 500) {
       const { data, error } = await admin.from("push_subscriptions")
@@ -115,7 +146,7 @@ Deno.serve(async (req: Request) => {
           }, JSON.stringify({
             title: notification.title,
             body: notification.message,
-            url: notification.destination,
+            url: dashboardInboxUrl(roleByUserId.get(notification.user_id)),
             tag: ("clariva-event-" + notification.notification_id).slice(0, 80)
           }), { TTL: 60 * 60 * 24 });
           sent++;
@@ -268,6 +299,14 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  let roleByUserId: Map<string, string>;
+  try {
+    roleByUserId = await loadRoleMap(targetIds);
+  } catch (error) {
+    console.error("Push recipient roles could not be loaded:", error);
+    return json({ error: "Unable to resolve notification destinations." }, 500);
+  }
+
   const subscriptions: Array<{ id: string; user_id: string; endpoint: string; p256dh: string; auth: string }> = [];
   for (let offset = 0; offset < targetIds.length; offset += 500) {
     const userBatch = targetIds.slice(offset, offset + 500);
@@ -289,7 +328,10 @@ Deno.serve(async (req: Request) => {
         await webpush.sendNotification({
           endpoint: row.endpoint,
           keys: { p256dh: row.p256dh, auth: row.auth }
-        }, JSON.stringify(payload), { TTL: 60 * 60 * 24 });
+        }, JSON.stringify({
+          ...payload,
+          url: dashboardInboxUrl(roleByUserId.get(row.user_id))
+        }), { TTL: 60 * 60 * 24 });
         sent++;
         sentUserIds.add(row.user_id);
       } catch (error) {

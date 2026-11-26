@@ -1,5 +1,5 @@
 /* Clariva app-shell cache. Private resource PDFs are never cached by the service worker. */
-const CACHE_NAME = 'clariva-app-shell-v24';
+const CACHE_NAME = 'clariva-app-shell-v25';
 const APP_SHELL = [
   './index.html',
   './Undergraduates.html',
@@ -8,7 +8,7 @@ const APP_SHELL = [
   './Stylesheet.css',
   './ProfileMenu.css?v=20261120-2',
   './script.js?v=20261125-3',
-  './notifications.js?v=20261126-1',
+  './notifications.js?v=20261126-2',
   './ProfileMenu.js?v=20261125-1',
   './StudentResources.js?v=20261126-1',
   './AdminDashboard.js?v=20261126-1',
@@ -113,6 +113,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const target = new URL(event.notification.data?.url || './', self.registration.scope);
   if (target.origin !== self.location.origin) return;
+  target.searchParams.set('openNotifications', '1');
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of windows) {
