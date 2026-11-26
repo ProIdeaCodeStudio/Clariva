@@ -2044,19 +2044,16 @@
     button.disabled = true;
     setFeatureStatus('course-rep-status', 'Creating appointment…');
     try {
-      const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-      if (authError || !authData?.user) throw authError || new Error('Your session has expired.');
-      const { error } = await supabaseClient.from('course_rep_appointments').insert({
-        student_user_id: studentSelect.value,
-        scope_level: Number(level),
-        scope_department: getElement('course-rep-department').value.trim() || null,
-        scope_course_code: getElement('course-rep-course').value.trim().toUpperCase() || null,
-        start_month: startMonth,
-        start_year: startYear,
-        end_month: endMonth,
-        end_year: endYear,
-        permissions,
-        appointed_by: authData.user.id
+      const { error } = await supabaseClient.rpc('admin_create_course_rep_appointment', {
+        p_student_user_id: studentSelect.value,
+        p_scope_level: Number(level),
+        p_scope_department: getElement('course-rep-department').value.trim(),
+        p_scope_course_code: getElement('course-rep-course').value.trim().toUpperCase() || null,
+        p_start_month: startMonth,
+        p_start_year: startYear,
+        p_end_month: endMonth,
+        p_end_year: endYear,
+        p_permissions: permissions
       });
       if (error) throw error;
       form.reset();
