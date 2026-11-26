@@ -1244,6 +1244,7 @@ table td {
 .footer-contact a { color: var(--amber); text-decoration: none; overflow-wrap: anywhere; }
 .footer-contact a:hover { color: var(--ember-tint); }
 @media (max-width: 640px) {
+  .clariva-landing-desktop-action { display: none !important; }
   .clariva-landing-actions { width: 100%; justify-content: flex-end; }
   .header-inner { gap: 12px; }
   .clariva-navbar-wordmark { width: min(230px, 62vw); }
