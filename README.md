@@ -2,19 +2,26 @@
 
 **From Confusion to Confidence.**
 
-Clariva is an educational platform developed by **Pro Idea** to help learners discover and use academic resources in one place.
+Clariva is an educational platform developed by **Pro Idea** to help university students discover, organise and use academic resources in one place.
 
 **Website:** https://proideacodestudio.github.io/Clariva/
 
-## About the platform
+## What Clariva offers
 
-Clariva brings together a student learning-resource experience and dedicated administrative experiences for maintaining the platform's educational collection.
+- **Student resource library:** Browse academic materials by level and semester, explore featured resources, search the collection and filter by resource type.
+- **PDF learning experience:** Read PDF resources in the integrated document viewer, navigate pages and save selected documents for offline reading.
+- **Student accounts:** Create and verify an account, manage account access, view academic information and personalise the profile avatar.
+- **Academic progression:** Maintain an academic profile with level and timeline information, including the one-time academic confirmation experience.
+- **Administrative resource tools:** Upload and manage learning materials, select files from device storage or Google Drive, and submit multiple files with reviewed academic details.
+- **Admin Dashboard:** View account and resource summaries, manage the resource collection, appoint course representatives and publish announcements.
+- **Course representatives:** Support defined academic responsibilities through appointments scoped by level, department, optional course and term.
+- **Owner Dashboard:** Access platform-wide account and activity overviews, resource-management tools and user-account oversight.
+- **Notifications and announcements:** Use the in-app notification inbox, enable optional device notifications and receive relevant platform updates. Administrators and owners can publish announcements to all users, selected roles or a chosen academic level.
+- **Guided tours and offline support:** Explore guided introductions to the website workspaces, receive connectivity feedback and revisit saved PDFs offline.
 
-The platform continues to evolve through usability improvements, feedback and carefully planned additions. Features that are still being developed are not presented as currently available.
+## Product overview
 
-## Development history
-
-A public, non-technical overview of Clariva's development is available in [CLARIVA_DEVELOPMENT_OVERVIEW.txt](docs/CLARIVA_DEVELOPMENT_OVERVIEW.txt).
+A public, non-technical account of Clariva's development and current user-facing capabilities is available in [CLARIVA_DEVELOPMENT_OVERVIEW.txt](docs/CLARIVA_DEVELOPMENT_OVERVIEW.txt).
 
 This repository's public documentation is intentionally limited to product history and user-facing information. It does not provide technical operating instructions, internal implementation details, privileged procedures or troubleshooting guidance.
 
@@ -22,7 +29,7 @@ This repository's public documentation is intentionally limited to product histo
 
 Clariva is developed and maintained by **Pro Idea**.
 
-For technical questions, account-access issues requiring intervention, suspected faults, security concerns or change requests, contact the project owner directly:
+For technical questions, account-access issues requiring intervention, security concerns or change requests, contact the project owner directly:
 
 **Email:** [proidea2025@gmail.com](mailto:proidea2025@gmail.com)
 
