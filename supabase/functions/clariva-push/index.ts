@@ -185,6 +185,21 @@ Deno.serve(async (req: Request) => {
   let notificationIdForDispatch: string | null = null;
   let announcementIdForDispatch: string | null = null;
 
+  if (action === "status") {
+    const endpoint = String(body.endpoint || "");
+    if (!endpoint.startsWith("https://")) return json({ error: "Invalid device endpoint." }, 400);
+    const { data, error } = await admin.from("push_subscriptions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("endpoint", endpoint)
+      .maybeSingle();
+    if (error) {
+      console.error("Push subscription status check failed:", error);
+      return json({ error: "Unable to verify this device subscription." }, 500);
+    }
+    return json({ ok: true, subscribed: Boolean(data) });
+  }
+
   if (action === "subscribe") {
     const sub = body.subscription as { endpoint?: string; keys?: { p256dh?: string; auth?: string } } | undefined;
     if (!sub?.endpoint || !sub.endpoint.startsWith("https://") || !sub.keys?.p256dh || !sub.keys?.auth) {
