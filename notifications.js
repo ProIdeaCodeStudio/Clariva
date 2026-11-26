@@ -9,9 +9,9 @@
   let statusNode = null;
   let enableButton = null;
   let disableButton = null;
-  let testButton = null;
   let initialized = false;
   let inboxChannel = null;
+  let bellButton = null;
 
   const encodeKey = value => {
     const padding = '='.repeat((4 - value.length % 4) % 4);
@@ -30,7 +30,7 @@
     if (panel || !document.body) return;
     const style = document.createElement('style');
     style.textContent = `
-      #clariva-push-panel{position:fixed;z-index:9998;right:18px;bottom:18px;width:min(340px,calc(100vw - 36px));padding:16px;border:1px solid #d8c9a8;border-radius:14px;background:#fffaf0;color:#211b12;box-shadow:0 8px 30px rgba(17,16,8,.18);font:14px/1.45 system-ui,sans-serif}
+      #clariva-push-panel{position:fixed;z-index:10030;inset:0;width:100%;height:100dvh;overflow:auto;box-sizing:border-box;padding:clamp(20px,5vw,42px);border:0;border-radius:0;background:#fffaf0;color:#211b12;font:14px/1.5 system-ui,sans-serif}
       #clariva-push-panel[hidden]{display:none}
       #clariva-push-panel h2{font:600 16px/1.3 Georgia,serif;margin:0 0 6px}
       #clariva-push-panel p{margin:0 0 12px}
@@ -39,7 +39,7 @@
       #clariva-push-status[data-state="success"]{color:#28623c}
       #clariva-inbox{margin-top:14px;padding-top:12px;border-top:1px solid #e5dac5}
       #clariva-inbox h3{font:600 14px Georgia,serif;margin:0 0 8px}
-      #clariva-inbox-list{display:grid;gap:8px;max-height:230px;overflow:auto}
+      #clariva-inbox-list{display:grid;gap:10px;max-width:900px;margin:0 auto;overflow:visible}
       .clariva-inbox-item{padding:9px;border-radius:9px;background:#f3ecdf}
       .clariva-inbox-item[data-unread="true"]{border-left:3px solid #e8941a}
       .clariva-inbox-item strong{display:block;font-size:13px}
@@ -50,10 +50,19 @@
       #clariva-inbox-refresh{margin-top:8px;border:0;border-radius:7px;padding:7px 10px;background:#e9dfca;color:#211b12;font:600 12px system-ui,sans-serif}
       .clariva-push-actions{display:flex;gap:8px;flex-wrap:wrap}
       .clariva-push-actions button{border:0;border-radius:8px;padding:9px 12px;font:600 13px system-ui,sans-serif;cursor:pointer}
-      #clariva-push-enable,#clariva-push-test{background:#211b12;color:#fffaf0}
+      #clariva-push-enable{background:#211b12;color:#fffaf0}
       #clariva-push-disable{background:#e9dfca;color:#211b12}
       #clariva-push-close{position:absolute;right:10px;top:8px;background:transparent;color:#625744;padding:4px 7px}
-      @media(max-width:480px){#clariva-push-panel{right:12px;bottom:12px;width:calc(100vw - 24px)}}
+      #clariva-notification-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:42px;border:0;background:transparent;color:inherit;cursor:pointer;border-radius:10px}
+      #clariva-notification-bell svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+      #clariva-notification-count{position:absolute;top:1px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:#e8941a;color:#211b12;font:700 10px/17px system-ui,sans-serif;text-align:center}
+      #clariva-push-panel .clariva-notification-page-head{max-width:900px;margin:0 auto 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+      #clariva-push-panel .clariva-notification-page-head h2{font:700 28px Georgia,serif;margin:0}
+      #clariva-push-panel #clariva-push-close{position:static;background:#211b12;color:#fffaf0;border:0;border-radius:8px;padding:9px 14px;cursor:pointer}
+      #clariva-inbox{max-width:900px;margin:20px auto 0;padding-top:18px;border-top:1px solid #e5dac5}
+      #clariva-push-panel .clariva-push-settings{max-width:900px;margin:0 auto 22px;padding:16px;border:1px solid #e5dac5;border-radius:12px}
+      #clariva-push-panel .clariva-push-settings[hidden]{display:none}
+      #clariva-push-panel .clariva-push-actions button{margin-right:8px}
     `;
     document.head.appendChild(style);
 
@@ -62,30 +71,32 @@
     panel.hidden = true;
     panel.setAttribute('aria-label', 'Clariva device notifications');
     panel.innerHTML = `
-      <button id="clariva-push-close" type="button" aria-label="Close notification settings">×</button>
-      <h2>Stay updated with Clariva</h2>
-      <p>Receive important Clariva updates on this device, even when the website is closed.</p>
-      <div id="clariva-push-status" role="status" aria-live="polite">Notifications are not enabled on this device.</div>
-      <div class="clariva-push-actions">
-        <button id="clariva-push-enable" type="button">Enable notifications</button>
-        <button id="clariva-push-test" type="button" hidden>Send test</button>
-        <button id="clariva-push-disable" type="button" hidden>Turn off</button>
+      <div class="clariva-notification-page-head">
+        <h2>Notifications</h2>
+        <button id="clariva-push-close" type="button" aria-label="Close notifications">Back</button>
       </div>
-      <section id="clariva-inbox" aria-label="Recent Clariva updates">
-        <h3>Recent updates</h3>
-        <div id="clariva-inbox-list" aria-live="polite"><p class="clariva-inbox-empty">Loading updates…</p></div>
-        <button id="clariva-inbox-refresh" type="button">Refresh updates</button>
+      <section class="clariva-push-settings" id="clariva-push-settings">
+        <h3>Device notification settings</h3>
+        <p>In-app notifications are always available here. Device notifications are optional.</p>
+        <div id="clariva-push-status" role="status" aria-live="polite">Checking this device…</div>
+        <div class="clariva-push-actions">
+          <button id="clariva-push-enable" type="button">Enable notifications</button>
+          <button id="clariva-push-disable" type="button" hidden>Turn off device notifications</button>
+        </div>
+      </section>
+      <section id="clariva-inbox" aria-label="All Clariva notifications">
+        <h3>All notifications</h3>
+        <div id="clariva-inbox-list" aria-live="polite"><p class="clariva-inbox-empty">Loading notifications…</p></div>
+        <button id="clariva-inbox-refresh" type="button">Refresh notifications</button>
       </section>`;
     document.body.appendChild(panel);
     statusNode = panel.querySelector('#clariva-push-status');
     enableButton = panel.querySelector('#clariva-push-enable');
     disableButton = panel.querySelector('#clariva-push-disable');
-    testButton = panel.querySelector('#clariva-push-test');
 
     panel.querySelector('#clariva-push-close').addEventListener('click', () => { panel.hidden = true; });
     enableButton.addEventListener('click', enableNotifications);
     disableButton.addEventListener('click', disableNotifications);
-    testButton.addEventListener('click', sendTest);
     panel.querySelector('#clariva-inbox-refresh').addEventListener('click', loadInbox);
   }
 
@@ -118,7 +129,6 @@
       setStatus(enabled ? 'Notifications are enabled on this device.' : 'Notifications are not enabled on this device.', enabled ? 'success' : 'info');
       enableButton.hidden = enabled;
       enableButton.disabled = false;
-      testButton.hidden = !enabled;
       disableButton.hidden = !enabled;
     } catch (error) {
       setStatus('Unable to check this device notification status.', 'error');
@@ -184,16 +194,34 @@
     }
   }
 
-  async function sendTest() {
-    testButton.disabled = true;
-    try {
-      await invoke('test');
-      setStatus('A test notification request was sent to your connected devices. Check this device.', 'success');
-    } catch (error) {
-      setStatus(error.message || 'The test notification could not be sent.', 'error');
-    } finally {
-      testButton.disabled = false;
-    }
+  function createBell() {
+    if (bellButton || !document.querySelector('.clariva-header-actions')) return;
+    const actions = document.querySelector('.clariva-header-actions');
+    const menuButton = document.getElementById('clariva-menu-toggle');
+    bellButton = document.createElement('button');
+    bellButton.type = 'button';
+    bellButton.id = 'clariva-notification-bell';
+    bellButton.className = 'clariva-header-control';
+    bellButton.setAttribute('aria-label', 'Open notifications');
+    bellButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span id="clariva-notification-count" hidden>0</span>';
+    bellButton.addEventListener('click', () => {
+      if (panel) {
+        panel.hidden = false;
+        void loadInbox();
+        void refreshState();
+      }
+    });
+    if (menuButton?.nextSibling) actions.insertBefore(bellButton, menuButton.nextSibling);
+    else actions.prepend(bellButton);
+  }
+
+  function updateUnreadCount(items) {
+    const badge = document.getElementById('clariva-notification-count');
+    if (!badge) return;
+    const count = (items || []).filter(item => !item.read_at).length;
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.hidden = count === 0;
+    if (bellButton) bellButton.setAttribute('aria-label', count ? 'Open notifications, ' + count + ' unread' : 'Open notifications');
   }
 
   async function loadInbox() {
@@ -205,12 +233,19 @@
     loading.textContent = 'Loading updates…';
     list.appendChild(loading);
     try {
-      const { data, error } = await supabaseClient.from('notifications')
-        .select('id,event_type,title,message,destination,created_at,read_at,push_sent_at')
-        .eq('user_id', activeUserId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) throw error;
+      const data = [];
+      const pageSize = 1000;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data: page, error } = await supabaseClient.from('notifications')
+          .select('id,event_type,title,message,destination,created_at,read_at,push_sent_at')
+          .eq('user_id', activeUserId)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        data.push(...(page || []));
+        if (!page || page.length < pageSize) break;
+      }
+      updateUnreadCount(data);
       list.replaceChildren();
       if (!data?.length) {
         const empty = document.createElement('p');
@@ -292,7 +327,8 @@
     if (activeUserId === userId && panel) return;
     activeUserId = userId;
     createPanel();
-    panel.hidden = false;
+    panel.hidden = true;
+    createBell();
     watchInbox(userId);
     await Promise.all([refreshState(), loadInbox()]);
   }
@@ -304,6 +340,7 @@
       inboxChannel = null;
     }
     if (panel) panel.hidden = true;
+    if (bellButton) { bellButton.remove(); bellButton = null; }
   }
 
   window.clarivaPrepareForSignOut = async function () {

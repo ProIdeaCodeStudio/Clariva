@@ -15,7 +15,7 @@
   <!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script> -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="script.js?v=20261125-3" defer></script>
-  <script src="notifications.js?v=20261125-2" defer></script>
+  <script src="notifications.js?v=20261126-1" defer></script>
   <script src="ProfileMenu.js?v=20261125-1" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
   <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js" async></script>
@@ -32,7 +32,7 @@
       appId: '579040774646'
     };
   </script>
-  <script src="AdminDashboard.js?v=20261125-7" defer></script>
+  <script src="AdminDashboard.js?v=20261126-1" defer></script>
 
   <style>
     /* ============================================================
@@ -1022,10 +1022,10 @@
     <section class="admin-panel" id="course-representatives">
       <p class="admin-section-kicker">Scoped administration</p>
       <h2>Course Representatives</h2>
-      <p class="admin-panel-intro">Appoint verified students as course representatives for a defined academic scope and term. Their student account role remains unchanged.</p>
+      <p class="admin-panel-intro">Appoint any student account as a course representative for a defined academic scope and term. Email verification and academic-level confirmation are not prerequisites for appointment. Their student account role remains unchanged.</p>
       <form id="course-rep-appointment-form">
         <div class="admin-form-grid">
-          <div class="admin-field"><label for="course-rep-student">Student</label><select id="course-rep-student" required><option value="">Loading eligible students…</option></select></div>
+          <div class="admin-field admin-field-full"><label for="course-rep-student-search">Find a student</label><input id="course-rep-student-search" type="search" maxlength="120" placeholder="Search by student name"><small class="admin-muted">All student accounts are listed, including accounts awaiting email verification or academic confirmation.</small></div><div class="admin-field"><label for="course-rep-student">Student</label><select id="course-rep-student" required><option value="">Loading students…</option></select></div>
           <div class="admin-field"><label for="course-rep-level">Academic level</label><select id="course-rep-level" required><option value="">Select level</option><option value="100">100 Level</option><option value="200">200 Level</option><option value="300">300 Level</option><option value="400">400 Level</option><option value="500">500 Level</option></select></div>
           <div class="admin-field"><label for="course-rep-department">Department scope</label><input id="course-rep-department" type="text" maxlength="160" required placeholder="e.g. Electrical and Electronics Engineering"></div>
           <div class="admin-field"><label for="course-rep-course">Course code scope (optional)</label><input id="course-rep-course" type="text" maxlength="40" placeholder="e.g. EEE 201"></div>
