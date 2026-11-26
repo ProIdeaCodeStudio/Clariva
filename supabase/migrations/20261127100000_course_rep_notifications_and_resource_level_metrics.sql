@@ -22,15 +22,11 @@ language plpgsql
 security definer
 set search_path = ''
 as $function$
-declare
-  v_student_name text;
 begin
-  select coalesce(nullif(s."Name", ''), 'You')
-    into v_student_name
-  from public.students s
-  where s.user_id = new.student_user_id;
-
-  if not found then
+  if not exists (
+    select 1 from public.students s
+    where s.user_id = new.student_user_id
+  ) then
     return new;
   end if;
 
