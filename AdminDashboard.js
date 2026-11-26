@@ -53,6 +53,7 @@
   let activePdfPage = 1;
   let pdfScale = 1;
   let pdfRenderTask = null;
+  let adminPdfHistoryEntryActive = false;
 
   function getElement(id) {
     return document.getElementById(id);
@@ -125,6 +126,10 @@
       throw new Error('The PDF viewer could not be loaded. Refresh the page and try again.');
     }
 
+    if (!adminPdfHistoryEntryActive) {
+      history.pushState({ ...(history.state || {}), clarivaAdminPdfReader: true }, '', window.location.href);
+      adminPdfHistoryEntryActive = true;
+    }
     reader.hidden = false;
     document.body.classList.add('admin-pdf-open');
     getElement('admin-pdf-title').textContent = title || 'Resource document';
@@ -150,8 +155,13 @@
     }
   }
 
-  function closeAdminPdfReader() {
+  function closeAdminPdfReader(fromPopState = false) {
     const reader = getElement('admin-pdf-reader');
+    if (!fromPopState && adminPdfHistoryEntryActive && history.state?.clarivaAdminPdfReader) {
+      history.back();
+      return;
+    }
+    adminPdfHistoryEntryActive = false;
     if (pdfRenderTask) {
       try { pdfRenderTask.cancel(); } catch (_) {}
       pdfRenderTask = null;
@@ -165,7 +175,11 @@
   }
 
   function initializeAdminPdfReaderControls() {
-    getElement('admin-pdf-close')?.addEventListener('click', closeAdminPdfReader);
+    getElement('admin-pdf-close')?.addEventListener('click', () => closeAdminPdfReader());
+    window.addEventListener('popstate', () => {
+      if (!getElement('admin-pdf-reader')?.hidden) closeAdminPdfReader(true);
+      else adminPdfHistoryEntryActive = false;
+    });
     const goToPreviousAdminPage = async () => {
       if (activePdf && activePdfPage > 1) { activePdfPage -= 1; await renderAdminPdfPage(); }
     };
@@ -985,6 +999,7 @@
       setOverviewValue('admin-total-views', data.total_views);
       setOverviewValue('admin-new-resources', data.resources_added_7d);
       renderOverviewBreakdown('admin-resource-type-breakdown', data.resources_by_type, 'No resource types to display.');
+      renderOverviewBreakdown('admin-resource-level-breakdown', data.resources_by_level, 'No resources have been assigned to academic levels yet.');
 
       const latest = getElement('admin-latest-resource');
       if (latest) latest.textContent = formatOverviewDate(data.latest_resource_at);
