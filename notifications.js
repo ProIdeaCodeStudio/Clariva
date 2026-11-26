@@ -1,4 +1,4 @@
-/* Clariva device push-notification controls. Requires an explicit user action. */
+/* Clariva shared notification centre and device push opt-in for every signed-in dashboard role. */
 (() => {
   'use strict';
 
@@ -138,7 +138,7 @@
       <div class="clariva-push-optin-card">
         <button id="clariva-push-optin-dismiss" type="button" aria-label="Close reminder">×</button>
         <h2 id="clariva-push-optin-title">Stay updated with Clariva</h2>
-        <p>Enable device notifications to receive important updates relevant to your account, even when Clariva is not open. You can continue without enabling them.</p>
+        <p>Enable device notifications to receive important updates relevant to your account, even when Clariva is not open. You can close this reminder and continue; it will appear again the next time you open Clariva until notifications are enabled.</p>
         <p class="clariva-push-optin-status" id="clariva-push-optin-status" role="status" aria-live="polite"></p>
         <div class="clariva-push-optin-actions">
           <button id="clariva-push-optin-enable" type="button">Enable notifications</button>
