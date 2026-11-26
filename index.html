@@ -456,7 +456,8 @@ Back to Login
         toggle.setAttribute('aria-expanded', String(open));
       });
       menu.querySelectorAll('a, button').forEach(item => item.addEventListener('click', () => {
-        if (item.tagName === 'A') { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
+        menu.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
       }));
       document.addEventListener('click', event => {
         if (!menu.hidden && !menu.contains(event.target) && !toggle.contains(event.target)) {
