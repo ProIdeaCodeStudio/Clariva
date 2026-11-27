@@ -38,6 +38,7 @@
   let content;
   let activeView = null;
   let previousOverflow = '';
+  let lastFocusedElement = null;
 
   function buildHub() {
     if (overlay) return;
@@ -94,6 +95,7 @@
   function openHub(view) {
     buildHub();
     if (overlay.hidden) {
+      lastFocusedElement = document.activeElement;
       history.pushState({ ...(history.state || {}), clarivaInfoHub: true, clarivaInfoView: view }, '', location.href);
       previousOverflow = document.body.style.overflow;
       showView(view, false);
@@ -107,6 +109,10 @@
     overlay.hidden = true;
     activeView = null;
     document.body.style.overflow = previousOverflow;
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus({ preventScroll: true });
+    }
+    lastFocusedElement = null;
   }
 
   function closeHub() {
