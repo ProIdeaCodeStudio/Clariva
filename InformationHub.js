@@ -64,7 +64,7 @@
     content = overlay.querySelector('.clariva-info-content');
     overlay.querySelector('.clariva-info-close').addEventListener('click', closeHub);
     overlay.querySelectorAll('[data-view]').forEach(button => {
-      button.addEventListener('click', () => showView(button.dataset.view, false));
+      button.addEventListener('click', () => showView(button.dataset.view, true));
     });
     overlay.addEventListener('click', event => {
       if (event.target === overlay) closeHub();
@@ -92,10 +92,15 @@
     overlay.querySelector('.clariva-info-dialog').focus({ preventScroll: true });
   }
 
-  function openHub(view) {
+  function openHub(view, trigger) {
     buildHub();
     if (overlay.hidden) {
-      lastFocusedElement = document.activeElement;
+      const sourceMenu = trigger?.closest('nav');
+      lastFocusedElement = sourceMenu?.id === 'clariva-landing-menu'
+        ? document.getElementById('clariva-landing-menu-toggle')
+        : sourceMenu?.id === 'clariva-nav-menu'
+          ? document.getElementById('clariva-menu-toggle')
+          : trigger || document.activeElement;
       history.pushState({ ...(history.state || {}), clarivaInfoHub: true, clarivaInfoView: view }, '', location.href);
       previousOverflow = document.body.style.overflow;
       showView(view, false);
@@ -132,7 +137,7 @@
       menu.hidden = true;
       document.getElementById('clariva-menu-toggle')?.setAttribute('aria-expanded', 'false');
     }
-    openHub(trigger.dataset.clarivaInfo);
+    openHub(trigger.dataset.clarivaInfo, trigger);
   });
 
   window.addEventListener('popstate', event => {
