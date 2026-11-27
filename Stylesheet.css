@@ -1262,25 +1262,24 @@ body:not(.clariva-dashboard-page) #header {
   position: fixed;
   inset: 0;
   z-index: 4800;
-  display: grid;
-  place-items: center;
-  padding: clamp(12px, 3vw, 28px);
-  background: rgba(17, 16, 8, .82);
-  backdrop-filter: blur(5px);
+  display: block;
+  padding: 0;
+  overflow: auto;
+  background: var(--warm-white);
 }
 .clariva-info-overlay[hidden] { display: none; }
 .clariva-info-dialog {
   position: relative;
-  width: min(900px, 100%);
-  max-height: min(88vh, 900px);
-  overflow: auto;
+  width: 100%;
+  min-height: 100%;
+  overflow: visible;
   padding: clamp(24px, 5vw, 52px);
-  border: 1px solid var(--parchment);
+  border: 0;
   border-top: 4px solid var(--amber);
-  border-radius: 12px;
+  border-radius: 0;
   background: var(--warm-white);
   color: var(--deep-ink);
-  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+  box-shadow: none;
 }
 .clariva-info-topbar {
   display: flex;
