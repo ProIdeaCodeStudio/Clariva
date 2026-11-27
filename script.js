@@ -465,14 +465,14 @@ if (emailConfirmationLoginBtn) {
     });
   });
 
-  const openLogin = document.querySelector('.js-open-login');
-  if (openLogin) {
+  // Wire every Login entry point, including the mobile navigation menu.
+  document.querySelectorAll('.js-open-login').forEach(openLogin => {
     openLogin.addEventListener('click', (e) => {
-      gateTriggerElement = e.target;
+      gateTriggerElement = e.currentTarget;
       showGate();
       showStep('step-3');
     });
-  }
+  });
 
   const showLoginLink = document.getElementById('show-login-link');
   if (showLoginLink) showLoginLink.addEventListener('click', (e) => { e.preventDefault(); showStep('step-3'); });

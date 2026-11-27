@@ -1250,3 +1250,128 @@ table td {
   .clariva-navbar-wordmark { width: min(230px, 62vw); }
   .footer-contact { text-align: center; }
 }
+
+
+/* Shared JavaScript-rendered information hub. */
+body:not(.clariva-dashboard-page) #header {
+  position: sticky;
+  top: 0;
+  z-index: 1500;
+}
+.clariva-info-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4800;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 28px);
+  background: rgba(17, 16, 8, .82);
+  backdrop-filter: blur(5px);
+}
+.clariva-info-overlay[hidden] { display: none; }
+.clariva-info-dialog {
+  position: relative;
+  width: min(900px, 100%);
+  max-height: min(88vh, 900px);
+  overflow: auto;
+  padding: clamp(24px, 5vw, 52px);
+  border: 1px solid var(--parchment);
+  border-top: 4px solid var(--amber);
+  border-radius: 12px;
+  background: var(--warm-white);
+  color: var(--deep-ink);
+  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+}
+.clariva-info-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: clamp(24px, 4vw, 40px);
+}
+.clariva-info-brand {
+  color: var(--deep-ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+}
+.clariva-info-close {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid var(--parchment);
+  border-radius: 8px;
+  background: var(--deep-ink);
+  color: var(--warm-white);
+  font-size: 24px;
+  cursor: pointer;
+}
+.clariva-info-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--parchment);
+}
+.clariva-info-tabs button {
+  padding: 10px 14px;
+  border: 1px solid var(--parchment);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--deep-ink);
+  font: inherit;
+  cursor: pointer;
+}
+.clariva-info-tabs button[aria-current="page"] {
+  border-color: var(--amber);
+  background: var(--deep-ink);
+  color: var(--warm-white);
+}
+.clariva-info-content { line-height: 1.8; }
+.clariva-info-content .features-label,
+.clariva-info-content .leadership-role {
+  color: var(--ember-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+.clariva-info-content h1 {
+  margin: 8px 0 22px;
+  color: var(--deep-ink);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.12;
+}
+.clariva-info-content h2 {
+  margin: 8px 0 22px;
+  color: var(--deep-ink);
+  font-family: var(--font-display);
+  font-size: clamp(26px, 4vw, 36px);
+}
+.clariva-info-content p { max-width: 760px; margin: 0 0 16px; color: var(--ember-text); }
+.clariva-info-contact-list { display: grid; gap: 14px; margin-top: 24px; }
+.clariva-info-contact-list a {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+  color: var(--ember-text);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-underline-offset: 4px;
+}
+@media (max-width: 640px) {
+  .clariva-info-overlay { padding: 0; place-items: stretch; }
+  .clariva-info-dialog {
+    width: 100%;
+    max-height: 100%;
+    min-height: 100%;
+    border-radius: 0;
+    padding: 22px 18px 36px;
+  }
+}
